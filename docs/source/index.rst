@@ -5,6 +5,10 @@ JAX AI Stack
    :file: index.html
 
 .. toctree::
+
+   blog
+
+.. toctree::
    :hidden:
    :caption: Getting started
    :maxdepth: 1

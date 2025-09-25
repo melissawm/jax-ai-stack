@@ -17,6 +17,7 @@ release = '0.0.0'
 extensions = [
     'myst_nb',
     'sphinx_copybutton',
+    'ablog',
 ]
 
 templates_path = ['_templates']
@@ -79,7 +80,7 @@ myst_enable_extensions = [
     'dollarmath',
     'linkify',
 ]
-nb_execution_mode = 'force'
+nb_execution_mode = 'off'
 nb_execution_allow_errors = False
 nb_merge_streams = True
 nb_execution_show_tb = True
@@ -105,3 +106,13 @@ nb_execution_excludepatterns = [
     'data_loaders_on_cpu_with_jax.ipynb',
     'data_loaders_on_gpu_with_jax.ipynb',
 ]
+
+# ABlog configuration
+# https://ablog.readthedocs.io/en/stable/manual/ablog-configuration-options.html
+blog_path = 'blog'
+blog_default_author = 'JAX team'
+blog_title = 'JAX AI Stack Blog'
+
+blog_post_pattern = "blog/*.md"
+blog_authors = {
+    'JAX team': ('JAX team', 'https://jax-ai-stack.readthedocs.io/en/latest/'),}

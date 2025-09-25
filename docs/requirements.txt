@@ -11,5 +11,8 @@ matplotlib
 penzai
 scikit-learn
 
+# Packages required for blog
+ablog
+
 # install jax-ai-stack from current directory
 .
