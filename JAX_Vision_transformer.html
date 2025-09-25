@@ -1,0 +1,1438 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Train a Vision Transformer (ViT) for image classification with JAX &#8212; JAX AI Stack</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css?v=6644e6bb" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=1dc24ef2" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="_static/documentation_options.js?v=c1d4a9c3"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'JAX_Vision_transformer';</script>
+    <link rel="icon" href="_static/favicon.png"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Time series classification with CNN" href="JAX_time_series_classification.html" />
+    <link rel="prev" title="Image Captioning with Vision Transformer (ViT) model" href="JAX_image_captioning.html" /> 
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>   
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/ai-stack-logo.svg" class="logo__image only-light" alt="JAX AI Stack - Home"/>
+    <script>document.write(`<img src="_static/ai-stack-logo.svg" class="logo__image only-dark" alt="JAX AI Stack - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="index.html">
+                    JAX AI Stack
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="blog.html">JAX AI Stack Blog</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing the stack</a></li>
+
+<li class="toctree-l1 has-children"><a class="reference internal" href="getting_started.html">Getting started with JAX for ML</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="neural_net_basics.html">Part 1: JAX neural net basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="digits_vae.html">Part 2: Debug a variational autoencoder (VAE)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="digits_diffusion_model.html">Part 3: Train a diffusion model for image generation</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="JAX_visualizing_models_metrics.html">Visualize JAX model metrics with TensorBoard</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="data_loaders.html">Introduction to Data Loaders</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="data_loaders_on_cpu_with_jax.html">Introduction to Data Loaders on CPU with JAX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_loaders_on_gpu_with_jax.html">Introduction to Data Loaders on GPU with JAX</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="pytorch_users.html">From PyTorch to JAX</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="JAX_for_PyTorch_users.html">JAX for PyTorch users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="JAX_porting_PyTorch_model.html">Porting a PyTorch model to JAX</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Example applications</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="JAX_for_LLM_pretraining.html">Train a miniGPT language model with JAX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_basic_text_classification.html">Basic text classification with 1D CNN</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_transformer_text_classification.html">Text classification with a transformer language model using JAX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_machine_translation.html">Machine Translation with encoder-decoder transformer model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_examples_image_segmentation.html">Image segmentation with UNETR model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_image_captioning.html">Image Captioning with Vision Transformer (ViT) model</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Train a Vision Transformer (ViT) for image classification with JAX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_time_series_classification.html">Time series classification with CNN</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer resources</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contribute to documentation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/jax-ml/jax-ai-stack" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/JAX_Vision_transformer.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Train a Vision Transformer (ViT) for image classification with JAX</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setup">Setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-vit-architecture">The ViT architecture</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-the-model-with-flax-nnx">Defining the model with Flax NNX</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-the-pretrained-weights">Loading the pretrained weights</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#verifying-image-prediction">Verifying image prediction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#food-101-dataset">Food 101 dataset</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-the-optimizier-the-loss-function-training-test-steps-and-metrics">Defining the optimizier, the loss function, training/test steps, and metrics</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-the-model">Training the model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#further-reading">Further reading</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                   <section class="tex2jax_ignore mathjax_ignore" id="train-a-vision-transformer-vit-for-image-classification-with-jax">
+<h1>Train a Vision Transformer (ViT) for image classification with JAX<a class="headerlink" href="#train-a-vision-transformer-vit-for-image-classification-with-jax" title="Link to this heading">#</a></h1>
+<p><a class="reference external" href="https://colab.research.google.com/github/jax-ml/jax-ai-stack/blob/main/docs/source/JAX_Vision_transformer.ipynb"><img alt="Open in Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
+<p>This tutorial guides you through developing and training a Vision Transformer (ViT) model using JAX, <a class="reference external" href="http://flax.readthedocs.io">Flax NNX</a>, and <a class="reference external" href="http://optax.readthedocs.io">Optax</a>. The architecture is based on <a class="reference external" href="https://arxiv.org/abs/2010.11929">“An Image is Worth 16x16 Words”</a> by Dosovitskiy et al. (2020). The tutorial shows how to define a ViT model using Flax NNX, load the pretrained ImageNet weights from the ViT transformer weights of <code class="docutils literal notranslate"><span class="pre">google/vit-base-patch16-224</span></code> on HuggingFace, which was pretrained on ImageNet-21k, and then fine-tune on the <a class="reference external" href="https://huggingface.co/datasets/ethz/food101">Food 101</a> dataset for image classification. We will also check the results for consistency with the reference model.</p>
+<p>This tutorial draws inspiration from the HuggingFace <a class="reference external" href="https://huggingface.co/docs/transformers/tasks/image_classification">Image classification tutorial</a>. The original JAX-based implementation of the ViT model can be found in the <a class="reference external" href="https://github.com/google-research/vision_transformer/">google-research/vision_transformer</a> GitHub repository.</p>
+<p>If you are new to JAX for AI, check out the <a class="reference external" href="https://jax-ai-stack.readthedocs.io/en/latest/neural_net_basics.html">introductory tutorial</a>, which covers neural network building with Flax, Optax and JAX.</p>
+<section id="setup">
+<h2>Setup<a class="headerlink" href="#setup" title="Link to this heading">#</a></h2>
+<p>JAX for AI (the stack) installation is covered <a class="reference external" href="https://docs.jaxstack.ai/en/latest/install.html">here</a>. And JAX (the library) installation is covered in <a class="reference external" href="https://jax.readthedocs.io/en/latest/installation.html">this guide</a> on the JAX documentation site.</p>
+<p>This tutorial uses HuggingFace <a class="reference external" href="https://huggingface.co/docs/datasets/">Datasets</a> for dataset loading,<a class="reference external" href="https://pytorch.org/vision">TorchVision</a> for image augmentations, <a class="reference external" href="https://github.com/google/grain/">grain</a> for efficient data loading, <a class="reference external" href="https://tqdm.github.io/">tqdm</a> for a progress bar to monitor training, and <a class="reference external" href="https://matplotlib.org/stable/">matplotlib</a> for visualization purposes. These libraries can be installed with <code class="docutils literal notranslate"><span class="pre">!pip</span> <span class="pre">install</span> <span class="pre">-U</span> <span class="pre">datasets</span> <span class="pre">grain</span> <span class="pre">torchvision</span> <span class="pre">tqdm</span> <span class="pre">matplotlib</span></code>.</p>
+<p>Start by importing JAX, JAX NumPy, Flax NNX, and Optax:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">jax</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flax</span><span class="w"> </span><span class="kn">import</span> <span class="n">nnx</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">optax</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="the-vit-architecture">
+<h2>The ViT architecture<a class="headerlink" href="#the-vit-architecture" title="Link to this heading">#</a></h2>
+<p>A Vision Transformer (ViT) treats images as sequences of patches and leverages the attention mechanism from transformers. The architecture consists of the following key components:</p>
+<ul class="simple">
+<li><p><strong>Patch and position embedding:</strong> Breaking down an image into fixed-size patches and embedding each patch into a vector representation. Positional embeddings are added to encode the position of each patch within the original image, which aids with spatial information.</p></li>
+<li><p><strong>Transformer encoder:</strong> A stack of transformer encoder blocks processes the input embedded patches. Each block consists of:</p>
+<ul>
+<li><p><strong>Multi-Head (Self-)Attention:</strong> This allows the model to weigh the importance of different patches relative to each other, capturing relationships within the image.</p></li>
+<li><p><strong>Feed-forward network:</strong> Processes each patch independently, allowing a for non-linear transformations.</p></li>
+<li><p><strong>Layer normatlization and residual connections:</strong> Stabilize training and improve gradient flow in the network.</p></li>
+</ul>
+</li>
+<li><p><strong>Classification head:</strong> The output of the transformer encoder is fed into a linear layer and then a softmax function, resulting in class probabilities for prediction.</p></li>
+</ul>
+<p><img alt="ViT-architecture" src="https://github.com/google-research/vision_transformer/raw/main/vit_figure.png" /></p>
+<p><strong>Note:</strong> The original JAX-based implementation of a ViT can also be found in the <a class="reference external" href="https://github.com/google-research/vision_transformer/"><code class="docutils literal notranslate"><span class="pre">google-research</span></code> GitHub repo</a>.</p>
+<section id="defining-the-model-with-flax-nnx">
+<h3>Defining the model with Flax NNX<a class="headerlink" href="#defining-the-model-with-flax-nnx" title="Link to this heading">#</a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">VisionTransformer</span><span class="p">(</span><span class="n">nnx</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Implements the ViT model, inheriting from `flax.nnx.Module`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        num_classes (int): Number of classes in the classification. Defaults to 1000.</span>
+<span class="sd">        in_channels (int): Number of input channels in the image (such as 3 for RGB). Defaults to 3.</span>
+<span class="sd">        img_size (int): Input image size. Defaults to 224.</span>
+<span class="sd">        patch_size (int): Size of the patches extracted from the image. Defaults to 16.</span>
+<span class="sd">        num_layers (int): Number of transformer encoder layers. Defaults to 12.</span>
+<span class="sd">        num_heads (int): Number of attention heads in each transformer layer. Defaults to 12.</span>
+<span class="sd">        mlp_dim (int): Dimension of the hidden layers in the feed-forward/MLP block. Defaults to 3072.</span>
+<span class="sd">        hidden_size (int): Dimensionality of the embedding vectors. Defaults to 3072.</span>
+<span class="sd">        dropout_rate (int): Dropout rate (for regularization). Defaults to 0.1.</span>
+<span class="sd">        rngs (flax.nnx.Rngs): A set of named `flax.nnx.RngStream` objects that generate a stream of JAX pseudo-random number generator (PRNG) keys. Defaults to `flax.nnx.Rngs(0)`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+        <span class="n">in_channels</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="n">img_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">224</span><span class="p">,</span>
+        <span class="n">patch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span>
+        <span class="n">num_layers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span>
+        <span class="n">num_heads</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span>
+        <span class="n">mlp_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3072</span><span class="p">,</span>
+        <span class="n">hidden_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">768</span><span class="p">,</span>
+        <span class="n">dropout_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">rngs</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+    <span class="p">):</span>
+        <span class="c1"># Calculate the number of patches generated from the image.</span>
+        <span class="n">n_patches</span> <span class="o">=</span> <span class="p">(</span><span class="n">img_size</span> <span class="o">//</span> <span class="n">patch_size</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="c1"># Patch embeddings:</span>
+        <span class="c1"># - Extracts patches from the input image and maps them to embedding vectors</span>
+        <span class="c1">#   using `flax.nnx.Conv` (convolutional layer).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">patch_embeddings</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Conv</span><span class="p">(</span>
+            <span class="n">in_channels</span><span class="p">,</span>
+            <span class="n">hidden_size</span><span class="p">,</span>
+            <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="n">patch_size</span><span class="p">,</span> <span class="n">patch_size</span><span class="p">),</span>
+            <span class="n">strides</span><span class="o">=</span><span class="p">(</span><span class="n">patch_size</span><span class="p">,</span> <span class="n">patch_size</span><span class="p">),</span>
+            <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;VALID&quot;</span><span class="p">,</span>
+            <span class="n">use_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Positional embeddings (add information about image patch positions):</span>
+        <span class="c1"># Set the truncated normal initializer (using `jax.nn.initializers.truncated_normal`).</span>
+        <span class="n">initializer</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">initializers</span><span class="o">.</span><span class="n">truncated_normal</span><span class="p">(</span><span class="n">stddev</span><span class="o">=</span><span class="mf">0.02</span><span class="p">)</span>
+        <span class="c1"># The learnable parameter for positional embeddings (using `flax.nnx.Param`).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">position_embeddings</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span>
+            <span class="n">initializer</span><span class="p">(</span><span class="n">rngs</span><span class="o">.</span><span class="n">params</span><span class="p">(),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_patches</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">),</span> <span class="n">jnp</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="p">)</span> <span class="c1"># Shape `(1, n_patches +1, hidden_size`)</span>
+        <span class="c1"># The dropout layer.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">dropout_rate</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+
+        <span class="c1"># CLS token (a special token prepended to the sequence of patch embeddings)</span>
+        <span class="c1"># using `flax.nnx.Param`.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cls_token</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">)))</span>
+
+        <span class="c1"># Transformer encoder (a sequence of encoder blocks for feature extraction).</span>
+        <span class="c1"># - Create multiple Transformer encoder blocks (with `nnx.Sequential`</span>
+        <span class="c1"># and `TransformerEncoder(nnx.Module)` which is defined later).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="o">*</span><span class="p">[</span>
+            <span class="n">TransformerEncoder</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">mlp_dim</span><span class="p">,</span> <span class="n">num_heads</span><span class="p">,</span> <span class="n">dropout_rate</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_layers</span><span class="p">)</span>
+        <span class="p">])</span>
+        <span class="c1"># Layer normalization with `flax.nnx.LayerNorm`.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">final_norm</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">LayerNorm</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+
+        <span class="c1"># Classification head (maps the transformer encoder to class probabilities).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+
+    <span class="c1"># The forward pass in the ViT model.</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">:</span>
+        <span class="c1"># Image patch embeddings.</span>
+        <span class="c1"># Extract image patches and embed them.</span>
+        <span class="n">patches</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">patch_embeddings</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="c1"># Get the batch size of image patches.</span>
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="n">patches</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># Reshape the image patches.</span>
+        <span class="n">patches</span> <span class="o">=</span> <span class="n">patches</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">patches</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="c1"># Replicate the CLS token for each image with `jax.numpy.tile`</span>
+        <span class="c1"># by constructing an array by repeating `cls_token` along `[batch_size, 1, 1]` dimensions.</span>
+        <span class="n">cls_token</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cls_token</span><span class="p">,</span> <span class="p">[</span><span class="n">batch_size</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="c1"># Concatenate the CLS token and image patch embeddings.</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">cls_token</span><span class="p">,</span> <span class="n">patches</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># Create embedded patches by adding positional embeddings to the concatenated CLS token and image patch embeddings.</span>
+        <span class="n">embeddings</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">position_embeddings</span>
+        <span class="c1"># Apply the dropout layer to embedded patches.</span>
+        <span class="n">embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span><span class="n">embeddings</span><span class="p">)</span>
+
+        <span class="c1"># Transformer encoder blocks.</span>
+        <span class="c1"># Process the embedded patches through the transformer encoder layers.</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="p">(</span><span class="n">embeddings</span><span class="p">)</span>
+        <span class="c1"># Apply layer normalization</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">final_norm</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="c1"># Extract the CLS token (first token), which represents the overall image embedding.</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># Predict class probabilities based on the CLS token embedding.</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">TransformerEncoder</span><span class="p">(</span><span class="n">nnx</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A single transformer encoder block in the ViT model, inheriting from `flax.nnx.Module`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        hidden_size (int): Input/output embedding dimensionality.</span>
+<span class="sd">        mlp_dim (int): Dimension of the feed-forward/MLP block hidden layer.</span>
+<span class="sd">        num_heads (int): Number of attention heads.</span>
+<span class="sd">        dropout_rate (float): Dropout rate. Defaults to 0.0.</span>
+<span class="sd">        rngs (flax.nnx.Rngs): A set of named `flax.nnx.RngStream` objects that generate a stream of JAX pseudo-random number generator (PRNG) keys. Defaults to `flax.nnx.Rngs(0)`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">hidden_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">mlp_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">num_heads</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">dropout_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">rngs</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># First layer normalization using `flax.nnx.LayerNorm`</span>
+        <span class="c1"># before we apply Multi-Head Attentn.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm1</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">LayerNorm</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+        <span class="c1"># The Multi-Head Attention layer (using `flax.nnx.MultiHeadAttention`).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attn</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">MultiHeadAttention</span><span class="p">(</span>
+            <span class="n">num_heads</span><span class="o">=</span><span class="n">num_heads</span><span class="p">,</span>
+            <span class="n">in_features</span><span class="o">=</span><span class="n">hidden_size</span><span class="p">,</span>
+            <span class="n">dropout_rate</span><span class="o">=</span><span class="n">dropout_rate</span><span class="p">,</span>
+            <span class="n">broadcast_dropout</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">decode</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">deterministic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="c1"># Second layer normalization using `flax.nnx.LayerNorm`.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm2</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">LayerNorm</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+
+        <span class="c1"># The MLP for point-wise feedforward (using `flax.nnx.Sequential`, `flax.nnx.Linear, flax.nnx.Dropout`)</span>
+        <span class="c1"># with the GeLU activation function (`flax.nnx.gelu`).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mlp</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="n">nnx</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">mlp_dim</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">),</span>
+            <span class="n">nnx</span><span class="o">.</span><span class="n">gelu</span><span class="p">,</span>
+            <span class="n">nnx</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">dropout_rate</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">),</span>
+            <span class="n">nnx</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">mlp_dim</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">),</span>
+            <span class="n">nnx</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">dropout_rate</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="c1"># The forward pass through the transformer encoder block.</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">:</span>
+        <span class="c1"># The Multi-Head Attention layer with layer normalization.</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">attn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">norm1</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="c1"># The feed-forward network with layer normalization.</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">mlp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">norm2</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">x</span>
+
+<span class="c1"># Example usage for testing:</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">VisionTransformer</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Predictions shape: &quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Jax version: 0.4.34
+Flax version: 0.10.1
+Optax version: 0.2.4
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="loading-the-pretrained-weights">
+<h2>Loading the pretrained weights<a class="headerlink" href="#loading-the-pretrained-weights" title="Link to this heading">#</a></h2>
+<p>In this section, we’ll load the weights pretrained on the ImageNet dataset using HuggingFace’s <code class="docutils literal notranslate"><span class="pre">transformers</span></code> library.</p>
+<p>First, import <a class="reference external" href="https://huggingface.co/docs/transformers/main/en/model_doc/vit"><code class="docutils literal notranslate"><span class="pre">transformers.FlaxViTForImageClassification</span></code></a> - a ViT Model transformer with an image classification head on top.</p>
+<p>Then, load the weights of <code class="docutils literal notranslate"><span class="pre">google/vit-base-patch16-224</span></code> - a ViT model pretrained on ImageNet-21k at the 224x224 resolution - from HuggingFace.</p>
+<p>We’ll also check whether we have consistent results with the reference model.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">transformers</span><span class="w"> </span><span class="kn">import</span> <span class="n">FlaxViTForImageClassification</span>
+
+<span class="n">tf_model</span> <span class="o">=</span> <span class="n">FlaxViTForImageClassification</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s1">&#39;google/vit-base-patch16-224&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Copies weights from a TF ViT model to a Flax ViT model, reshaping layers</span>
+<span class="c1"># to match the expected shapes in Flax.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">vit_inplace_copy_weights</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">src_model</span><span class="p">,</span> <span class="n">dst_model</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">src_model</span><span class="p">,</span> <span class="n">FlaxViTForImageClassification</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dst_model</span><span class="p">,</span> <span class="n">VisionTransformer</span><span class="p">)</span>
+
+    <span class="n">tf_model_params</span> <span class="o">=</span> <span class="n">src_model</span><span class="o">.</span><span class="n">params</span>
+    <span class="n">tf_model_params_fstate</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">traversals</span><span class="o">.</span><span class="n">flatten_mapping</span><span class="p">(</span><span class="n">tf_model_params</span><span class="p">)</span>
+
+    <span class="c1"># Notice the use of `flax.nnx.state`.</span>
+    <span class="n">flax_model_params</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">state</span><span class="p">(</span><span class="n">dst_model</span><span class="p">,</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Param</span><span class="p">)</span>
+    <span class="n">flax_model_params_fstate</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">flax_model_params</span><span class="o">.</span><span class="n">flat_state</span><span class="p">())</span>
+
+    <span class="c1"># Mapping from Flax parameter names to TF parameter names.</span>
+    <span class="n">params_name_mapping</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="p">(</span><span class="s2">&quot;cls_token&quot;</span><span class="p">,):</span> <span class="p">(</span><span class="s2">&quot;vit&quot;</span><span class="p">,</span> <span class="s2">&quot;embeddings&quot;</span><span class="p">,</span> <span class="s2">&quot;cls_token&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;position_embeddings&quot;</span><span class="p">,):</span> <span class="p">(</span><span class="s2">&quot;vit&quot;</span><span class="p">,</span> <span class="s2">&quot;embeddings&quot;</span><span class="p">,</span> <span class="s2">&quot;position_embeddings&quot;</span><span class="p">),</span>
+        <span class="o">**</span><span class="p">{</span>
+            <span class="p">(</span><span class="s2">&quot;patch_embeddings&quot;</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span> <span class="p">(</span><span class="s2">&quot;vit&quot;</span><span class="p">,</span> <span class="s2">&quot;embeddings&quot;</span><span class="p">,</span> <span class="s2">&quot;patch_embeddings&quot;</span><span class="p">,</span> <span class="s2">&quot;projection&quot;</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;kernel&quot;</span><span class="p">,</span> <span class="s2">&quot;bias&quot;</span><span class="p">]</span>
+        <span class="p">},</span>
+        <span class="o">**</span><span class="p">{</span>
+            <span class="p">(</span><span class="s2">&quot;encoder&quot;</span><span class="p">,</span> <span class="s2">&quot;layers&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="s2">&quot;attn&quot;</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span> <span class="p">(</span>
+                <span class="s2">&quot;vit&quot;</span><span class="p">,</span> <span class="s2">&quot;encoder&quot;</span><span class="p">,</span> <span class="s2">&quot;layer&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="s2">&quot;attention&quot;</span><span class="p">,</span> <span class="s2">&quot;attention&quot;</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;kernel&quot;</span><span class="p">,</span> <span class="s2">&quot;bias&quot;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;query&quot;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
+        <span class="p">},</span>
+        <span class="o">**</span><span class="p">{</span>
+            <span class="p">(</span><span class="s2">&quot;encoder&quot;</span><span class="p">,</span> <span class="s2">&quot;layers&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="s2">&quot;attn&quot;</span><span class="p">,</span> <span class="s2">&quot;out&quot;</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span> <span class="p">(</span>
+                <span class="s2">&quot;vit&quot;</span><span class="p">,</span> <span class="s2">&quot;encoder&quot;</span><span class="p">,</span> <span class="s2">&quot;layer&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="s2">&quot;attention&quot;</span><span class="p">,</span> <span class="s2">&quot;output&quot;</span><span class="p">,</span> <span class="s2">&quot;dense&quot;</span><span class="p">,</span> <span class="n">x</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;kernel&quot;</span><span class="p">,</span> <span class="s2">&quot;bias&quot;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
+        <span class="p">},</span>
+        <span class="o">**</span><span class="p">{</span>
+            <span class="p">(</span><span class="s2">&quot;encoder&quot;</span><span class="p">,</span> <span class="s2">&quot;layers&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="s2">&quot;mlp&quot;</span><span class="p">,</span> <span class="s2">&quot;layers&quot;</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span> <span class="p">(</span>
+                <span class="s2">&quot;vit&quot;</span><span class="p">,</span> <span class="s2">&quot;encoder&quot;</span><span class="p">,</span> <span class="s2">&quot;layer&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">y2</span><span class="p">,</span> <span class="s2">&quot;dense&quot;</span><span class="p">,</span> <span class="n">x</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;kernel&quot;</span><span class="p">,</span> <span class="s2">&quot;bias&quot;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">y1</span><span class="p">,</span> <span class="n">y2</span> <span class="ow">in</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;intermediate&quot;</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;output&quot;</span><span class="p">)]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
+        <span class="p">},</span>
+        <span class="o">**</span><span class="p">{</span>
+            <span class="p">(</span><span class="s2">&quot;encoder&quot;</span><span class="p">,</span> <span class="s2">&quot;layers&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span> <span class="p">(</span>
+                <span class="s2">&quot;vit&quot;</span><span class="p">,</span> <span class="s2">&quot;encoder&quot;</span><span class="p">,</span> <span class="s2">&quot;layer&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">y2</span><span class="p">,</span> <span class="n">x</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">,</span> <span class="s2">&quot;bias&quot;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">y1</span><span class="p">,</span> <span class="n">y2</span> <span class="ow">in</span> <span class="p">[(</span><span class="s2">&quot;norm1&quot;</span><span class="p">,</span> <span class="s2">&quot;layernorm_before&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;norm2&quot;</span><span class="p">,</span> <span class="s2">&quot;layernorm_after&quot;</span><span class="p">)]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
+        <span class="p">},</span>
+        <span class="o">**</span><span class="p">{</span>
+            <span class="p">(</span><span class="s2">&quot;final_norm&quot;</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span> <span class="p">(</span><span class="s2">&quot;vit&quot;</span><span class="p">,</span> <span class="s2">&quot;layernorm&quot;</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">,</span> <span class="s2">&quot;bias&quot;</span><span class="p">]</span>
+        <span class="p">},</span>
+        <span class="o">**</span><span class="p">{</span>
+            <span class="p">(</span><span class="s2">&quot;classifier&quot;</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span> <span class="p">(</span><span class="s2">&quot;classifier&quot;</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;kernel&quot;</span><span class="p">,</span> <span class="s2">&quot;bias&quot;</span><span class="p">]</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="n">nonvisited</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">flax_model_params_fstate</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="k">for</span> <span class="n">key1</span><span class="p">,</span> <span class="n">key2</span> <span class="ow">in</span> <span class="n">params_name_mapping</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">assert</span> <span class="n">key1</span> <span class="ow">in</span> <span class="n">flax_model_params_fstate</span><span class="p">,</span> <span class="n">key1</span>
+        <span class="k">assert</span> <span class="n">key2</span> <span class="ow">in</span> <span class="n">tf_model_params_fstate</span><span class="p">,</span> <span class="p">(</span><span class="n">key1</span><span class="p">,</span> <span class="n">key2</span><span class="p">)</span>
+
+        <span class="n">nonvisited</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">key1</span><span class="p">)</span>
+
+        <span class="n">src_value</span> <span class="o">=</span> <span class="n">tf_model_params_fstate</span><span class="p">[</span><span class="n">key2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">key2</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;kernel&quot;</span> <span class="ow">and</span> <span class="n">key2</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;key&quot;</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;query&quot;</span><span class="p">):</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="n">src_value</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">src_value</span> <span class="o">=</span> <span class="n">src_value</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">64</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">key2</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;bias&quot;</span> <span class="ow">and</span> <span class="n">key2</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;key&quot;</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;query&quot;</span><span class="p">):</span>
+            <span class="n">src_value</span> <span class="o">=</span> <span class="n">src_value</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">12</span><span class="p">,</span> <span class="mi">64</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">key2</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">:]</span> <span class="o">==</span> <span class="p">(</span><span class="s2">&quot;attention&quot;</span><span class="p">,</span> <span class="s2">&quot;output&quot;</span><span class="p">,</span> <span class="s2">&quot;dense&quot;</span><span class="p">,</span> <span class="s2">&quot;kernel&quot;</span><span class="p">):</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="n">src_value</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">src_value</span> <span class="o">=</span> <span class="n">src_value</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">12</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+
+        <span class="n">dst_value</span> <span class="o">=</span> <span class="n">flax_model_params_fstate</span><span class="p">[</span><span class="n">key1</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="n">src_value</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">dst_value</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="p">(</span><span class="n">key2</span><span class="p">,</span> <span class="n">src_value</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">key1</span><span class="p">,</span> <span class="n">dst_value</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">dst_value</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">src_value</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">dst_value</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">==</span> <span class="n">src_value</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="p">(</span><span class="n">dst_value</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">src_value</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">nonvisited</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">nonvisited</span>
+    <span class="c1"># Notice the use of `flax.nnx.update` and `flax.nnx.State`.</span>
+    <span class="n">nnx</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">dst_model</span><span class="p">,</span> <span class="n">nnx</span><span class="o">.</span><span class="n">State</span><span class="o">.</span><span class="n">from_flat_path</span><span class="p">(</span><span class="n">flax_model_params_fstate</span><span class="p">))</span>
+
+
+<span class="n">vit_inplace_copy_weights</span><span class="p">(</span><span class="n">src_model</span><span class="o">=</span><span class="n">tf_model</span><span class="p">,</span> <span class="n">dst_model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="verifying-image-prediction">
+<h2>Verifying image prediction<a class="headerlink" href="#verifying-image-prediction" title="Link to this heading">#</a></h2>
+<p>Load a sample image from a URL, perform inference, and compare the predictions to verify the weight transfer:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">transformers</span><span class="w"> </span><span class="kn">import</span> <span class="n">ViTImageProcessor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+
+<span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;https://farm2.staticflickr.com/1152/1151216944_1525126615_z.jpg&quot;</span>
+<span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">raw</span><span class="p">)</span>
+
+<span class="n">processor</span> <span class="o">=</span> <span class="n">ViTImageProcessor</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s1">&#39;google/vit-base-patch16-224&#39;</span><span class="p">)</span>
+
+<span class="n">inputs</span> <span class="o">=</span> <span class="n">processor</span><span class="p">(</span><span class="n">images</span><span class="o">=</span><span class="n">image</span><span class="p">,</span> <span class="n">return_tensors</span><span class="o">=</span><span class="s2">&quot;np&quot;</span><span class="p">)</span>
+<span class="n">outputs</span> <span class="o">=</span> <span class="n">tf_model</span><span class="p">(</span><span class="o">**</span><span class="n">inputs</span><span class="p">)</span>
+<span class="n">logits</span> <span class="o">=</span> <span class="n">outputs</span><span class="o">.</span><span class="n">logits</span>
+
+
+<span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;pixel_values&quot;</span><span class="p">],</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+<span class="c1"># Model predicts one of the 1000 ImageNet classes.</span>
+<span class="n">ref_class_idx</span> <span class="o">=</span> <span class="n">logits</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+<span class="n">pred_class_idx</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+<span class="k">assert</span> <span class="n">jnp</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">logits</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:])</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mf">0.1</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;Reference model:</span><span class="se">\n</span><span class="si">{</span><span class="n">tf_model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">id2label</span><span class="p">[</span><span class="n">ref_class_idx</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">P=</span><span class="si">{</span><span class="n">nnx</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span><span class="w"> </span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">ref_class_idx</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;Our model:</span><span class="se">\n</span><span class="si">{</span><span class="n">tf_model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">id2label</span><span class="p">[</span><span class="n">pred_class_idx</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">P=</span><span class="si">{</span><span class="n">nnx</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">output</span><span class="p">,</span><span class="w"> </span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">pred_class_idx</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2024-11-27 12:16:59.113948: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:477] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1732709819.131675  191323 cuda_dnn.cc:8310] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1732709819.137058  191323 cuda_blas.cc:1418] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+</pre></div>
+</div>
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;matplotlib.image.AxesImage at 0x7f2330ea5dd0&gt;
+</pre></div>
+</div>
+<img alt="_images/ecec4c1fca1fa51cf54906c13063e496c4ea74912ce014f641dc667e2a1e5ec1.png" src="_images/ecec4c1fca1fa51cf54906c13063e496c4ea74912ce014f641dc667e2a1e5ec1.png" />
+</div>
+</div>
+<p>Replace the classifier with a smaller fully-connected layer returning 20 classes instead of 1000:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">classifier</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">classifier</span><span class="o">.</span><span class="n">in_features</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Predictions shape: &quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Predictions shape:  (4, 20)
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="food-101-dataset">
+<h2>Food 101 dataset<a class="headerlink" href="#food-101-dataset" title="Link to this heading">#</a></h2>
+<p>In this section, we’ll prepare the dataset and train the ViT model. The dataset is <a class="reference external" href="https://huggingface.co/datasets/ethz/food101">Food 101</a>, which consists of 101 food categories with 101,000 images.</p>
+<p>In our example, each class will have 250 test set images and 750 training set images. The training images won’t be cleaned and will contain some amount of noise (on purpose), mostly in the form of intense colors and sometimes wrong labels. All images are rescaled to have a maximum side length of 512 pixels.</p>
+<p>Let’s download the dataset from <a class="reference external" href="https://huggingface.co/docs/datasets/">HuggingFace Datasets</a> and select 20 classes to reduce the dataset size and the model training time. We’ll use <a class="reference external" href="https://pytorch.org/vision">TorchVision</a> to transform input images and <a class="reference external" href="https://github.com/google/grain/"><code class="docutils literal notranslate"><span class="pre">grain</span></code></a> for efficient data loading.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_dataset</span>
+
+<span class="c1"># Select first 20 classes to reduce the dataset size and the training time.</span>
+<span class="n">train_size</span> <span class="o">=</span> <span class="mi">20</span> <span class="o">*</span> <span class="mi">750</span>
+<span class="n">val_size</span> <span class="o">=</span> <span class="mi">20</span> <span class="o">*</span> <span class="mi">250</span>
+
+<span class="n">train_dataset</span> <span class="o">=</span> <span class="n">load_dataset</span><span class="p">(</span><span class="s2">&quot;food101&quot;</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;train[:</span><span class="si">{</span><span class="n">train_size</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
+<span class="n">val_dataset</span> <span class="o">=</span> <span class="n">load_dataset</span><span class="p">(</span><span class="s2">&quot;food101&quot;</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;validation[:</span><span class="si">{</span><span class="n">val_size</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
+
+<span class="c1"># Create labels mapping where we map current labels between 0 and 19.</span>
+<span class="n">labels_mapping</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">val_dataset</span><span class="p">),</span> <span class="mi">250</span><span class="p">):</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="n">val_dataset</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;label&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">labels_mapping</span><span class="p">:</span>
+        <span class="n">labels_mapping</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">index</span>
+        <span class="n">index</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<span class="n">inv_labels_mapping</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="p">:</span> <span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">labels_mapping</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Training dataset size:&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Validation dataset size:&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">val_dataset</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">display_datapoints</span><span class="p">(</span><span class="o">*</span><span class="n">datapoints</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">names_map</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">num_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">datapoints</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">datapoint</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">datapoints</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">datapoint</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">img</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">datapoint</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">],</span> <span class="n">datapoint</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">img</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">datapoint</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="s2">&quot;dtype&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">img</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">in</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="p">):</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="p">((</span><span class="n">img</span> <span class="o">-</span> <span class="n">img</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">/</span> <span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">img</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">*</span> <span class="mf">255.0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+
+        <span class="n">label_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot; (</span><span class="si">{</span><span class="n">names_map</span><span class="p">[</span><span class="n">label</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span> <span class="k">if</span> <span class="n">names_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">axs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tag</span><span class="si">}</span><span class="s2">Label: </span><span class="si">{</span><span class="n">label</span><span class="si">}{</span><span class="n">label_str</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">axs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Visualize a few samples from the training and test sets:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">display_datapoints</span><span class="p">(</span>
+    <span class="n">train_dataset</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">train_dataset</span><span class="p">[</span><span class="mi">1000</span><span class="p">],</span> <span class="n">train_dataset</span><span class="p">[</span><span class="mi">2000</span><span class="p">],</span> <span class="n">train_dataset</span><span class="p">[</span><span class="mi">3000</span><span class="p">],</span>
+    <span class="n">tag</span><span class="o">=</span><span class="s2">&quot;(Training) &quot;</span><span class="p">,</span>
+    <span class="n">names_map</span><span class="o">=</span><span class="n">train_dataset</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">names</span>
+<span class="p">)</span>
+
+<span class="n">display_datapoints</span><span class="p">(</span>
+    <span class="n">val_dataset</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">val_dataset</span><span class="p">[</span><span class="mi">1000</span><span class="p">],</span> <span class="n">val_dataset</span><span class="p">[</span><span class="mi">2000</span><span class="p">],</span> <span class="n">val_dataset</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+    <span class="n">tag</span><span class="o">=</span><span class="s2">&quot;(Validation) &quot;</span><span class="p">,</span>
+    <span class="n">names_map</span><span class="o">=</span><span class="n">val_dataset</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">names</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="_images/851b6e1c2bcd52a6f0a06f087818769307c6f3f1e50d45d7f62f12fcd8f19e34.png" src="_images/851b6e1c2bcd52a6f0a06f087818769307c6f3f1e50d45d7f62f12fcd8f19e34.png" />
+<img alt="_images/ae6815771a24b12a2833c8fb803af6979c07cda4370630518342a881f7911afb.png" src="_images/ae6815771a24b12a2833c8fb803af6979c07cda4370630518342a881f7911afb.png" />
+</div>
+</div>
+<p>We need to define training and test set image preprocessing helper functions. Training image transformations will also contain random augmentations to prevent overfitting and make the trained model more robust.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.transforms</span><span class="w"> </span><span class="kn">import</span> <span class="n">v2</span> <span class="k">as</span> <span class="n">T</span>
+
+
+<span class="n">img_size</span> <span class="o">=</span> <span class="mi">224</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">to_np_array</span><span class="p">(</span><span class="n">pil_image</span><span class="p">):</span>
+  <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">pil_image</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&quot;RGB&quot;</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">normalize</span><span class="p">(</span><span class="n">image</span><span class="p">):</span>
+    <span class="c1"># Image preprocessing matches the one of pretrained ViT</span>
+    <span class="n">mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.0</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">image</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span> <span class="o">/</span> <span class="n">std</span>
+
+
+<span class="n">tv_train_transforms</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">Compose</span><span class="p">([</span>
+    <span class="n">T</span><span class="o">.</span><span class="n">RandomResizedCrop</span><span class="p">((</span><span class="n">img_size</span><span class="p">,</span> <span class="n">img_size</span><span class="p">),</span> <span class="n">scale</span><span class="o">=</span><span class="p">(</span><span class="mf">0.7</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)),</span>
+    <span class="n">T</span><span class="o">.</span><span class="n">RandomHorizontalFlip</span><span class="p">(),</span>
+    <span class="n">T</span><span class="o">.</span><span class="n">ColorJitter</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">),</span>
+    <span class="n">T</span><span class="o">.</span><span class="n">Lambda</span><span class="p">(</span><span class="n">to_np_array</span><span class="p">),</span>
+    <span class="n">T</span><span class="o">.</span><span class="n">Lambda</span><span class="p">(</span><span class="n">normalize</span><span class="p">),</span>
+<span class="p">])</span>
+
+
+<span class="n">tv_test_transforms</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">Compose</span><span class="p">([</span>
+    <span class="n">T</span><span class="o">.</span><span class="n">Resize</span><span class="p">((</span><span class="n">img_size</span><span class="p">,</span> <span class="n">img_size</span><span class="p">)),</span>
+    <span class="n">T</span><span class="o">.</span><span class="n">Lambda</span><span class="p">(</span><span class="n">to_np_array</span><span class="p">),</span>
+    <span class="n">T</span><span class="o">.</span><span class="n">Lambda</span><span class="p">(</span><span class="n">normalize</span><span class="p">),</span>
+<span class="p">])</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_transform</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">wrapper</span><span class="p">(</span><span class="n">batch</span><span class="p">):</span>
+        <span class="n">batch</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">fn</span><span class="p">(</span><span class="n">pil_image</span><span class="p">)</span> <span class="k">for</span> <span class="n">pil_image</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">]</span>
+        <span class="p">]</span>
+        <span class="c1"># map label index between 0 - 19</span>
+        <span class="n">batch</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">labels_mapping</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span>
+        <span class="p">]</span>
+        <span class="k">return</span> <span class="n">batch</span>
+    <span class="k">return</span> <span class="n">wrapper</span>
+
+
+<span class="n">train_transforms</span> <span class="o">=</span> <span class="n">get_transform</span><span class="p">(</span><span class="n">tv_train_transforms</span><span class="p">)</span>
+<span class="n">val_transforms</span> <span class="o">=</span> <span class="n">get_transform</span><span class="p">(</span><span class="n">tv_test_transforms</span><span class="p">)</span>
+
+<span class="n">train_dataset</span> <span class="o">=</span> <span class="n">train_dataset</span><span class="o">.</span><span class="n">with_transform</span><span class="p">(</span><span class="n">train_transforms</span><span class="p">)</span>
+<span class="n">val_dataset</span> <span class="o">=</span> <span class="n">val_dataset</span><span class="o">.</span><span class="n">with_transform</span><span class="p">(</span><span class="n">val_transforms</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">grain.python</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">grain</span>
+
+
+<span class="n">seed</span> <span class="o">=</span> <span class="mi">12</span>
+<span class="n">train_batch_size</span> <span class="o">=</span> <span class="mi">32</span>
+<span class="n">val_batch_size</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">train_batch_size</span>
+
+
+<span class="c1"># Create an `grain.IndexSampler` with no sharding for single-device computations.</span>
+<span class="n">train_sampler</span> <span class="o">=</span> <span class="n">grain</span><span class="o">.</span><span class="n">IndexSampler</span><span class="p">(</span>
+    <span class="nb">len</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">),</span>  <span class="c1"># The total number of samples in the data source.</span>
+    <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>            <span class="c1"># Shuffle the data to randomize the order.of samples</span>
+    <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>               <span class="c1"># Set a seed for reproducibility.</span>
+    <span class="n">shard_options</span><span class="o">=</span><span class="n">grain</span><span class="o">.</span><span class="n">NoSharding</span><span class="p">(),</span>  <span class="c1"># No sharding since this is a single-device setup.</span>
+    <span class="n">num_epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>            <span class="c1"># Iterate over the dataset for one epoch.</span>
+<span class="p">)</span>
+
+<span class="n">val_sampler</span> <span class="o">=</span> <span class="n">grain</span><span class="o">.</span><span class="n">IndexSampler</span><span class="p">(</span>
+    <span class="nb">len</span><span class="p">(</span><span class="n">val_dataset</span><span class="p">),</span>  <span class="c1"># The total number of samples in the data source.</span>
+    <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>         <span class="c1"># Do not shuffle the data.</span>
+    <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>             <span class="c1"># Set a seed for reproducibility.</span>
+    <span class="n">shard_options</span><span class="o">=</span><span class="n">grain</span><span class="o">.</span><span class="n">NoSharding</span><span class="p">(),</span>  <span class="c1"># No sharding since this is a single-device setup.</span>
+    <span class="n">num_epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>          <span class="c1"># Iterate over the dataset for one epoch.</span>
+<span class="p">)</span>
+
+
+<span class="n">train_loader</span> <span class="o">=</span> <span class="n">grain</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span>
+    <span class="n">data_source</span><span class="o">=</span><span class="n">train_dataset</span><span class="p">,</span>
+    <span class="n">sampler</span><span class="o">=</span><span class="n">train_sampler</span><span class="p">,</span>                 <span class="c1"># A sampler to determine how to access the data.</span>
+    <span class="n">worker_count</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>                        <span class="c1"># Number of child processes launched to parallelize the transformations among.</span>
+    <span class="n">worker_buffer_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>                  <span class="c1"># Count of output batches to produce in advance per worker.</span>
+    <span class="n">operations</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">grain</span><span class="o">.</span><span class="n">Batch</span><span class="p">(</span><span class="n">train_batch_size</span><span class="p">,</span> <span class="n">drop_remainder</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># Test (validation) dataset `grain.DataLoader`.</span>
+<span class="n">val_loader</span> <span class="o">=</span> <span class="n">grain</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span>
+    <span class="n">data_source</span><span class="o">=</span><span class="n">val_dataset</span><span class="p">,</span>
+    <span class="n">sampler</span><span class="o">=</span><span class="n">val_sampler</span><span class="p">,</span>                   <span class="c1"># A sampler to determine how to access the data.</span>
+    <span class="n">worker_count</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>                        <span class="c1"># Number of child processes launched to parallelize the transformations among.</span>
+    <span class="n">worker_buffer_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">operations</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">grain</span><span class="o">.</span><span class="n">Batch</span><span class="p">(</span><span class="n">val_batch_size</span><span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Let’s visualize the training and test set batches:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">train_batch</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">train_loader</span><span class="p">))</span>
+<span class="n">val_batch</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">val_loader</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Training batch info:&quot;</span><span class="p">,</span> <span class="n">train_batch</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">train_batch</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">train_batch</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">train_batch</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Validation batch info:&quot;</span><span class="p">,</span> <span class="n">val_batch</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">val_batch</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">val_batch</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">val_batch</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training batch info: (32, 224, 224, 3) float32 (32,) int64
+Validation batch info: (64, 224, 224, 3) float32 (64,) int64
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">display_datapoints</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">[(</span><span class="n">train_batch</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">train_batch</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)],</span>
+    <span class="n">tag</span><span class="o">=</span><span class="s2">&quot;(Training) &quot;</span><span class="p">,</span>
+    <span class="n">names_map</span><span class="o">=</span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">train_dataset</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">inv_labels_mapping</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="_images/1de227b7edaddaf7a47e9fa1bd472890704eb6674eaf5b77d645d4ac40842e9d.png" src="_images/1de227b7edaddaf7a47e9fa1bd472890704eb6674eaf5b77d645d4ac40842e9d.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">display_datapoints</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">[(</span><span class="n">val_batch</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">val_batch</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)],</span>
+    <span class="n">tag</span><span class="o">=</span><span class="s2">&quot;(Validation) &quot;</span><span class="p">,</span>
+    <span class="n">names_map</span><span class="o">=</span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">val_dataset</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">inv_labels_mapping</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="_images/ae0af9124cef91cfd2de03e7f140e56d7a958355f344b646446ec8c334f405cc.png" src="_images/ae0af9124cef91cfd2de03e7f140e56d7a958355f344b646446ec8c334f405cc.png" />
+</div>
+</div>
+</section>
+<section id="defining-the-optimizier-the-loss-function-training-test-steps-and-metrics">
+<h2>Defining the optimizier, the loss function, training/test steps, and metrics<a class="headerlink" href="#defining-the-optimizier-the-loss-function-training-test-steps-and-metrics" title="Link to this heading">#</a></h2>
+<p>In this section, we’ll define the optimizer, the loss function, the training and test step functions, and then begin training the model.</p>
+<p>First, initiliaze the learning rate and the SGD optimizer with <code class="docutils literal notranslate"><span class="pre">optax</span></code>, using <code class="docutils literal notranslate"><span class="pre">optax.sgd</span></code> and <code class="docutils literal notranslate"><span class="pre">flax.nnx.Optimizer</span></code>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">num_epochs</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">learning_rate</span> <span class="o">=</span> <span class="mf">0.001</span>
+<span class="n">momentum</span> <span class="o">=</span> <span class="mf">0.8</span>
+<span class="n">total_steps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">)</span> <span class="o">//</span> <span class="n">train_batch_size</span>
+
+<span class="n">lr_schedule</span> <span class="o">=</span> <span class="n">optax</span><span class="o">.</span><span class="n">linear_schedule</span><span class="p">(</span><span class="n">learning_rate</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">num_epochs</span> <span class="o">*</span> <span class="n">total_steps</span><span class="p">)</span>
+
+<span class="n">iterate_subsample</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_epochs</span> <span class="o">*</span> <span class="n">total_steps</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_epochs</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">iterate_subsample</span><span class="p">)),</span>
+    <span class="p">[</span><span class="n">lr_schedule</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">iterate_subsample</span><span class="p">],</span>
+    <span class="n">lw</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Learning rate&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Epochs&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Learning rate&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_epochs</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">ModelAndOptimizer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optax</span><span class="o">.</span><span class="n">sgd</span><span class="p">(</span><span class="n">lr_schedule</span><span class="p">,</span> <span class="n">momentum</span><span class="p">,</span> <span class="n">nesterov</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="_images/5ba11fa506bc0d91cd5cec2a202a437b6aeff645e524e356828e36c354300e6c.png" src="_images/5ba11fa506bc0d91cd5cec2a202a437b6aeff645e524e356828e36c354300e6c.png" />
+</div>
+</div>
+<p>Define a loss function with <code class="docutils literal notranslate"><span class="pre">optax.softmax_cross_entropy_with_integer_labels</span></code>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">compute_losses_and_logits</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">images</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">):</span>
+    <span class="n">logits</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
+
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">optax</span><span class="o">.</span><span class="n">softmax_cross_entropy_with_integer_labels</span><span class="p">(</span>
+        <span class="n">logits</span><span class="o">=</span><span class="n">logits</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">labels</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">loss</span><span class="p">,</span> <span class="n">logits</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Set up the train and test steps (with <code class="docutils literal notranslate"><span class="pre">flax.nnx.jit</span></code> and <code class="docutils literal notranslate"><span class="pre">flax.nnx.value_and_grad</span></code>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nd">@nnx</span><span class="o">.</span><span class="n">jit</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">train_step</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span>
+<span class="p">):</span>
+    <span class="c1"># Convert np.ndarray to jax.Array on GPU</span>
+    <span class="n">images</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">])</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+
+    <span class="n">grad_fn</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">value_and_grad</span><span class="p">(</span><span class="n">compute_losses_and_logits</span><span class="p">,</span> <span class="n">has_aux</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">logits</span><span class="p">),</span> <span class="n">grads</span> <span class="o">=</span> <span class="n">grad_fn</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+
+    <span class="n">optimizer</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">grads</span><span class="p">)</span>  <span class="c1"># In-place updates.</span>
+
+    <span class="k">return</span> <span class="n">loss</span>
+
+
+<span class="nd">@nnx</span><span class="o">.</span><span class="n">jit</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">eval_step</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">eval_metrics</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">MultiMetric</span>
+<span class="p">):</span>
+    <span class="c1"># Convert np.ndarray to jax.Array on GPU</span>
+    <span class="n">images</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">])</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="n">loss</span><span class="p">,</span> <span class="n">logits</span> <span class="o">=</span> <span class="n">compute_losses_and_logits</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+
+    <span class="n">eval_metrics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+        <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span>
+        <span class="n">logits</span><span class="o">=</span><span class="n">logits</span><span class="p">,</span>
+        <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Instantiae the metrics function with <code class="docutils literal notranslate"><span class="pre">flax.nnx.MultiMetric</span></code>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">eval_metrics</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">MultiMetric</span><span class="p">(</span>
+    <span class="n">loss</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">Average</span><span class="p">(</span><span class="s1">&#39;loss&#39;</span><span class="p">),</span>
+    <span class="n">accuracy</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">Accuracy</span><span class="p">(),</span>
+<span class="p">)</span>
+
+
+<span class="n">train_metrics_history</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;train_loss&quot;</span><span class="p">:</span> <span class="p">[],</span>
+<span class="p">}</span>
+
+<span class="n">eval_metrics_history</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;val_loss&quot;</span><span class="p">:</span> <span class="p">[],</span>
+    <span class="s2">&quot;val_accuracy&quot;</span><span class="p">:</span> <span class="p">[],</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tqdm</span>
+
+
+<span class="n">bar_format</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{desc}</span><span class="s2">[</span><span class="si">{n_fmt}</span><span class="s2">/</span><span class="si">{total_fmt}</span><span class="s2">]</span><span class="si">{postfix}</span><span class="s2"> [</span><span class="si">{elapsed}</span><span class="s2">&lt;</span><span class="si">{remaining}</span><span class="s2">]&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">train_one_epoch</span><span class="p">(</span><span class="n">epoch</span><span class="p">):</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>  <span class="c1"># Set model to the training mode: e.g. update batch statistics</span>
+    <span class="k">with</span> <span class="n">tqdm</span><span class="o">.</span><span class="n">tqdm</span><span class="p">(</span>
+        <span class="n">desc</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;[train] epoch: </span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">num_epochs</span><span class="si">}</span><span class="s2">, &quot;</span><span class="p">,</span>
+        <span class="n">total</span><span class="o">=</span><span class="n">total_steps</span><span class="p">,</span>
+        <span class="n">bar_format</span><span class="o">=</span><span class="n">bar_format</span><span class="p">,</span>
+        <span class="n">leave</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="k">as</span> <span class="n">pbar</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">train_loader</span><span class="p">:</span>
+            <span class="n">loss</span> <span class="o">=</span> <span class="n">train_step</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">batch</span><span class="p">)</span>
+            <span class="n">train_metrics_history</span><span class="p">[</span><span class="s2">&quot;train_loss&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+            <span class="n">pbar</span><span class="o">.</span><span class="n">set_postfix</span><span class="p">({</span><span class="s2">&quot;loss&quot;</span><span class="p">:</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()})</span>
+            <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">evaluate_model</span><span class="p">(</span><span class="n">epoch</span><span class="p">):</span>
+    <span class="c1"># Computes the metrics on the training and test sets after each training epoch.</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>  <span class="c1"># Sets model to evaluation model: e.g. use stored batch statistics.</span>
+
+    <span class="n">eval_metrics</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>  <span class="c1"># Reset the eval metrics</span>
+    <span class="k">for</span> <span class="n">val_batch</span> <span class="ow">in</span> <span class="n">val_loader</span><span class="p">:</span>
+        <span class="n">eval_step</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">val_batch</span><span class="p">,</span> <span class="n">eval_metrics</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">metric</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">eval_metrics</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">eval_metrics_history</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;val_</span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[val] epoch: </span><span class="si">{</span><span class="n">epoch</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">num_epochs</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- total loss: </span><span class="si">{</span><span class="n">eval_metrics_history</span><span class="p">[</span><span class="s1">&#39;val_loss&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">0.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- Accuracy: </span><span class="si">{</span><span class="n">eval_metrics_history</span><span class="p">[</span><span class="s1">&#39;val_accuracy&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">0.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="training-the-model">
+<h2>Training the model<a class="headerlink" href="#training-the-model" title="Link to this heading">#</a></h2>
+<p>Begin training the model:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
+
+<span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_epochs</span><span class="p">):</span>
+    <span class="n">train_one_epoch</span><span class="p">(</span><span class="n">epoch</span><span class="p">)</span>
+    <span class="n">evaluate_model</span><span class="p">(</span><span class="n">epoch</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[val] epoch: 1/3
+- total loss: 0.2389
+- Accuracy: 0.9350
+[val] epoch: 2/3
+- total loss: 0.1899
+- Accuracy: 0.9436
+[val] epoch: 3/3
+- total loss: 0.1805
+- Accuracy: 0.9454
+CPU times: user 6min 56s, sys: 18.5 s, total: 7min 15s
+Wall time: 5min 22s
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[train] epoch: 0/3, [468/468], loss=0.295 [01:55&lt;00:00]
+/opt/conda/lib/python3.11/site-packages/PIL/TiffImagePlugin.py:935: UserWarning: Truncated File Read
+  warnings.warn(str(msg))
+[train] epoch: 1/3, [468/468], loss=0.172 [01:19&lt;00:00] 
+/opt/conda/lib/python3.11/site-packages/PIL/TiffImagePlugin.py:935: UserWarning: Truncated File Read
+  warnings.warn(str(msg))
+[train] epoch: 2/3, [468/468], loss=0.132 [01:18&lt;00:00] 
+/opt/conda/lib/python3.11/site-packages/PIL/TiffImagePlugin.py:935: UserWarning: Truncated File Read
+  warnings.warn(str(msg))
+</pre></div>
+</div>
+</div>
+</div>
+<p>Visualize the collected metrics:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">train_metrics_history</span><span class="p">[</span><span class="s2">&quot;train_loss&quot;</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Loss value during the training&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;matplotlib.legend.Legend at 0x7f232c5e6c50&gt;
+</pre></div>
+</div>
+<img alt="_images/5ec7cf967f3f499dc0ee24c2b815018bb3cbfaecd409cfcb12f601de4e72f8f1.png" src="_images/5ec7cf967f3f499dc0ee24c2b815018bb3cbfaecd409cfcb12f601de4e72f8f1.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Loss value on validation set&quot;</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">eval_metrics_history</span><span class="p">[</span><span class="s2">&quot;val_loss&quot;</span><span class="p">])</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Accuracy on validation set&quot;</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">eval_metrics_history</span><span class="p">[</span><span class="s2">&quot;val_accuracy&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&lt;matplotlib.lines.Line2D at 0x7f232c042d90&gt;]
+</pre></div>
+</div>
+<img alt="_images/4eba289b22ed03c03691b49aff08a4dabb5c42feb1310aa540a73d34dadee2a6.png" src="_images/4eba289b22ed03c03691b49aff08a4dabb5c42feb1310aa540a73d34dadee2a6.png" />
+</div>
+</div>
+<p>Check the model’s predictions on the test data:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">test_indices</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">250</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">750</span><span class="p">,</span> <span class="mi">1000</span><span class="p">]</span>
+
+<span class="n">test_images</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">val_dataset</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;image&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">test_indices</span><span class="p">])</span>
+<span class="n">expected_labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">val_dataset</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">test_indices</span><span class="p">]</span>
+
+<span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="n">preds</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">test_images</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">num_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">test_indices</span><span class="p">)</span>
+<span class="n">names_map</span> <span class="o">=</span> <span class="n">train_dataset</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">names</span>
+
+<span class="n">probas</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">pred_labels</span> <span class="o">=</span> <span class="n">probas</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_samples</span><span class="p">):</span>
+    <span class="n">img</span><span class="p">,</span> <span class="n">expected_label</span> <span class="o">=</span> <span class="n">test_images</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">expected_labels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="n">pred_label</span> <span class="o">=</span> <span class="n">pred_labels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+    <span class="n">proba</span> <span class="o">=</span> <span class="n">probas</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">pred_label</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">img</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">in</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="p">):</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="p">((</span><span class="n">img</span> <span class="o">-</span> <span class="n">img</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">/</span> <span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">img</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">*</span> <span class="mf">255.0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+
+    <span class="n">expected_label_str</span> <span class="o">=</span> <span class="n">names_map</span><span class="p">[</span><span class="n">inv_labels_mapping</span><span class="p">[</span><span class="n">expected_label</span><span class="p">]]</span>
+    <span class="n">pred_label_str</span> <span class="o">=</span> <span class="n">names_map</span><span class="p">[</span><span class="n">inv_labels_mapping</span><span class="p">[</span><span class="n">pred_label</span><span class="p">]]</span>
+    <span class="n">axs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Expected: </span><span class="si">{</span><span class="n">expected_label_str</span><span class="si">}</span><span class="s2"> vs </span><span class="se">\n</span><span class="s2">Predicted: </span><span class="si">{</span><span class="n">pred_label_str</span><span class="si">}</span><span class="s2">, P=</span><span class="si">{</span><span class="n">proba</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">axs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="_images/8ca0237aa2ee2ddce8fdfc85e0039ec37c1b315189dfe47fc2e794514cb76652.png" src="_images/8ca0237aa2ee2ddce8fdfc85e0039ec37c1b315189dfe47fc2e794514cb76652.png" />
+</div>
+</div>
+</section>
+<section id="further-reading">
+<h2>Further reading<a class="headerlink" href="#further-reading" title="Link to this heading">#</a></h2>
+<p>In this tutorial we implemented the ViT model and finetuned it on a subset of the Food 101 dataset.</p>
+<p>For further reading, check out:</p>
+<ul class="simple">
+<li><p>Model checkpointing and exporting with <a class="reference external" href="https://orbax.readthedocs.io/en/latest/">Orbax</a>.</p></li>
+<li><p>Optimizers and learning rate scheduling with <a class="reference external" href="https://optax.readthedocs.io/en/latest/">Optax</a>.</p></li>
+<li><p>Freezing model’s parameters using trainable parameters filtering with examples: 1) <a class="reference external" href="https://flax.readthedocs.io/en/latest/api_reference/flax.nnx/training/optimizer.html#flax.nnx.optimizer.Optimizer.update"><code class="docutils literal notranslate"><span class="pre">flax.nnx.optimizer.Optimizer.update</span></code></a> and 2) <a class="reference external" href="https://github.com/google/flax/issues/4167#issuecomment-2324245208">example 2 on <code class="docutils literal notranslate"><span class="pre">google/flax</span></code> GitHub Issues</a>.</p></li>
+<li><p>Other computer vision tutorials using the <a class="reference external" href="https://jax-ai-stack.readthedocs.io/en/latest/getting_started.html">JAX AI Stack</a>.</p></li>
+</ul>
+</section>
+</section>
+
+<div class="section ablog__blog_comments">
+   
+</div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="JAX_image_captioning.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Image Captioning with Vision Transformer (ViT) model</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="JAX_time_series_classification.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Time series classification with CNN</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setup">Setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-vit-architecture">The ViT architecture</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-the-model-with-flax-nnx">Defining the model with Flax NNX</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-the-pretrained-weights">Loading the pretrained weights</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#verifying-image-prediction">Verifying image prediction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#food-101-dataset">Food 101 dataset</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-the-optimizier-the-loss-function-training-test-steps-and-metrics">Defining the optimizier, the loss function, training/test steps, and metrics</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-the-model">Training the model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#further-reading">Further reading</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By JAX team
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, JAX team.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

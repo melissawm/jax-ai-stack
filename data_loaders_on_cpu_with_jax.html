@@ -1,0 +1,1350 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Introduction to Data Loaders on CPU with JAX &#8212; JAX AI Stack</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css?v=6644e6bb" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=1dc24ef2" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="_static/documentation_options.js?v=c1d4a9c3"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'data_loaders_on_cpu_with_jax';</script>
+    <link rel="icon" href="_static/favicon.png"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Introduction to Data Loaders on GPU with JAX" href="data_loaders_on_gpu_with_jax.html" />
+    <link rel="prev" title="Introduction to Data Loaders" href="data_loaders.html" /> 
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>   
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/ai-stack-logo.svg" class="logo__image only-light" alt="JAX AI Stack - Home"/>
+    <script>document.write(`<img src="_static/ai-stack-logo.svg" class="logo__image only-dark" alt="JAX AI Stack - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="index.html">
+                    JAX AI Stack
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="blog.html">JAX AI Stack Blog</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing the stack</a></li>
+
+<li class="toctree-l1 has-children"><a class="reference internal" href="getting_started.html">Getting started with JAX for ML</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="neural_net_basics.html">Part 1: JAX neural net basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="digits_vae.html">Part 2: Debug a variational autoencoder (VAE)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="digits_diffusion_model.html">Part 3: Train a diffusion model for image generation</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="JAX_visualizing_models_metrics.html">Visualize JAX model metrics with TensorBoard</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="data_loaders.html">Introduction to Data Loaders</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Introduction to Data Loaders on CPU with JAX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_loaders_on_gpu_with_jax.html">Introduction to Data Loaders on GPU with JAX</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="pytorch_users.html">From PyTorch to JAX</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="JAX_for_PyTorch_users.html">JAX for PyTorch users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="JAX_porting_PyTorch_model.html">Porting a PyTorch model to JAX</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Example applications</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="JAX_for_LLM_pretraining.html">Train a miniGPT language model with JAX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_basic_text_classification.html">Basic text classification with 1D CNN</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_transformer_text_classification.html">Text classification with a transformer language model using JAX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_machine_translation.html">Machine Translation with encoder-decoder transformer model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_examples_image_segmentation.html">Image segmentation with UNETR model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_image_captioning.html">Image Captioning with Vision Transformer (ViT) model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_Vision_transformer.html">Train a Vision Transformer (ViT) for image classification with JAX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_time_series_classification.html">Time series classification with CNN</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer resources</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contribute to documentation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/jax-ml/jax-ai-stack" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/data_loaders_on_cpu_with_jax.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Introduction to Data Loaders on CPU with JAX</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setting-jax-to-use-cpu-only">Setting JAX to Use CPU Only</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cpu-setup-verification">CPU Setup Verification</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setting-hyperparameters-and-initializing-parameters">Setting Hyperparameters and Initializing Parameters</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-prediction-with-auto-batching">Model Prediction with Auto-Batching</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#utility-and-loss-functions">Utility and Loss Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-data-with-pytorch-dataloader">Loading Data with PyTorch DataLoader</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#load-dataset-with-transformations">Load Dataset with Transformations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#full-training-dataset-for-accuracy-checks">Full Training Dataset for Accuracy Checks</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-full-test-dataset">Get Full Test Dataset</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#training-data-generator">Training Data Generator</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#training-loop-pytorch-dataloader">Training Loop (PyTorch DataLoader)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-data-with-tensorflow-datasets-tfds">Loading Data with TensorFlow Datasets (TFDS)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fetch-full-dataset-for-evaluation">Fetch Full Dataset for Evaluation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#define-the-training-generator">Define the Training Generator</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#training-loop-tfds">Training Loop (TFDS)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-data-with-grain">Loading Data with Grain</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#define-dataset-class">Define Dataset Class</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#initialize-the-dataset">Initialize the Dataset</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-the-full-train-and-test-dataset">Get the full train and test dataset</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#initialize-pygrain-dataloader">Initialize PyGrain DataLoader</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#training-loop-grain">Training Loop (Grain)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-data-with-hugging-face">Loading Data with Hugging Face</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#load-and-format-mnist-dataset">Load and Format MNIST Dataset</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#extract-images-and-labels">Extract images and labels</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#define-training-generator">Define Training Generator</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#training-loop-hugging-face-datasets">Training Loop (Hugging Face Datasets)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                   <section class="tex2jax_ignore mathjax_ignore" id="introduction-to-data-loaders-on-cpu-with-jax">
+<h1>Introduction to Data Loaders on CPU with JAX<a class="headerlink" href="#introduction-to-data-loaders-on-cpu-with-jax" title="Link to this heading">#</a></h1>
+<p><a class="reference external" href="https://colab.research.google.com/github/jax-ml/jax-ai-stack/blob/main/docs/source/data_loaders_on_cpu_with_jax.ipynb"><img alt="Open in Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
+<p>This tutorial explores different data loading strategies for using <strong>JAX</strong> on a single <a class="reference external" href="https://jax.readthedocs.io/en/latest/glossary.html#term-CPU"><strong>CPU</strong></a>. While JAX doesn’t include a built-in data loader, it seamlessly integrates with popular data loading libraries, including:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/pytorch/data"><strong>PyTorch DataLoader</strong></a></p></li>
+<li><p><a class="reference external" href="https://github.com/tensorflow/datasets"><strong>TensorFlow Datasets (TFDS)</strong></a></p></li>
+<li><p><a class="reference external" href="https://github.com/google/grain"><strong>Grain</strong></a></p></li>
+<li><p><a class="reference external" href="https://huggingface.co/docs/datasets/en/use_with_jax#data-loading"><strong>Hugging Face</strong></a></p></li>
+</ul>
+<p>In this tutorial, you’ll learn how to efficiently load data using these libraries for a simple image classification task based on the MNIST dataset.</p>
+<p>Compared to GPU or multi-device setups, CPU-based data loading is straightforward as it avoids challenges like GPU memory management and data synchronization across devices. This makes it ideal for smaller-scale tasks or scenarios where data resides exclusively on the CPU.</p>
+<p>If you’re looking for GPU-specific data loading advice, see <a class="reference external" href="https://jax-ai-stack.readthedocs.io/en/latest/data_loaders_on_gpu_with_jax.html">Data Loaders on GPU</a>.</p>
+<p>If you’re looking for a multi-device data loading strategy, see <a class="reference external" href="https://jax-ai-stack.readthedocs.io/en/latest/data_loaders_for_multi_device_setups_with_jax.html">Data Loaders on Multi-Device Setups</a>.</p>
+<section id="setting-jax-to-use-cpu-only">
+<h2>Setting JAX to Use CPU Only<a class="headerlink" href="#setting-jax-to-use-cpu-only" title="Link to this heading">#</a></h2>
+<p>First, you’ll restrict JAX to use only the CPU, even if a GPU is available. This ensures consistency and allows you to focus on CPU-based data loading.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;JAX_PLATFORM_NAME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;cpu&#39;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Import JAX API</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">jax</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">jax</span><span class="w"> </span><span class="kn">import</span> <span class="n">random</span><span class="p">,</span> <span class="n">grad</span><span class="p">,</span> <span class="n">jit</span><span class="p">,</span> <span class="n">vmap</span>
+</pre></div>
+</div>
+</div>
+</div>
+<section id="cpu-setup-verification">
+<h3>CPU Setup Verification<a class="headerlink" href="#cpu-setup-verification" title="Link to this heading">#</a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">jax</span><span class="o">.</span><span class="n">devices</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[CpuDevice(id=0)]
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="setting-hyperparameters-and-initializing-parameters">
+<h2>Setting Hyperparameters and Initializing Parameters<a class="headerlink" href="#setting-hyperparameters-and-initializing-parameters" title="Link to this heading">#</a></h2>
+<p>You’ll define hyperparameters for your model and data loading, including layer sizes, learning rate, batch size, and the data directory. You’ll also initialize the weights and biases for a fully-connected neural network.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># A helper function to randomly initialize weights and biases</span>
+<span class="c1"># for a dense neural network layer</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">random_layer_params</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">):</span>
+  <span class="n">w_key</span><span class="p">,</span> <span class="n">b_key</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+  <span class="k">return</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">w_key</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">)),</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">b_key</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span><span class="p">,))</span>
+
+<span class="c1"># Function to initialize network parameters for all layers based on defined sizes</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">init_network_params</span><span class="p">(</span><span class="n">sizes</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+  <span class="n">keys</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">sizes</span><span class="p">))</span>
+  <span class="k">return</span> <span class="p">[</span><span class="n">random_layer_params</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">sizes</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">sizes</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">keys</span><span class="p">)]</span>
+
+<span class="n">layer_sizes</span> <span class="o">=</span> <span class="p">[</span><span class="mi">784</span><span class="p">,</span> <span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">,</span> <span class="mi">10</span><span class="p">]</span>  <span class="c1"># Layers of the network</span>
+<span class="n">step_size</span> <span class="o">=</span> <span class="mf">0.01</span>                   <span class="c1"># Learning rate for optimization</span>
+<span class="n">num_epochs</span> <span class="o">=</span> <span class="mi">8</span>                     <span class="c1"># Number of training epochs</span>
+<span class="n">batch_size</span> <span class="o">=</span> <span class="mi">128</span>                   <span class="c1"># Batch size for training</span>
+<span class="n">n_targets</span> <span class="o">=</span> <span class="mi">10</span>                     <span class="c1"># Number of classes (digits 0-9)</span>
+<span class="n">num_pixels</span> <span class="o">=</span> <span class="mi">28</span> <span class="o">*</span> <span class="mi">28</span>               <span class="c1"># Input size (MNIST images are 28x28 pixels)</span>
+<span class="n">data_dir</span> <span class="o">=</span> <span class="s1">&#39;/tmp/mnist_dataset&#39;</span>    <span class="c1"># Directory for storing the dataset</span>
+
+<span class="c1"># Initialize network parameters using the defined layer sizes and a random seed</span>
+<span class="n">params</span> <span class="o">=</span> <span class="n">init_network_params</span><span class="p">(</span><span class="n">layer_sizes</span><span class="p">,</span> <span class="n">random</span><span class="o">.</span><span class="n">PRNGKey</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="model-prediction-with-auto-batching">
+<h2>Model Prediction with Auto-Batching<a class="headerlink" href="#model-prediction-with-auto-batching" title="Link to this heading">#</a></h2>
+<p>In this section, you’ll define the <code class="docutils literal notranslate"><span class="pre">predict</span></code> function for your neural network. This function computes the output of the network for a single input image.</p>
+<p>To efficiently process multiple images simultaneously, you’ll use <a class="reference external" href="https://jax.readthedocs.io/en/latest/_autosummary/jax.vmap.html#jax.vmap"><code class="docutils literal notranslate"><span class="pre">vmap</span></code></a>, which allows you to vectorize the <code class="docutils literal notranslate"><span class="pre">predict</span></code> function and apply it across a batch of inputs. This technique, called auto-batching, improves computational efficiency by leveraging hardware acceleration.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">jax.scipy.special</span><span class="w"> </span><span class="kn">import</span> <span class="n">logsumexp</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">relu</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+  <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+  <span class="c1"># per-example prediction</span>
+  <span class="n">activations</span> <span class="o">=</span> <span class="n">image</span>
+  <span class="k">for</span> <span class="n">w</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+    <span class="n">outputs</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">activations</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span>
+    <span class="n">activations</span> <span class="o">=</span> <span class="n">relu</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+
+  <span class="n">final_w</span><span class="p">,</span> <span class="n">final_b</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+  <span class="n">logits</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">final_w</span><span class="p">,</span> <span class="n">activations</span><span class="p">)</span> <span class="o">+</span> <span class="n">final_b</span>
+  <span class="k">return</span> <span class="n">logits</span> <span class="o">-</span> <span class="n">logsumexp</span><span class="p">(</span><span class="n">logits</span><span class="p">)</span>
+
+<span class="c1"># Make a batched version of the `predict` function</span>
+<span class="n">batched_predict</span> <span class="o">=</span> <span class="n">vmap</span><span class="p">(</span><span class="n">predict</span><span class="p">,</span> <span class="n">in_axes</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="utility-and-loss-functions">
+<h2>Utility and Loss Functions<a class="headerlink" href="#utility-and-loss-functions" title="Link to this heading">#</a></h2>
+<p>You’ll now define utility functions for:</p>
+<ul class="simple">
+<li><p>One-hot encoding: Converts class indices to binary vectors.</p></li>
+<li><p>Accuracy calculation: Measures the performance of the model on the dataset.</p></li>
+<li><p>Loss computation: Calculates the difference between predictions and targets.</p></li>
+</ul>
+<p>To optimize performance:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://jax.readthedocs.io/en/latest/_autosummary/jax.grad.html#jax.grad"><code class="docutils literal notranslate"><span class="pre">grad</span></code></a> is used to compute gradients of the loss function with respect to network parameters.</p></li>
+<li><p><a class="reference external" href="https://jax.readthedocs.io/en/latest/_autosummary/jax.jit.html#jax.jit"><code class="docutils literal notranslate"><span class="pre">jit</span></code></a> compiles the update function, enabling faster execution by leveraging JAX’s <a class="reference external" href="https://openxla.org/xla">XLA</a> compilation.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">one_hot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float32</span><span class="p">):</span>
+<span class="w">  </span><span class="sd">&quot;&quot;&quot;Create a one-hot encoding of x of size k.&quot;&quot;&quot;</span>
+  <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">==</span> <span class="n">jnp</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">k</span><span class="p">),</span> <span class="n">dtype</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">accuracy</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">targets</span><span class="p">):</span>
+<span class="w">  </span><span class="sd">&quot;&quot;&quot;Calculate the accuracy of predictions.&quot;&quot;&quot;</span>
+  <span class="n">target_class</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+  <span class="n">predicted_class</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">batched_predict</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">images</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+  <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">predicted_class</span> <span class="o">==</span> <span class="n">target_class</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">loss</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">targets</span><span class="p">):</span>
+<span class="w">  </span><span class="sd">&quot;&quot;&quot;Calculate the loss between predictions and targets.&quot;&quot;&quot;</span>
+  <span class="n">preds</span> <span class="o">=</span> <span class="n">batched_predict</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">images</span><span class="p">)</span>
+  <span class="k">return</span> <span class="o">-</span><span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">preds</span> <span class="o">*</span> <span class="n">targets</span><span class="p">)</span>
+
+<span class="nd">@jit</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+<span class="w">  </span><span class="sd">&quot;&quot;&quot;Update the network parameters using gradient descent.&quot;&quot;&quot;</span>
+  <span class="n">grads</span> <span class="o">=</span> <span class="n">grad</span><span class="p">(</span><span class="n">loss</span><span class="p">)(</span><span class="n">params</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+  <span class="k">return</span> <span class="p">[(</span><span class="n">w</span> <span class="o">-</span> <span class="n">step_size</span> <span class="o">*</span> <span class="n">dw</span><span class="p">,</span> <span class="n">b</span> <span class="o">-</span> <span class="n">step_size</span> <span class="o">*</span> <span class="n">db</span><span class="p">)</span>
+          <span class="k">for</span> <span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="p">(</span><span class="n">dw</span><span class="p">,</span> <span class="n">db</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">grads</span><span class="p">)]</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">reshape_and_one_hot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Reshape and one-hot encode the inputs.&quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">num_pixels</span><span class="p">))</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">one_hot</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">n_targets</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">train_model</span><span class="p">(</span><span class="n">num_epochs</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">training_generator</span><span class="p">,</span> <span class="n">data_loader_type</span><span class="o">=</span><span class="s1">&#39;streamed&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Train the model for a given number of epochs.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_epochs</span><span class="p">):</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">training_generator</span><span class="p">()</span> <span class="k">if</span> <span class="n">data_loader_type</span> <span class="o">==</span> <span class="s1">&#39;streamed&#39;</span> <span class="k">else</span> <span class="n">training_generator</span><span class="p">:</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">reshape_and_one_hot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="n">update</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Epoch </span><span class="si">{</span><span class="n">epoch</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2"> in </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">start_time</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> sec: &quot;</span>
+              <span class="sa">f</span><span class="s2">&quot;Train Accuracy: </span><span class="si">{</span><span class="n">accuracy</span><span class="p">(</span><span class="n">params</span><span class="p">,</span><span class="w"> </span><span class="n">train_images</span><span class="p">,</span><span class="w"> </span><span class="n">train_labels</span><span class="p">)</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, &quot;</span>
+              <span class="sa">f</span><span class="s2">&quot;Test Accuracy: </span><span class="si">{</span><span class="n">accuracy</span><span class="p">(</span><span class="n">params</span><span class="p">,</span><span class="w"> </span><span class="n">test_images</span><span class="p">,</span><span class="w"> </span><span class="n">test_labels</span><span class="p">)</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="loading-data-with-pytorch-dataloader">
+<h2>Loading Data with PyTorch DataLoader<a class="headerlink" href="#loading-data-with-pytorch-dataloader" title="Link to this heading">#</a></h2>
+<p>This section shows how to load the MNIST dataset using PyTorch’s DataLoader, convert the data to NumPy arrays, and apply transformations to flatten and cast images.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="err">!</span><span class="n">pip</span> <span class="n">install</span> <span class="n">torch</span> <span class="n">torchvision</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Requirement already satisfied: torch in /usr/local/lib/python3.10/dist-packages (2.5.1+cu121)
+Requirement already satisfied: torchvision in /usr/local/lib/python3.10/dist-packages (0.20.1+cu121)
+Requirement already satisfied: filelock in /usr/local/lib/python3.10/dist-packages (from torch) (3.16.1)
+Requirement already satisfied: typing-extensions&gt;=4.8.0 in /usr/local/lib/python3.10/dist-packages (from torch) (4.12.2)
+Requirement already satisfied: networkx in /usr/local/lib/python3.10/dist-packages (from torch) (3.4.2)
+Requirement already satisfied: jinja2 in /usr/local/lib/python3.10/dist-packages (from torch) (3.1.4)
+Requirement already satisfied: fsspec in /usr/local/lib/python3.10/dist-packages (from torch) (2024.10.0)
+Requirement already satisfied: sympy==1.13.1 in /usr/local/lib/python3.10/dist-packages (from torch) (1.13.1)
+Requirement already satisfied: mpmath&lt;1.4,&gt;=1.1.0 in /usr/local/lib/python3.10/dist-packages (from sympy==1.13.1-&gt;torch) (1.3.0)
+Requirement already satisfied: numpy in /usr/local/lib/python3.10/dist-packages (from torchvision) (1.26.4)
+Requirement already satisfied: pillow!=8.3.*,&gt;=5.3.0 in /usr/local/lib/python3.10/dist-packages (from torchvision) (11.0.0)
+Requirement already satisfied: MarkupSafe&gt;=2.0 in /usr/local/lib/python3.10/dist-packages (from jinja2-&gt;torch) (3.0.2)
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">jax.tree_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">tree_map</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">data</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">MNIST</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">numpy_collate</span><span class="p">(</span><span class="n">batch</span><span class="p">):</span>
+<span class="w">  </span><span class="sd">&quot;&quot;&quot;Convert a batch of PyTorch data to NumPy arrays.&quot;&quot;&quot;</span>
+  <span class="k">return</span> <span class="n">tree_map</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">default_collate</span><span class="p">(</span><span class="n">batch</span><span class="p">))</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">NumpyLoader</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom DataLoader to return NumPy arrays from a PyTorch Dataset.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="n">shuffle</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">numpy_collate</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">FlattenAndCast</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">  </span><span class="sd">&quot;&quot;&quot;Transform class to flatten and cast images to float32.&quot;&quot;&quot;</span>
+  <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pic</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pic</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<section id="load-dataset-with-transformations">
+<h3>Load Dataset with Transformations<a class="headerlink" href="#load-dataset-with-transformations" title="Link to this heading">#</a></h3>
+<p>Standardize the data by flattening the images, casting them to <code class="docutils literal notranslate"><span class="pre">float32</span></code>, and ensuring consistent data types.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mnist_dataset</span> <span class="o">=</span> <span class="n">MNIST</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">download</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">FlattenAndCast</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Downloading http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz
+Failed to download (trying next):
+HTTP Error 403: Forbidden
+
+Downloading https://ossci-datasets.s3.amazonaws.com/mnist/train-images-idx3-ubyte.gz
+Downloading https://ossci-datasets.s3.amazonaws.com/mnist/train-images-idx3-ubyte.gz to /tmp/mnist_dataset/MNIST/raw/train-images-idx3-ubyte.gz
+Extracting /tmp/mnist_dataset/MNIST/raw/train-images-idx3-ubyte.gz to /tmp/mnist_dataset/MNIST/raw
+
+Downloading http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz
+Failed to download (trying next):
+HTTP Error 403: Forbidden
+
+Downloading https://ossci-datasets.s3.amazonaws.com/mnist/train-labels-idx1-ubyte.gz
+Downloading https://ossci-datasets.s3.amazonaws.com/mnist/train-labels-idx1-ubyte.gz to /tmp/mnist_dataset/MNIST/raw/train-labels-idx1-ubyte.gz
+Extracting /tmp/mnist_dataset/MNIST/raw/train-labels-idx1-ubyte.gz to /tmp/mnist_dataset/MNIST/raw
+
+Downloading http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz
+Failed to download (trying next):
+HTTP Error 403: Forbidden
+
+Downloading https://ossci-datasets.s3.amazonaws.com/mnist/t10k-images-idx3-ubyte.gz
+Downloading https://ossci-datasets.s3.amazonaws.com/mnist/t10k-images-idx3-ubyte.gz to /tmp/mnist_dataset/MNIST/raw/t10k-images-idx3-ubyte.gz
+Extracting /tmp/mnist_dataset/MNIST/raw/t10k-images-idx3-ubyte.gz to /tmp/mnist_dataset/MNIST/raw
+
+Downloading http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz
+Failed to download (trying next):
+HTTP Error 403: Forbidden
+
+Downloading https://ossci-datasets.s3.amazonaws.com/mnist/t10k-labels-idx1-ubyte.gz
+Downloading https://ossci-datasets.s3.amazonaws.com/mnist/t10k-labels-idx1-ubyte.gz to /tmp/mnist_dataset/MNIST/raw/t10k-labels-idx1-ubyte.gz
+Extracting /tmp/mnist_dataset/MNIST/raw/t10k-labels-idx1-ubyte.gz to /tmp/mnist_dataset/MNIST/raw
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>100%|██████████| 9.91M/9.91M [00:00&lt;00:00, 49.4MB/s]
+100%|██████████| 28.9k/28.9k [00:00&lt;00:00, 2.09MB/s]
+100%|██████████| 1.65M/1.65M [00:00&lt;00:00, 13.3MB/s]
+100%|██████████| 4.54k/4.54k [00:00&lt;00:00, 8.81MB/s]
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="full-training-dataset-for-accuracy-checks">
+<h3>Full Training Dataset for Accuracy Checks<a class="headerlink" href="#full-training-dataset-for-accuracy-checks" title="Link to this heading">#</a></h3>
+<p>Convert the entire training dataset to JAX arrays.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">train_images</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mnist_dataset</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mnist_dataset</span><span class="o">.</span><span class="n">data</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="n">train_labels</span> <span class="o">=</span> <span class="n">one_hot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mnist_dataset</span><span class="o">.</span><span class="n">targets</span><span class="p">),</span> <span class="n">n_targets</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="get-full-test-dataset">
+<h3>Get Full Test Dataset<a class="headerlink" href="#get-full-test-dataset" title="Link to this heading">#</a></h3>
+<p>Load and process the full test dataset.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mnist_dataset_test</span> <span class="o">=</span> <span class="n">MNIST</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">download</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">train</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">test_images</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mnist_dataset_test</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mnist_dataset_test</span><span class="o">.</span><span class="n">data</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="n">test_labels</span> <span class="o">=</span> <span class="n">one_hot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mnist_dataset_test</span><span class="o">.</span><span class="n">targets</span><span class="p">),</span> <span class="n">n_targets</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Train:&#39;</span><span class="p">,</span> <span class="n">train_images</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">train_labels</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Test:&#39;</span><span class="p">,</span> <span class="n">test_images</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">test_labels</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Train: (60000, 784) (60000, 10)
+Test: (10000, 784) (10000, 10)
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="training-data-generator">
+<h3>Training Data Generator<a class="headerlink" href="#training-data-generator" title="Link to this heading">#</a></h3>
+<p>Define a generator function using PyTorch’s DataLoader for batch training. Setting <code class="docutils literal notranslate"><span class="pre">num_workers</span> <span class="pre">&gt;</span> <span class="pre">0</span></code> enables multi-process data loading, which can accelerate data loading for larger datasets or intensive preprocessing tasks. Experiment with different values to find the optimal setting for your hardware and workload.</p>
+<p>Note: When setting <code class="docutils literal notranslate"><span class="pre">num_workers</span> <span class="pre">&gt;</span> <span class="pre">0</span></code>, you may see the following <code class="docutils literal notranslate"><span class="pre">RuntimeWarning:</span> <span class="pre">os.fork()</span> <span class="pre">was</span> <span class="pre">called.</span> <span class="pre">os.fork()</span> <span class="pre">is</span> <span class="pre">incompatible</span> <span class="pre">with</span> <span class="pre">multithreaded</span> <span class="pre">code,</span> <span class="pre">and</span> <span class="pre">JAX</span> <span class="pre">is</span> <span class="pre">multithreaded,</span> <span class="pre">so</span> <span class="pre">this</span> <span class="pre">will</span> <span class="pre">likely</span> <span class="pre">lead</span> <span class="pre">to</span> <span class="pre">a</span> <span class="pre">deadlock.</span></code> This warning can be safely ignored since data loaders do not use JAX within the forked processes.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">pytorch_training_generator</span><span class="p">(</span><span class="n">mnist_dataset</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">NumpyLoader</span><span class="p">(</span><span class="n">mnist_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="training-loop-pytorch-dataloader">
+<h3>Training Loop (PyTorch DataLoader)<a class="headerlink" href="#training-loop-pytorch-dataloader" title="Link to this heading">#</a></h3>
+<p>The training loop uses the PyTorch DataLoader to iterate through batches and update model parameters.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">train_model</span><span class="p">(</span><span class="n">num_epochs</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">pytorch_training_generator</span><span class="p">(</span><span class="n">mnist_dataset</span><span class="p">),</span> <span class="n">data_loader_type</span><span class="o">=</span><span class="s1">&#39;iterable&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Epoch 1 in 28.93 sec: Train Accuracy: 0.9158, Test Accuracy: 0.9196
+Epoch 2 in 8.33 sec: Train Accuracy: 0.9372, Test Accuracy: 0.9384
+Epoch 3 in 6.99 sec: Train Accuracy: 0.9492, Test Accuracy: 0.9468
+Epoch 4 in 7.01 sec: Train Accuracy: 0.9569, Test Accuracy: 0.9532
+Epoch 5 in 8.17 sec: Train Accuracy: 0.9630, Test Accuracy: 0.9579
+Epoch 6 in 8.27 sec: Train Accuracy: 0.9674, Test Accuracy: 0.9615
+Epoch 7 in 8.32 sec: Train Accuracy: 0.9708, Test Accuracy: 0.9650
+Epoch 8 in 8.07 sec: Train Accuracy: 0.9737, Test Accuracy: 0.9671
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="loading-data-with-tensorflow-datasets-tfds">
+<h2>Loading Data with TensorFlow Datasets (TFDS)<a class="headerlink" href="#loading-data-with-tensorflow-datasets-tfds" title="Link to this heading">#</a></h2>
+<p>This section demonstrates how to load the MNIST dataset using TFDS, fetch the full dataset for evaluation, and define a training generator for batch processing. GPU usage is explicitly disabled for TensorFlow.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow_datasets</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tfds</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+
+<span class="c1"># Ensuring CPU-Only Execution, disable any GPU usage(if applicable) for TF</span>
+<span class="n">tf</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">set_visible_devices</span><span class="p">([],</span> <span class="n">device_type</span><span class="o">=</span><span class="s1">&#39;GPU&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<section id="fetch-full-dataset-for-evaluation">
+<h3>Fetch Full Dataset for Evaluation<a class="headerlink" href="#fetch-full-dataset-for-evaluation" title="Link to this heading">#</a></h3>
+<p>Load the dataset with <code class="docutils literal notranslate"><span class="pre">tfds.load</span></code>, convert it to NumPy arrays, and process it for evaluation.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># tfds.load returns tf.Tensors (or tf.data.Datasets if batch_size != -1)</span>
+<span class="n">mnist_data</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">tfds</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;mnist&quot;</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">with_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">mnist_data</span> <span class="o">=</span> <span class="n">tfds</span><span class="o">.</span><span class="n">as_numpy</span><span class="p">(</span><span class="n">mnist_data</span><span class="p">)</span>
+<span class="n">train_data</span><span class="p">,</span> <span class="n">test_data</span> <span class="o">=</span> <span class="n">mnist_data</span><span class="p">[</span><span class="s1">&#39;train&#39;</span><span class="p">],</span> <span class="n">mnist_data</span><span class="p">[</span><span class="s1">&#39;test&#39;</span><span class="p">]</span>
+
+<span class="c1"># Full train set</span>
+<span class="n">train_images</span><span class="p">,</span> <span class="n">train_labels</span> <span class="o">=</span> <span class="n">train_data</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">],</span> <span class="n">train_data</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span>
+<span class="n">train_images</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">train_images</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">train_images</span><span class="p">),</span> <span class="n">num_pixels</span><span class="p">))</span>
+<span class="n">train_labels</span> <span class="o">=</span> <span class="n">one_hot</span><span class="p">(</span><span class="n">train_labels</span><span class="p">,</span> <span class="n">n_targets</span><span class="p">)</span>
+
+<span class="c1"># Full test set</span>
+<span class="n">test_images</span><span class="p">,</span> <span class="n">test_labels</span> <span class="o">=</span> <span class="n">test_data</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">],</span> <span class="n">test_data</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span>
+<span class="n">test_images</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">test_images</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">test_images</span><span class="p">),</span> <span class="n">num_pixels</span><span class="p">))</span>
+<span class="n">test_labels</span> <span class="o">=</span> <span class="n">one_hot</span><span class="p">(</span><span class="n">test_labels</span><span class="p">,</span> <span class="n">n_targets</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Downloading and preparing dataset 11.06 MiB (download: 11.06 MiB, generated: 21.00 MiB, total: 32.06 MiB) to /tmp/mnist_dataset/mnist/3.0.1...
+Dataset mnist downloaded and prepared to /tmp/mnist_dataset/mnist/3.0.1. Subsequent calls will reuse this data.
+</pre></div>
+</div>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "b8cdabf5c05848f38f03850cab08b56f", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Train:&#39;</span><span class="p">,</span> <span class="n">train_images</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">train_labels</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Test:&#39;</span><span class="p">,</span> <span class="n">test_images</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">test_labels</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Train: (60000, 784) (60000, 10)
+Test: (10000, 784) (10000, 10)
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="define-the-training-generator">
+<h3>Define the Training Generator<a class="headerlink" href="#define-the-training-generator" title="Link to this heading">#</a></h3>
+<p>Create a generator function to yield batches of data for training.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">training_generator</span><span class="p">():</span>
+  <span class="c1"># as_supervised=True gives us the (image, label) as a tuple instead of a dict</span>
+  <span class="n">ds</span> <span class="o">=</span> <span class="n">tfds</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;mnist&#39;</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s1">&#39;train&#39;</span><span class="p">,</span> <span class="n">as_supervised</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="n">data_dir</span><span class="p">)</span>
+  <span class="c1"># You can build up an arbitrary tf.data input pipeline</span>
+  <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)</span><span class="o">.</span><span class="n">prefetch</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+  <span class="c1"># tfds.dataset_as_numpy converts the tf.data.Dataset into an iterable of NumPy arrays</span>
+  <span class="k">return</span> <span class="n">tfds</span><span class="o">.</span><span class="n">as_numpy</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="training-loop-tfds">
+<h3>Training Loop (TFDS)<a class="headerlink" href="#training-loop-tfds" title="Link to this heading">#</a></h3>
+<p>Use the training generator in a custom training loop.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">train_model</span><span class="p">(</span><span class="n">num_epochs</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">training_generator</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Epoch 1 in 8.46 sec: Train Accuracy: 0.9252, Test Accuracy: 0.9270
+Epoch 2 in 7.79 sec: Train Accuracy: 0.9429, Test Accuracy: 0.9412
+Epoch 3 in 9.84 sec: Train Accuracy: 0.9533, Test Accuracy: 0.9514
+Epoch 4 in 9.47 sec: Train Accuracy: 0.9602, Test Accuracy: 0.9551
+Epoch 5 in 9.32 sec: Train Accuracy: 0.9652, Test Accuracy: 0.9602
+Epoch 6 in 9.30 sec: Train Accuracy: 0.9692, Test Accuracy: 0.9630
+Epoch 7 in 9.24 sec: Train Accuracy: 0.9726, Test Accuracy: 0.9655
+Epoch 8 in 8.00 sec: Train Accuracy: 0.9755, Test Accuracy: 0.9667
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="loading-data-with-grain">
+<h2>Loading Data with Grain<a class="headerlink" href="#loading-data-with-grain" title="Link to this heading">#</a></h2>
+<p>This section demonstrates how to load MNIST data using Grain, a data-loading library. You’ll define a custom dataset class for Grain and set up a Grain DataLoader for efficient training.</p>
+<p>Install Grain</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="err">!</span><span class="n">pip</span> <span class="n">install</span> <span class="n">grain</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Collecting grain
+  Downloading grain-0.2.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (13 kB)
+Requirement already satisfied: absl-py in /usr/local/lib/python3.10/dist-packages (from grain) (1.4.0)
+Requirement already satisfied: array-record in /usr/local/lib/python3.10/dist-packages (from grain) (0.5.1)
+Requirement already satisfied: cloudpickle in /usr/local/lib/python3.10/dist-packages (from grain) (3.1.0)
+Requirement already satisfied: dm-tree in /usr/local/lib/python3.10/dist-packages (from grain) (0.1.8)
+Requirement already satisfied: etils[epath,epy] in /usr/local/lib/python3.10/dist-packages (from grain) (1.10.0)
+Collecting jaxtyping (from grain)
+  Downloading jaxtyping-0.2.36-py3-none-any.whl.metadata (6.5 kB)
+Requirement already satisfied: more-itertools&gt;=9.1.0 in /usr/local/lib/python3.10/dist-packages (from grain) (10.5.0)
+Requirement already satisfied: numpy in /usr/local/lib/python3.10/dist-packages (from grain) (1.26.4)
+Requirement already satisfied: typing_extensions in /usr/local/lib/python3.10/dist-packages (from etils[epath,epy]-&gt;grain) (4.12.2)
+Requirement already satisfied: fsspec in /usr/local/lib/python3.10/dist-packages (from etils[epath,epy]-&gt;grain) (2024.10.0)
+Requirement already satisfied: importlib_resources in /usr/local/lib/python3.10/dist-packages (from etils[epath,epy]-&gt;grain) (6.4.5)
+Requirement already satisfied: zipp in /usr/local/lib/python3.10/dist-packages (from etils[epath,epy]-&gt;grain) (3.21.0)
+Downloading grain-0.2.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (418 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ <span class=" -Color -Color-Green">419.0/419.0 kB</span> <span class=" -Color -Color-Red">7.0 MB/s</span> eta <span class=" -Color -Color-Cyan">0:00:00</span>
+?25hDownloading jaxtyping-0.2.36-py3-none-any.whl (55 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ <span class=" -Color -Color-Green">55.8/55.8 kB</span> <span class=" -Color -Color-Red">4.3 MB/s</span> eta <span class=" -Color -Color-Cyan">0:00:00</span>
+?25hInstalling collected packages: jaxtyping, grain
+Successfully installed grain-0.2.2 jaxtyping-0.2.36
+</pre></div>
+</div>
+</div>
+</div>
+<p>Import Required Libraries (import MNIST dataset from torchvision)</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">grain.python</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pygrain</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">MNIST</span>
+</pre></div>
+</div>
+</div>
+</div>
+<section id="define-dataset-class">
+<h3>Define Dataset Class<a class="headerlink" href="#define-dataset-class" title="Link to this heading">#</a></h3>
+<p>Create a custom dataset class to load MNIST data for Grain.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Dataset</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">,</span> <span class="n">train</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">=</span> <span class="n">data_dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train</span> <span class="o">=</span> <span class="n">train</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_data</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">MNIST</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">download</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">train</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">train</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="n">img</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)),</span> <span class="n">label</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="initialize-the-dataset">
+<h3>Initialize the Dataset<a class="headerlink" href="#initialize-the-dataset" title="Link to this heading">#</a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mnist_dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">data_dir</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="get-the-full-train-and-test-dataset">
+<h3>Get the full train and test dataset<a class="headerlink" href="#get-the-full-train-and-test-dataset" title="Link to this heading">#</a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Convert training data to JAX arrays and encode labels as one-hot vectors</span>
+<span class="n">train_images</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">mnist_dataset</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mnist_dataset</span><span class="p">))],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="n">train_labels</span> <span class="o">=</span> <span class="n">one_hot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">mnist_dataset</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mnist_dataset</span><span class="p">))]),</span> <span class="n">n_targets</span><span class="p">)</span>
+
+<span class="c1"># Load test dataset and process it</span>
+<span class="n">mnist_dataset_test</span> <span class="o">=</span> <span class="n">MNIST</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">download</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">train</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">test_images</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mnist_dataset_test</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mnist_dataset_test</span><span class="p">))],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="n">test_labels</span> <span class="o">=</span> <span class="n">one_hot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">mnist_dataset_test</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mnist_dataset_test</span><span class="p">))]),</span> <span class="n">n_targets</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Train:&quot;</span><span class="p">,</span> <span class="n">train_images</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">train_labels</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Test:&quot;</span><span class="p">,</span> <span class="n">test_images</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">test_labels</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Train: (60000, 784) (60000, 10)
+Test: (10000, 784) (10000, 10)
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="initialize-pygrain-dataloader">
+<h3>Initialize PyGrain DataLoader<a class="headerlink" href="#initialize-pygrain-dataloader" title="Link to this heading">#</a></h3>
+<p>Set up a PyGrain DataLoader for sequential batch sampling.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sampler</span> <span class="o">=</span> <span class="n">pygrain</span><span class="o">.</span><span class="n">SequentialSampler</span><span class="p">(</span>
+    <span class="n">num_records</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">mnist_dataset</span><span class="p">),</span>
+    <span class="n">shard_options</span><span class="o">=</span><span class="n">pygrain</span><span class="o">.</span><span class="n">NoSharding</span><span class="p">())</span> <span class="c1"># Single-device, no sharding</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">pygrain_training_generator</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Grain DataLoader generator for training.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">pygrain</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span>
+        <span class="n">data_source</span><span class="o">=</span><span class="n">mnist_dataset</span><span class="p">,</span>
+        <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
+        <span class="n">operations</span><span class="o">=</span><span class="p">[</span><span class="n">pygrain</span><span class="o">.</span><span class="n">Batch</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)],</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="training-loop-grain">
+<h3>Training Loop (Grain)<a class="headerlink" href="#training-loop-grain" title="Link to this heading">#</a></h3>
+<p>Run the training loop using the Grain DataLoader.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">train_model</span><span class="p">(</span><span class="n">num_epochs</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">pygrain_training_generator</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Epoch 1 in 15.39 sec: Train Accuracy: 0.9158, Test Accuracy: 0.9196
+Epoch 2 in 15.27 sec: Train Accuracy: 0.9372, Test Accuracy: 0.9384
+Epoch 3 in 12.61 sec: Train Accuracy: 0.9492, Test Accuracy: 0.9468
+Epoch 4 in 12.62 sec: Train Accuracy: 0.9569, Test Accuracy: 0.9532
+Epoch 5 in 12.39 sec: Train Accuracy: 0.9630, Test Accuracy: 0.9579
+Epoch 6 in 12.19 sec: Train Accuracy: 0.9674, Test Accuracy: 0.9615
+Epoch 7 in 12.56 sec: Train Accuracy: 0.9708, Test Accuracy: 0.9650
+Epoch 8 in 13.04 sec: Train Accuracy: 0.9737, Test Accuracy: 0.9671
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="loading-data-with-hugging-face">
+<h2>Loading Data with Hugging Face<a class="headerlink" href="#loading-data-with-hugging-face" title="Link to this heading">#</a></h2>
+<p>This section demonstrates loading MNIST data using the Hugging Face <code class="docutils literal notranslate"><span class="pre">datasets</span></code> library. You’ll format the dataset for JAX compatibility, prepare flattened images and one-hot-encoded labels, and define a training generator.</p>
+<p>Install the Hugging Face <code class="docutils literal notranslate"><span class="pre">datasets</span></code> library.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="err">!</span><span class="n">pip</span> <span class="n">install</span> <span class="n">datasets</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Collecting datasets
+  Downloading datasets-3.1.0-py3-none-any.whl.metadata (20 kB)
+Requirement already satisfied: filelock in /usr/local/lib/python3.10/dist-packages (from datasets) (3.16.1)
+Requirement already satisfied: numpy&gt;=1.17 in /usr/local/lib/python3.10/dist-packages (from datasets) (1.26.4)
+Requirement already satisfied: pyarrow&gt;=15.0.0 in /usr/local/lib/python3.10/dist-packages (from datasets) (17.0.0)
+Collecting dill&lt;0.3.9,&gt;=0.3.0 (from datasets)
+  Downloading dill-0.3.8-py3-none-any.whl.metadata (10 kB)
+Requirement already satisfied: pandas in /usr/local/lib/python3.10/dist-packages (from datasets) (2.2.2)
+Requirement already satisfied: requests&gt;=2.32.2 in /usr/local/lib/python3.10/dist-packages (from datasets) (2.32.3)
+Requirement already satisfied: tqdm&gt;=4.66.3 in /usr/local/lib/python3.10/dist-packages (from datasets) (4.66.6)
+Collecting xxhash (from datasets)
+  Downloading xxhash-3.5.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (12 kB)
+Collecting multiprocess&lt;0.70.17 (from datasets)
+  Downloading multiprocess-0.70.16-py310-none-any.whl.metadata (7.2 kB)
+Collecting fsspec&lt;=2024.9.0,&gt;=2023.1.0 (from fsspec[http]&lt;=2024.9.0,&gt;=2023.1.0-&gt;datasets)
+  Downloading fsspec-2024.9.0-py3-none-any.whl.metadata (11 kB)
+Requirement already satisfied: aiohttp in /usr/local/lib/python3.10/dist-packages (from datasets) (3.11.2)
+Requirement already satisfied: huggingface-hub&gt;=0.23.0 in /usr/local/lib/python3.10/dist-packages (from datasets) (0.26.2)
+Requirement already satisfied: packaging in /usr/local/lib/python3.10/dist-packages (from datasets) (24.2)
+Requirement already satisfied: pyyaml&gt;=5.1 in /usr/local/lib/python3.10/dist-packages (from datasets) (6.0.2)
+Requirement already satisfied: aiohappyeyeballs&gt;=2.3.0 in /usr/local/lib/python3.10/dist-packages (from aiohttp-&gt;datasets) (2.4.3)
+Requirement already satisfied: aiosignal&gt;=1.1.2 in /usr/local/lib/python3.10/dist-packages (from aiohttp-&gt;datasets) (1.3.1)
+Requirement already satisfied: attrs&gt;=17.3.0 in /usr/local/lib/python3.10/dist-packages (from aiohttp-&gt;datasets) (24.2.0)
+Requirement already satisfied: frozenlist&gt;=1.1.1 in /usr/local/lib/python3.10/dist-packages (from aiohttp-&gt;datasets) (1.5.0)
+Requirement already satisfied: multidict&lt;7.0,&gt;=4.5 in /usr/local/lib/python3.10/dist-packages (from aiohttp-&gt;datasets) (6.1.0)
+Requirement already satisfied: propcache&gt;=0.2.0 in /usr/local/lib/python3.10/dist-packages (from aiohttp-&gt;datasets) (0.2.0)
+Requirement already satisfied: yarl&lt;2.0,&gt;=1.17.0 in /usr/local/lib/python3.10/dist-packages (from aiohttp-&gt;datasets) (1.17.2)
+Requirement already satisfied: async-timeout&lt;6.0,&gt;=4.0 in /usr/local/lib/python3.10/dist-packages (from aiohttp-&gt;datasets) (4.0.3)
+Requirement already satisfied: typing-extensions&gt;=3.7.4.3 in /usr/local/lib/python3.10/dist-packages (from huggingface-hub&gt;=0.23.0-&gt;datasets) (4.12.2)
+Requirement already satisfied: charset-normalizer&lt;4,&gt;=2 in /usr/local/lib/python3.10/dist-packages (from requests&gt;=2.32.2-&gt;datasets) (3.4.0)
+Requirement already satisfied: idna&lt;4,&gt;=2.5 in /usr/local/lib/python3.10/dist-packages (from requests&gt;=2.32.2-&gt;datasets) (3.10)
+Requirement already satisfied: urllib3&lt;3,&gt;=1.21.1 in /usr/local/lib/python3.10/dist-packages (from requests&gt;=2.32.2-&gt;datasets) (2.2.3)
+Requirement already satisfied: certifi&gt;=2017.4.17 in /usr/local/lib/python3.10/dist-packages (from requests&gt;=2.32.2-&gt;datasets) (2024.8.30)
+Requirement already satisfied: python-dateutil&gt;=2.8.2 in /usr/local/lib/python3.10/dist-packages (from pandas-&gt;datasets) (2.8.2)
+Requirement already satisfied: pytz&gt;=2020.1 in /usr/local/lib/python3.10/dist-packages (from pandas-&gt;datasets) (2024.2)
+Requirement already satisfied: tzdata&gt;=2022.7 in /usr/local/lib/python3.10/dist-packages (from pandas-&gt;datasets) (2024.2)
+Requirement already satisfied: six&gt;=1.5 in /usr/local/lib/python3.10/dist-packages (from python-dateutil&gt;=2.8.2-&gt;pandas-&gt;datasets) (1.16.0)
+Downloading datasets-3.1.0-py3-none-any.whl (480 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ <span class=" -Color -Color-Green">480.6/480.6 kB</span> <span class=" -Color -Color-Red">8.7 MB/s</span> eta <span class=" -Color -Color-Cyan">0:00:00</span>
+?25hDownloading dill-0.3.8-py3-none-any.whl (116 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ <span class=" -Color -Color-Green">116.3/116.3 kB</span> <span class=" -Color -Color-Red">9.5 MB/s</span> eta <span class=" -Color -Color-Cyan">0:00:00</span>
+?25hDownloading fsspec-2024.9.0-py3-none-any.whl (179 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ <span class=" -Color -Color-Green">179.3/179.3 kB</span> <span class=" -Color -Color-Red">13.2 MB/s</span> eta <span class=" -Color -Color-Cyan">0:00:00</span>
+?25hDownloading multiprocess-0.70.16-py310-none-any.whl (134 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ <span class=" -Color -Color-Green">134.8/134.8 kB</span> <span class=" -Color -Color-Red">9.9 MB/s</span> eta <span class=" -Color -Color-Cyan">0:00:00</span>
+?25hDownloading xxhash-3.5.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (194 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ <span class=" -Color -Color-Green">194.1/194.1 kB</span> <span class=" -Color -Color-Red">15.0 MB/s</span> eta <span class=" -Color -Color-Cyan">0:00:00</span>
+?25hInstalling collected packages: xxhash, fsspec, dill, multiprocess, datasets
+  Attempting uninstall: fsspec
+    Found existing installation: fsspec 2024.10.0
+    Uninstalling fsspec-2024.10.0:
+      Successfully uninstalled fsspec-2024.10.0
+<span class=" -Color -Color-Red">ERROR: pip&#39;s dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.</span>
+<span class=" -Color -Color-Red">gcsfs 2024.10.0 requires fsspec==2024.10.0, but you have fsspec 2024.9.0 which is incompatible.</span>
+Successfully installed datasets-3.1.0 dill-0.3.8 fsspec-2024.9.0 multiprocess-0.70.16 xxhash-3.5.0
+</pre></div>
+</div>
+</div>
+</div>
+<p>Import Library</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_dataset</span>
+</pre></div>
+</div>
+</div>
+</div>
+<section id="load-and-format-mnist-dataset">
+<h3>Load and Format MNIST Dataset<a class="headerlink" href="#load-and-format-mnist-dataset" title="Link to this heading">#</a></h3>
+<p>Load the MNIST dataset from Hugging Face and format it as <code class="docutils literal notranslate"><span class="pre">numpy</span></code> arrays for quick access or <code class="docutils literal notranslate"><span class="pre">jax</span></code> to get JAX arrays.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mnist_dataset</span> <span class="o">=</span> <span class="n">load_dataset</span><span class="p">(</span><span class="s2">&quot;mnist&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">with_format</span><span class="p">(</span><span class="s2">&quot;numpy&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.10/dist-packages/huggingface_hub/utils/_auth.py:94: UserWarning: 
+The secret `HF_TOKEN` does not exist in your Colab secrets.
+To authenticate with the Hugging Face Hub, create a token in your settings tab (https://huggingface.co/settings/tokens), set it as secret in your Google Colab and restart your session.
+You will be able to reuse this secret in all of your notebooks.
+Please note that authentication is recommended but still optional to access public models or datasets.
+  warnings.warn(
+</pre></div>
+</div>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "32f6132a31aa4c508d3c3c5ef70348bb", "version_major": 2, "version_minor": 0}</script><script type="application/vnd.jupyter.widget-view+json">{"model_id": "5d8202da24244dc896e9a8cba6a4ed4f", "version_major": 2, "version_minor": 0}</script><script type="application/vnd.jupyter.widget-view+json">{"model_id": "1ba3f86870724f55b94a35cb6b4173af", "version_major": 2, "version_minor": 0}</script><script type="application/vnd.jupyter.widget-view+json">{"model_id": "d07c2f37cf914894b1551a8104e6cb70", "version_major": 2, "version_minor": 0}</script><script type="application/vnd.jupyter.widget-view+json">{"model_id": "9237d877d84e4b3ab69698ecf56915bb", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+</section>
+<section id="extract-images-and-labels">
+<h3>Extract images and labels<a class="headerlink" href="#extract-images-and-labels" title="Link to this heading">#</a></h3>
+<p>Get image shape and flatten for model input</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">train_images</span> <span class="o">=</span> <span class="n">mnist_dataset</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">][</span><span class="s2">&quot;image&quot;</span><span class="p">]</span>
+<span class="n">train_labels</span> <span class="o">=</span> <span class="n">mnist_dataset</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">][</span><span class="s2">&quot;label&quot;</span><span class="p">]</span>
+<span class="n">test_images</span> <span class="o">=</span> <span class="n">mnist_dataset</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">][</span><span class="s2">&quot;image&quot;</span><span class="p">]</span>
+<span class="n">test_labels</span> <span class="o">=</span> <span class="n">mnist_dataset</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">][</span><span class="s2">&quot;label&quot;</span><span class="p">]</span>
+
+<span class="c1"># Flatten images and one-hot encode labels</span>
+<span class="n">image_shape</span> <span class="o">=</span> <span class="n">train_images</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+<span class="n">num_features</span> <span class="o">=</span> <span class="n">image_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">image_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="n">train_images</span> <span class="o">=</span> <span class="n">train_images</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_features</span><span class="p">)</span>
+<span class="n">test_images</span> <span class="o">=</span> <span class="n">test_images</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_features</span><span class="p">)</span>
+
+<span class="n">train_labels</span> <span class="o">=</span> <span class="n">one_hot</span><span class="p">(</span><span class="n">train_labels</span><span class="p">,</span> <span class="n">n_targets</span><span class="p">)</span>
+<span class="n">test_labels</span> <span class="o">=</span> <span class="n">one_hot</span><span class="p">(</span><span class="n">test_labels</span><span class="p">,</span> <span class="n">n_targets</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Train:&#39;</span><span class="p">,</span> <span class="n">train_images</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">train_labels</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Test:&#39;</span><span class="p">,</span> <span class="n">test_images</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">test_labels</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Train: (60000, 784) (60000, 10)
+Test: (10000, 784) (10000, 10)
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="define-training-generator">
+<h3>Define Training Generator<a class="headerlink" href="#define-training-generator" title="Link to this heading">#</a></h3>
+<p>Set up a generator to yield batches of images and labels for training.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">hf_training_generator</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Yield batches for training.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">mnist_dataset</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">batch_size</span><span class="p">):</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">],</span> <span class="n">batch</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span>
+        <span class="k">yield</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="training-loop-hugging-face-datasets">
+<h3>Training Loop (Hugging Face Datasets)<a class="headerlink" href="#training-loop-hugging-face-datasets" title="Link to this heading">#</a></h3>
+<p>Run the training loop using the Hugging Face training generator.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">train_model</span><span class="p">(</span><span class="n">num_epochs</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">hf_training_generator</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Epoch 1 in 9.77 sec: Train Accuracy: 0.9158, Test Accuracy: 0.9196
+Epoch 2 in 9.94 sec: Train Accuracy: 0.9372, Test Accuracy: 0.9384
+Epoch 3 in 9.44 sec: Train Accuracy: 0.9492, Test Accuracy: 0.9468
+Epoch 4 in 9.48 sec: Train Accuracy: 0.9569, Test Accuracy: 0.9532
+Epoch 5 in 9.41 sec: Train Accuracy: 0.9630, Test Accuracy: 0.9579
+Epoch 6 in 9.98 sec: Train Accuracy: 0.9674, Test Accuracy: 0.9615
+Epoch 7 in 12.19 sec: Train Accuracy: 0.9708, Test Accuracy: 0.9650
+Epoch 8 in 10.91 sec: Train Accuracy: 0.9737, Test Accuracy: 0.9671
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">#</a></h2>
+<p>This notebook has introduced efficient strategies for data loading on a CPU with JAX, demonstrating how to integrate popular libraries like PyTorch DataLoader, TensorFlow Datasets, Grain, and Hugging Face Datasets. Each library offers distinct advantages, enabling you to streamline the data loading process for machine learning tasks. By understanding the strengths of these methods, you can select the approach that best suits your project’s specific requirements.</p>
+</section>
+</section>
+
+<div class="section ablog__blog_comments">
+   
+</div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="data_loaders.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Introduction to Data Loaders</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="data_loaders_on_gpu_with_jax.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Introduction to Data Loaders on GPU with JAX</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setting-jax-to-use-cpu-only">Setting JAX to Use CPU Only</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cpu-setup-verification">CPU Setup Verification</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setting-hyperparameters-and-initializing-parameters">Setting Hyperparameters and Initializing Parameters</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-prediction-with-auto-batching">Model Prediction with Auto-Batching</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#utility-and-loss-functions">Utility and Loss Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-data-with-pytorch-dataloader">Loading Data with PyTorch DataLoader</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#load-dataset-with-transformations">Load Dataset with Transformations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#full-training-dataset-for-accuracy-checks">Full Training Dataset for Accuracy Checks</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-full-test-dataset">Get Full Test Dataset</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#training-data-generator">Training Data Generator</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#training-loop-pytorch-dataloader">Training Loop (PyTorch DataLoader)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-data-with-tensorflow-datasets-tfds">Loading Data with TensorFlow Datasets (TFDS)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fetch-full-dataset-for-evaluation">Fetch Full Dataset for Evaluation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#define-the-training-generator">Define the Training Generator</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#training-loop-tfds">Training Loop (TFDS)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-data-with-grain">Loading Data with Grain</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#define-dataset-class">Define Dataset Class</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#initialize-the-dataset">Initialize the Dataset</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-the-full-train-and-test-dataset">Get the full train and test dataset</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#initialize-pygrain-dataloader">Initialize PyGrain DataLoader</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#training-loop-grain">Training Loop (Grain)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-data-with-hugging-face">Loading Data with Hugging Face</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#load-and-format-mnist-dataset">Load and Format MNIST Dataset</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#extract-images-and-labels">Extract images and labels</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#define-training-generator">Define Training Generator</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#training-loop-hugging-face-datasets">Training Loop (Hugging Face Datasets)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By JAX team
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, JAX team.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

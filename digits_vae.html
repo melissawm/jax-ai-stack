@@ -1,0 +1,1390 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Part 2: Debug a variational autoencoder (VAE) &#8212; JAX AI Stack</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css?v=6644e6bb" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=1dc24ef2" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="_static/documentation_options.js?v=c1d4a9c3"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'digits_vae';</script>
+    <link rel="icon" href="_static/favicon.png"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Part 3: Train a diffusion model for image generation" href="digits_diffusion_model.html" />
+    <link rel="prev" title="Part 1: JAX neural net basics" href="neural_net_basics.html" /> 
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>   
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/ai-stack-logo.svg" class="logo__image only-light" alt="JAX AI Stack - Home"/>
+    <script>document.write(`<img src="_static/ai-stack-logo.svg" class="logo__image only-dark" alt="JAX AI Stack - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="index.html">
+                    JAX AI Stack
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="blog.html">JAX AI Stack Blog</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing the stack</a></li>
+
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="getting_started.html">Getting started with JAX for ML</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="neural_net_basics.html">Part 1: JAX neural net basics</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Part 2: Debug a variational autoencoder (VAE)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="digits_diffusion_model.html">Part 3: Train a diffusion model for image generation</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="JAX_visualizing_models_metrics.html">Visualize JAX model metrics with TensorBoard</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="data_loaders.html">Introduction to Data Loaders</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="data_loaders_on_cpu_with_jax.html">Introduction to Data Loaders on CPU with JAX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_loaders_on_gpu_with_jax.html">Introduction to Data Loaders on GPU with JAX</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="pytorch_users.html">From PyTorch to JAX</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="JAX_for_PyTorch_users.html">JAX for PyTorch users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="JAX_porting_PyTorch_model.html">Porting a PyTorch model to JAX</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Example applications</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="JAX_for_LLM_pretraining.html">Train a miniGPT language model with JAX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_basic_text_classification.html">Basic text classification with 1D CNN</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_transformer_text_classification.html">Text classification with a transformer language model using JAX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_machine_translation.html">Machine Translation with encoder-decoder transformer model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_examples_image_segmentation.html">Image segmentation with UNETR model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_image_captioning.html">Image Captioning with Vision Transformer (ViT) model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_Vision_transformer.html">Train a Vision Transformer (ViT) for image classification with JAX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_time_series_classification.html">Time series classification with CNN</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer resources</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contribute to documentation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/jax-ml/jax-ai-stack" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/digits_vae.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Part 2: Debug a variational autoencoder (VAE)</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-the-data">Loading the data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-the-vae-with-flax">Defining the VAE with Flax</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#debugging-nans-in-jax">Debugging NaNs in JAX</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exploring-the-vae-model-results">Exploring the VAE model results</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                   <section class="tex2jax_ignore mathjax_ignore" id="part-2-debug-a-variational-autoencoder-vae">
+<h1>Part 2: Debug a variational autoencoder (VAE)<a class="headerlink" href="#part-2-debug-a-variational-autoencoder-vae" title="Link to this heading">#</a></h1>
+<p><a class="reference external" href="https://colab.research.google.com/github/jax-ml/jax-ai-stack/blob/main/docs/source/digits_vae.ipynb"><img alt="Open in Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
+<p>This tutorial explores a simplified version of a generative model called <a class="reference external" href="https://en.wikipedia.org/wiki/Variational_autoencoder">Variational Autoencoder (VAE)</a> with <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_digits.html">scikit-learn <code class="docutils literal notranslate"><span class="pre">digits</span></code></a> dataset, and expands on what we learned in <a class="reference external" href="https://jax-ai-stack.readthedocs.io/en/latest/neural_net_basics.html">Getting started with JAX</a>. Along the way, you’ll learn more about how JAX’s <a class="reference external" href="https://jax.readthedocs.io/en/latest/jit-compilation.html#jit-compilation">JIT compilation</a> (<code class="docutils literal notranslate"><span class="pre">jax.jit</span></code>) actually works, and what this means for <a class="reference external" href="https://jax.readthedocs.io/en/latest/debugging/index.html">debugging</a> <a class="reference external" href="https://jax.readthedocs.io/en/latest/debugging.html">JAX programs</a>, as we learn how to identify what can go wrong during model training.</p>
+<p>If you are new to JAX for AI, check out the <a class="reference external" href="https://jax-ai-stack.readthedocs.io/en/latest/neural_net_basics.html">first tutorial</a>, which explains how to build a simple neural netwwork with Flax and Optax, and JAX’s key features, including the NumPy-style interface with <code class="docutils literal notranslate"><span class="pre">jax.numpy</span></code>, JAX transformations for JIT compilation with <code class="docutils literal notranslate"><span class="pre">jax.jit</span></code>, automatic vectorization with <code class="docutils literal notranslate"><span class="pre">jax.vmap</span></code>, and automatic differentiation with <code class="docutils literal notranslate"><span class="pre">jax.grad</span></code>.</p>
+<section id="loading-the-data">
+<h2>Loading the data<a class="headerlink" href="#loading-the-data" title="Link to this heading">#</a></h2>
+<p>As <a class="reference external" href="https://jax-ai-stack.readthedocs.io/en/latest/neural_net_basics.html">before</a>, this example uses the well-known, small and self-contained <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_digits.html">scikit-learn <code class="docutils literal notranslate"><span class="pre">digits</span></code></a> dataset:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_digits</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_test_split</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
+
+<span class="n">digits</span> <span class="o">=</span> <span class="n">load_digits</span><span class="p">()</span>
+
+<span class="n">splits</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">digits</span><span class="o">.</span><span class="n">images</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="n">images_train</span><span class="p">,</span> <span class="n">images_test</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">asarray</span><span class="p">,</span> <span class="n">splits</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">images_train</span><span class="o">.</span><span class="n">shape</span><span class="si">=}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">images_test</span><span class="o">.</span><span class="n">shape</span><span class="si">=}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>images_train.shape=(1347, 8, 8)
+images_test.shape=(450, 8, 8)
+</pre></div>
+</div>
+</div>
+</div>
+<p>The dataset comprises 1800 images of hand-written digits, each represented by an <code class="docutils literal notranslate"><span class="pre">8x8</span></code> pixel grid, and their corresponding labels. For visualization of this data, refer to <a class="reference external" href="https://jax-ai-stack.readthedocs.io/en/latest/neural_net_basics.html#loading-the-data">loading the data</a> in the previous tutorial.</p>
+</section>
+<section id="defining-the-vae-with-flax">
+<h2>Defining the VAE with Flax<a class="headerlink" href="#defining-the-vae-with-flax" title="Link to this heading">#</a></h2>
+<p><a class="reference external" href="https://jax-ai-stack.readthedocs.io/en/latest/neural_net_basics.html">Previously</a>, we learned how to use <a class="reference external" href="http://flax.readthedocs.io">Flax NNX</a> to create a simple <a class="reference external" href="https://en.wikipedia.org/wiki/Feedforward_neural_network">feed-forward</a> neural network trained for classification with an architecture that looked roughly like this:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">jax</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flax</span><span class="w"> </span><span class="kn">import</span> <span class="n">nnx</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">SimpleNN</span><span class="p">(</span><span class="n">nnx</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_features</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">n_hidden</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">n_targets</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">rngs</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">layer1</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">n_features</span><span class="p">,</span> <span class="n">n_hidden</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">layer2</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">n_hidden</span><span class="p">,</span> <span class="n">n_hidden</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">layer3</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">n_hidden</span><span class="p">,</span> <span class="n">n_targets</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">:</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">selu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layer1</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">selu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layer2</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer3</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>This kind of network has one output per class, and the loss function is designed such that once the model is trained, the output corresponding to the correct class would return the strongest signal, thus predicting the correct label in upwards of 95% of cases.</p>
+<p>To create a VAE with Flax NNX, we will use similar building blocks - subclassing <a class="reference external" href="https://flax.readthedocs.io/en/latest/api_reference/flax.nnx/module.html#flax.nnx.Module"><code class="docutils literal notranslate"><span class="pre">flax.nnx.Module</span></code></a>, stacking <a class="reference external" href="https://flax.readthedocs.io/en/latest/api_reference/flax.nnx/nn/linear.html#flax.nnx.Linear"><code class="docutils literal notranslate"><span class="pre">flax.nnx.Linear</span></code></a> layers, and adding a rectified linear unit activation function (<a class="reference external" href="https://flax.readthedocs.io/en/latest/api_reference/flax.nnx/nn/activations.html#flax.nnx.relu"><code class="docutils literal notranslate"><span class="pre">flax.nnx.relu</span></code></a>). A VAE maps the input data into the parameters of a probability distribution (<code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">std</span></code>), and the output is a small probabilistic model representing the data.</p>
+<p>Note that the classic VAE is generally based on convolutional layers, this example uses linear layers for simplicity.</p>
+<p>The sub-network that produces this probabilistic encoding is the <code class="docutils literal notranslate"><span class="pre">Encoder</span></code>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Encoder</span><span class="p">(</span><span class="n">nnx</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+  <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">intermediate_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">output_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+               <span class="o">*</span><span class="p">,</span> <span class="n">rngs</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">rngs</span> <span class="o">=</span> <span class="n">rngs</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">linear</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">input_size</span><span class="p">,</span> <span class="n">intermediate_size</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">linear_mean</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">intermediate_size</span><span class="p">,</span> <span class="n">output_size</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">linear_std</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">intermediate_size</span><span class="p">,</span> <span class="n">output_size</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">]:</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="n">mean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear_mean</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">std</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">linear_std</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+
+    <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rngs</span><span class="o">.</span><span class="n">noise</span><span class="p">()</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">mean</span> <span class="o">+</span> <span class="n">std</span> <span class="o">*</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">mean</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">z</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>The idea here is that <code class="docutils literal notranslate"><span class="pre">mean</span></code> and <code class="docutils literal notranslate"><span class="pre">std</span></code> define a low-dimensional probability distribution over a latent space, and that <code class="docutils literal notranslate"><span class="pre">z</span></code> is a draw from this latent space that represents the training data.</p>
+<p>To ensure that this latent distribution faithfully represents the actual data, define a <code class="docutils literal notranslate"><span class="pre">Decoder</span></code> that maps back to the input space as follows:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Decoder</span><span class="p">(</span><span class="n">nnx</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+  <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">intermediate_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">output_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+               <span class="o">*</span><span class="p">,</span> <span class="n">rngs</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">linear1</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">input_size</span><span class="p">,</span> <span class="n">intermediate_size</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">linear2</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">intermediate_size</span><span class="p">,</span> <span class="n">output_size</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">:</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear1</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+    <span class="n">logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear2</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">logits</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Now, define the VAE model (again by subclassing <a class="reference external" href="https://flax.readthedocs.io/en/latest/api_reference/flax.nnx/module.html#flax.nnx.Module"><code class="docutils literal notranslate"><span class="pre">flax.nnx.Module</span></code></a>) by combining <code class="docutils literal notranslate"><span class="pre">Encoder</span></code> and <code class="docutils literal notranslate"><span class="pre">Decoder</span></code> in a single network (<code class="docutils literal notranslate"><span class="pre">VAE</span></code>).</p>
+<p>The model returns both the reconstructed image and the internal latent space model:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">VAE</span><span class="p">(</span><span class="n">nnx</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+  <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">image_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+    <span class="n">hidden_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">latent_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">rngs</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span>
+  <span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">image_shape</span> <span class="o">=</span> <span class="n">image_shape</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">latent_size</span> <span class="o">=</span> <span class="n">latent_size</span>
+    <span class="n">input_size</span> <span class="o">=</span> <span class="n">image_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">image_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span> <span class="o">=</span> <span class="n">Encoder</span><span class="p">(</span><span class="n">input_size</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">latent_size</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">decoder</span> <span class="o">=</span> <span class="n">Decoder</span><span class="p">(</span><span class="n">latent_size</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">input_size</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">]:</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">vmap</span><span class="p">(</span><span class="n">jax</span><span class="o">.</span><span class="n">numpy</span><span class="o">.</span><span class="n">ravel</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>  <span class="c1"># flatten</span>
+    <span class="n">z</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+    <span class="n">logits</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">image_shape</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">logits</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Next, we need to define the loss function. The are two components to the model that we want to ensure:</p>
+<ol class="arabic simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">logits</span></code> output faithfully reconstruct the input image.</p></li>
+<li><p>The model represented by <code class="docutils literal notranslate"><span class="pre">mean</span></code> and <code class="docutils literal notranslate"><span class="pre">std</span></code> faithfully represents the “true” latent distribution.</p></li>
+</ol>
+<p>Note that VAE uses a loss function based on the <a class="reference external" href="https://en.wikipedia.org/wiki/Evidence_lower_bound">Evidence lower bound</a> to quantify these two goals in a single loss value:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">vae_loss</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">VAE</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">):</span>
+  <span class="n">logits</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+  <span class="n">kl_loss</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
+      <span class="o">-</span><span class="n">jnp</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">std</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="n">std</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">mean</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
+  <span class="n">reconstruction_loss</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
+    <span class="n">optax</span><span class="o">.</span><span class="n">sigmoid_binary_cross_entropy</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+  <span class="p">)</span>
+  <span class="k">return</span> <span class="n">reconstruction_loss</span> <span class="o">+</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">kl_loss</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Now all that’s left:</p>
+<ul class="simple">
+<li><p>Instantiate the <code class="docutils literal notranslate"><span class="pre">VAE</span></code> model.</p></li>
+<li><p>Select <a class="reference external" href="https://optax.readthedocs.io/en/latest/api/optimizers.html#optax.adam"><code class="docutils literal notranslate"><span class="pre">optax.adam</span></code></a> (the Adam optimizer in our example), and instantiate the <code class="docutils literal notranslate"><span class="pre">optimizer</span></code> with <a class="reference external" href="https://flax.readthedocs.io/en/latest/api_reference/flax.nnx/training/optimizer.html"><code class="docutils literal notranslate"><span class="pre">flax.nnx.Optimizer</span></code></a> for setting the train step.</p></li>
+<li><p>Define the <code class="docutils literal notranslate"><span class="pre">train_step</span></code> using <a class="reference external" href="https://flax.readthedocs.io/en/latest/api_reference/flax.nnx/transforms.html#flax.nnx.value_and_grad"><code class="docutils literal notranslate"><span class="pre">flax.nnx.value_and_grad</span></code></a> for computing the gradients and update the model’s parameters using the <code class="docutils literal notranslate"><span class="pre">optimizer</span></code>.</p></li>
+<li><p>Use the <a class="reference external" href="https://flax.readthedocs.io/en/latest/api_reference/flax.nnx/transforms.html#flax.nnx.jit"><code class="docutils literal notranslate"><span class="pre">flax.nnx.jit</span></code></a> transformation decorator to trace the <code class="docutils literal notranslate"><span class="pre">train_step</span></code> function for just-in-time compilation.</p></li>
+<li><p>Run the training loop.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">optax</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">VAE</span><span class="p">(</span>
+  <span class="n">image_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
+  <span class="n">hidden_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+  <span class="n">latent_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+  <span class="n">rngs</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">noise</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">ModelAndOptimizer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optax</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">))</span>
+
+<span class="nd">@nnx</span><span class="o">.</span><span class="n">jit</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">train_step</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">VAE</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">):</span>
+  <span class="n">loss</span><span class="p">,</span> <span class="n">grads</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">value_and_grad</span><span class="p">(</span><span class="n">vae_loss</span><span class="p">)(</span><span class="n">model</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+  <span class="n">optimizer</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">grads</span><span class="p">)</span>
+  <span class="k">return</span> <span class="n">loss</span>
+
+<span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2001</span><span class="p">):</span>
+  <span class="n">loss</span> <span class="o">=</span> <span class="n">train_step</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">images_train</span><span class="p">)</span>
+  <span class="k">if</span> <span class="n">epoch</span> <span class="o">%</span> <span class="mi">500</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Epoch </span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s1"> loss: </span><span class="si">{</span><span class="n">loss</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Epoch 0 loss: 16745235.0
+Epoch 500 loss: nan
+Epoch 1000 loss: nan
+Epoch 1500 loss: nan
+Epoch 2000 loss: nan
+</pre></div>
+</div>
+</div>
+</div>
+<p>Notice in the output that something has gone wrong - the loss value has become NaN after some number of iterations.</p>
+</section>
+<section id="debugging-nans-in-jax">
+<h2>Debugging NaNs in JAX<a class="headerlink" href="#debugging-nans-in-jax" title="Link to this heading">#</a></h2>
+<p>Despite our best efforts, the <code class="docutils literal notranslate"><span class="pre">VAE</span></code> model is producing NaNs. What can we do?</p>
+<p>JAX offers a number of debugging approaches for situations like this, outlined in JAX’s <a class="reference external" href="https://jax.readthedocs.io/en/latest/debugging/index.html">Debugging runtime values</a> guide. (There is also the <a class="reference external" href="https://jax.readthedocs.io/en/latest/debugging.html">Introduction to debugging</a> tutorial you may find useful.)</p>
+<p>In this case, we can use the <a class="reference external" href="https://jax.readthedocs.io/en/latest/debugging/flags.html#jax-debug-nans-configuration-option-and-context-manager"><code class="docutils literal notranslate"><span class="pre">jax.debug_nans</span></code></a> configuration to check where the NaN value is arising.</p>
+<div class="cell tag_raises-exception docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">VAE</span><span class="p">(</span>
+  <span class="n">image_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
+  <span class="n">hidden_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+  <span class="n">latent_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+  <span class="n">rngs</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">noise</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">ModelAndOptimizer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optax</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">))</span>
+
+<span class="k">with</span> <span class="n">jax</span><span class="o">.</span><span class="n">debug_nans</span><span class="p">(</span><span class="kc">True</span><span class="p">):</span>
+  <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2001</span><span class="p">):</span>
+    <span class="n">train_step</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">images_train</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Invalid nan value encountered in the output of a C++-jit/pmap function. Calling the de-optimized version.
+Invalid nan value encountered in the output of a C++-jit/pmap function. Calling the de-optimized version.
+</pre></div>
+</div>
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
+<span class="ne">FloatingPointError</span><span class="g g-Whitespace">                        </span>Traceback (most recent call last)
+<span class="nn">/usr/local/lib/python3.10/dist-packages/jax/_src/api.py</span> in <span class="ni">_nan_check_posthook</span><span class="nt">(fun, args, kwargs, output)</span>
+<span class="g g-Whitespace">    </span><span class="mi">113</span>   <span class="k">try</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">114</span>     <span class="n">dispatch</span><span class="o">.</span><span class="n">check_special</span><span class="p">(</span><span class="n">pjit</span><span class="o">.</span><span class="n">pjit_p</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">buffers</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">115</span>   <span class="k">except</span> <span class="ne">FloatingPointError</span><span class="p">:</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/jax/_src/dispatch.py</span> in <span class="ni">check_special</span><span class="nt">(name, bufs)</span>
+<span class="g g-Whitespace">    </span><span class="mi">320</span>     <span class="k">for</span> <span class="n">buf</span> <span class="ow">in</span> <span class="n">bufs</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">321</span>       <span class="n">_check_special</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">buf</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">buf</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">322</span> 
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/jax/_src/dispatch.py</span> in <span class="ni">_check_special</span><span class="nt">(name, dtype, buf)</span>
+<span class="g g-Whitespace">    </span><span class="mi">325</span>     <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">debug_nans</span><span class="o">.</span><span class="n">value</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">buf</span><span class="p">))):</span>
+<span class="ne">--&gt; </span><span class="mi">326</span>       <span class="k">raise</span> <span class="ne">FloatingPointError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;invalid value (nan) encountered in </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">327</span>     <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">debug_infs</span><span class="o">.</span><span class="n">value</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">buf</span><span class="p">))):</span>
+
+<span class="ne">FloatingPointError</span>: invalid value (nan) encountered in pjit
+
+<span class="n">During</span> <span class="n">handling</span> <span class="n">of</span> <span class="n">the</span> <span class="n">above</span> <span class="n">exception</span><span class="p">,</span> <span class="n">another</span> <span class="n">exception</span> <span class="n">occurred</span><span class="p">:</span>
+
+<span class="ne">FloatingPointError</span><span class="g g-Whitespace">                        </span>Traceback (most recent call last)
+    <span class="p">[</span><span class="o">...</span> <span class="n">skipping</span> <span class="n">hidden</span> <span class="mi">1</span> <span class="n">frame</span><span class="p">]</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/jax/_src/dispatch.py</span> in <span class="ni">check_special</span><span class="nt">(name, bufs)</span>
+<span class="g g-Whitespace">    </span><span class="mi">320</span>     <span class="k">for</span> <span class="n">buf</span> <span class="ow">in</span> <span class="n">bufs</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">321</span>       <span class="n">_check_special</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">buf</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">buf</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">322</span> 
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/jax/_src/dispatch.py</span> in <span class="ni">_check_special</span><span class="nt">(name, dtype, buf)</span>
+<span class="g g-Whitespace">    </span><span class="mi">325</span>     <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">debug_nans</span><span class="o">.</span><span class="n">value</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">buf</span><span class="p">))):</span>
+<span class="ne">--&gt; </span><span class="mi">326</span>       <span class="k">raise</span> <span class="ne">FloatingPointError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;invalid value (nan) encountered in </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">327</span>     <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">debug_infs</span><span class="o">.</span><span class="n">value</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">buf</span><span class="p">))):</span>
+
+<span class="ne">FloatingPointError</span>: invalid value (nan) encountered in pjit
+
+<span class="n">During</span> <span class="n">handling</span> <span class="n">of</span> <span class="n">the</span> <span class="n">above</span> <span class="n">exception</span><span class="p">,</span> <span class="n">another</span> <span class="n">exception</span> <span class="n">occurred</span><span class="p">:</span>
+
+<span class="ne">FloatingPointError</span><span class="g g-Whitespace">                        </span>Traceback (most recent call last)
+    <span class="p">[</span><span class="o">...</span> <span class="n">skipping</span> <span class="n">hidden</span> <span class="mi">1</span> <span class="n">frame</span><span class="p">]</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/jax/_src/profiler.py</span> in <span class="ni">wrapper</span><span class="nt">(*args, **kwargs)</span>
+<span class="g g-Whitespace">    </span><span class="mi">332</span>     <span class="k">with</span> <span class="n">TraceAnnotation</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">decorator_kwargs</span><span class="p">):</span>
+<span class="ne">--&gt; </span><span class="mi">333</span>       <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">334</span>     <span class="k">return</span> <span class="n">wrapper</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/jax/_src/interpreters/pxla.py</span> in <span class="ni">__call__</span><span class="nt">(self, *args)</span>
+<span class="g g-Whitespace">   </span><span class="mi">1290</span>         <span class="k">for</span> <span class="n">arrays</span> <span class="ow">in</span> <span class="n">out_arrays</span><span class="p">:</span>
+<span class="ne">-&gt; </span><span class="mi">1291</span>           <span class="n">dispatch</span><span class="o">.</span><span class="n">check_special</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">arrays</span><span class="p">)</span>
+<span class="g g-Whitespace">   </span><span class="mi">1292</span>         <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_handler</span><span class="p">(</span><span class="n">out_arrays</span><span class="p">)</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/jax/_src/dispatch.py</span> in <span class="ni">check_special</span><span class="nt">(name, bufs)</span>
+<span class="g g-Whitespace">    </span><span class="mi">320</span>     <span class="k">for</span> <span class="n">buf</span> <span class="ow">in</span> <span class="n">bufs</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">321</span>       <span class="n">_check_special</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">buf</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">buf</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">322</span> 
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/jax/_src/dispatch.py</span> in <span class="ni">_check_special</span><span class="nt">(name, dtype, buf)</span>
+<span class="g g-Whitespace">    </span><span class="mi">325</span>     <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">debug_nans</span><span class="o">.</span><span class="n">value</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">buf</span><span class="p">))):</span>
+<span class="ne">--&gt; </span><span class="mi">326</span>       <span class="k">raise</span> <span class="ne">FloatingPointError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;invalid value (nan) encountered in </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">327</span>     <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">debug_infs</span><span class="o">.</span><span class="n">value</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">buf</span><span class="p">))):</span>
+
+<span class="nn">FloatingPointError: invalid value (nan) encountered</span> in <span class="ni">jit</span><span class="nt">(jit_fn)</span>
+
+<span class="n">During</span> <span class="n">handling</span> <span class="n">of</span> <span class="n">the</span> <span class="n">above</span> <span class="n">exception</span><span class="p">,</span> <span class="n">another</span> <span class="n">exception</span> <span class="n">occurred</span><span class="p">:</span>
+
+<span class="ne">FloatingPointError</span><span class="g g-Whitespace">                        </span>Traceback (most recent call last)
+    <span class="p">[</span><span class="o">...</span> <span class="n">skipping</span> <span class="n">hidden</span> <span class="mi">1</span> <span class="n">frame</span><span class="p">]</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/jax/_src/profiler.py</span> in <span class="ni">wrapper</span><span class="nt">(*args, **kwargs)</span>
+<span class="g g-Whitespace">    </span><span class="mi">332</span>     <span class="k">with</span> <span class="n">TraceAnnotation</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">decorator_kwargs</span><span class="p">):</span>
+<span class="ne">--&gt; </span><span class="mi">333</span>       <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">334</span>     <span class="k">return</span> <span class="n">wrapper</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/jax/_src/interpreters/pxla.py</span> in <span class="ni">__call__</span><span class="nt">(self, *args)</span>
+<span class="g g-Whitespace">   </span><span class="mi">1290</span>         <span class="k">for</span> <span class="n">arrays</span> <span class="ow">in</span> <span class="n">out_arrays</span><span class="p">:</span>
+<span class="ne">-&gt; </span><span class="mi">1291</span>           <span class="n">dispatch</span><span class="o">.</span><span class="n">check_special</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">arrays</span><span class="p">)</span>
+<span class="g g-Whitespace">   </span><span class="mi">1292</span>         <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_handler</span><span class="p">(</span><span class="n">out_arrays</span><span class="p">)</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/jax/_src/dispatch.py</span> in <span class="ni">check_special</span><span class="nt">(name, bufs)</span>
+<span class="g g-Whitespace">    </span><span class="mi">320</span>     <span class="k">for</span> <span class="n">buf</span> <span class="ow">in</span> <span class="n">bufs</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">321</span>       <span class="n">_check_special</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">buf</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">buf</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">322</span> 
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/jax/_src/dispatch.py</span> in <span class="ni">_check_special</span><span class="nt">(name, dtype, buf)</span>
+<span class="g g-Whitespace">    </span><span class="mi">325</span>     <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">debug_nans</span><span class="o">.</span><span class="n">value</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">buf</span><span class="p">))):</span>
+<span class="ne">--&gt; </span><span class="mi">326</span>       <span class="k">raise</span> <span class="ne">FloatingPointError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;invalid value (nan) encountered in </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">327</span>     <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">debug_infs</span><span class="o">.</span><span class="n">value</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">buf</span><span class="p">))):</span>
+
+<span class="nn">FloatingPointError: invalid value (nan) encountered</span> in <span class="ni">jit</span><span class="nt">(dot_general)</span>
+
+<span class="n">During</span> <span class="n">handling</span> <span class="n">of</span> <span class="n">the</span> <span class="n">above</span> <span class="n">exception</span><span class="p">,</span> <span class="n">another</span> <span class="n">exception</span> <span class="n">occurred</span><span class="p">:</span>
+
+<span class="ne">JaxStackTraceBeforeTransformation</span><span class="g g-Whitespace">         </span>Traceback (most recent call last)
+<span class="nn">/usr/lib/python3.10/runpy.py</span> in <span class="ni">_run_module_as_main</span><span class="nt">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">195</span>         <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">mod_spec</span><span class="o">.</span><span class="n">origin</span>
+<span class="ne">--&gt; </span><span class="mi">196</span>     <span class="k">return</span> <span class="n">_run_code</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">main_globals</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">197</span>                      <span class="s2">&quot;__main__&quot;</span><span class="p">,</span> <span class="n">mod_spec</span><span class="p">)</span>
+
+<span class="nn">/usr/lib/python3.10/runpy.py</span> in <span class="ni">_run_code</span><span class="nt">()</span>
+<span class="g g-Whitespace">     </span><span class="mi">85</span>                        <span class="n">__spec__</span> <span class="o">=</span> <span class="n">mod_spec</span><span class="p">)</span>
+<span class="ne">---&gt; </span><span class="mi">86</span>     <span class="n">exec</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">run_globals</span><span class="p">)</span>
+<span class="g g-Whitespace">     </span><span class="mi">87</span>     <span class="k">return</span> <span class="n">run_globals</span>
+
+<span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">python3</span><span class="mf">.10</span><span class="o">/</span><span class="n">dist</span><span class="o">-</span><span class="n">packages</span><span class="o">/</span><span class="n">colab_kernel_launcher</span><span class="o">.</span><span class="n">py</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
+<span class="g g-Whitespace">     </span><span class="mi">36</span> <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+<span class="ne">---&gt; </span><span class="mi">37</span>   <span class="n">ColabKernelApp</span><span class="o">.</span><span class="n">launch_instance</span><span class="p">()</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/traitlets/config/application.py</span> in <span class="ni">launch_instance</span><span class="nt">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">991</span>         <span class="n">app</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">argv</span><span class="p">)</span>
+<span class="ne">--&gt; </span><span class="mi">992</span>         <span class="n">app</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">993</span> 
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/ipykernel/kernelapp.py</span> in <span class="ni">start</span><span class="nt">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">618</span>             <span class="k">try</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">619</span>                 <span class="bp">self</span><span class="o">.</span><span class="n">io_loop</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">620</span>             <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/tornado/platform/asyncio.py</span> in <span class="ni">start</span><span class="nt">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">194</span>     <span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">195</span>         <span class="bp">self</span><span class="o">.</span><span class="n">asyncio_loop</span><span class="o">.</span><span class="n">run_forever</span><span class="p">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">196</span> 
+
+<span class="nn">/usr/lib/python3.10/asyncio/base_events.py</span> in <span class="ni">run_forever</span><span class="nt">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">602</span>             <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">603</span>                 <span class="bp">self</span><span class="o">.</span><span class="n">_run_once</span><span class="p">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">604</span>                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stopping</span><span class="p">:</span>
+
+<span class="nn">/usr/lib/python3.10/asyncio/base_events.py</span> in <span class="ni">_run_once</span><span class="nt">()</span>
+<span class="g g-Whitespace">   </span><span class="mi">1908</span>             <span class="k">else</span><span class="p">:</span>
+<span class="ne">-&gt; </span><span class="mi">1909</span>                 <span class="n">handle</span><span class="o">.</span><span class="n">_run</span><span class="p">()</span>
+<span class="g g-Whitespace">   </span><span class="mi">1910</span>         <span class="n">handle</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Needed to break cycles when an exception occurs.</span>
+
+<span class="nn">/usr/lib/python3.10/asyncio/events.py</span> in <span class="ni">_run</span><span class="nt">()</span>
+<span class="g g-Whitespace">     </span><span class="mi">79</span>         <span class="k">try</span><span class="p">:</span>
+<span class="ne">---&gt; </span><span class="mi">80</span>             <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="p">)</span>
+<span class="g g-Whitespace">     </span><span class="mi">81</span>         <span class="k">except</span> <span class="p">(</span><span class="ne">SystemExit</span><span class="p">,</span> <span class="ne">KeyboardInterrupt</span><span class="p">):</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/tornado/ioloop.py</span> in <span class="ni">&lt;lambda&gt;</span><span class="nt">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">684</span>             <span class="n">future</span><span class="o">.</span><span class="n">add_done_callback</span><span class="p">(</span>
+<span class="ne">--&gt; </span><span class="mi">685</span>                 <span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_callback</span><span class="p">(</span><span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">callback</span><span class="p">,</span> <span class="n">future</span><span class="p">))</span>
+<span class="g g-Whitespace">    </span><span class="mi">686</span>             <span class="p">)</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/tornado/ioloop.py</span> in <span class="ni">_run_callback</span><span class="nt">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">737</span>         <span class="k">try</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">738</span>             <span class="n">ret</span> <span class="o">=</span> <span class="n">callback</span><span class="p">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">739</span>             <span class="k">if</span> <span class="n">ret</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/tornado/gen.py</span> in <span class="ni">inner</span><span class="nt">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">824</span>                 <span class="n">f</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># noqa: F841</span>
+<span class="ne">--&gt; </span><span class="mi">825</span>                 <span class="bp">self</span><span class="o">.</span><span class="n">ctx_run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">826</span> 
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/tornado/gen.py</span> in <span class="ni">run</span><span class="nt">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">785</span>                     <span class="k">else</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">786</span>                         <span class="n">yielded</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gen</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">787</span> 
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/ipykernel/kernelbase.py</span> in <span class="ni">process_one</span><span class="nt">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">360</span>                 <span class="k">return</span> <span class="kc">None</span>
+<span class="ne">--&gt; </span><span class="mi">361</span>         <span class="k">yield</span> <span class="n">gen</span><span class="o">.</span><span class="n">maybe_future</span><span class="p">(</span><span class="n">dispatch</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">))</span>
+<span class="g g-Whitespace">    </span><span class="mi">362</span> 
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/tornado/gen.py</span> in <span class="ni">wrapper</span><span class="nt">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">233</span>                 <span class="k">try</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">234</span>                     <span class="n">yielded</span> <span class="o">=</span> <span class="n">ctx_run</span><span class="p">(</span><span class="nb">next</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">235</span>                 <span class="k">except</span> <span class="p">(</span><span class="ne">StopIteration</span><span class="p">,</span> <span class="n">Return</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/ipykernel/kernelbase.py</span> in <span class="ni">dispatch_shell</span><span class="nt">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">260</span>             <span class="k">try</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">261</span>                 <span class="k">yield</span> <span class="n">gen</span><span class="o">.</span><span class="n">maybe_future</span><span class="p">(</span><span class="n">handler</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">idents</span><span class="p">,</span> <span class="n">msg</span><span class="p">))</span>
+<span class="g g-Whitespace">    </span><span class="mi">262</span>             <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/tornado/gen.py</span> in <span class="ni">wrapper</span><span class="nt">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">233</span>                 <span class="k">try</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">234</span>                     <span class="n">yielded</span> <span class="o">=</span> <span class="n">ctx_run</span><span class="p">(</span><span class="nb">next</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">235</span>                 <span class="k">except</span> <span class="p">(</span><span class="ne">StopIteration</span><span class="p">,</span> <span class="n">Return</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/ipykernel/kernelbase.py</span> in <span class="ni">execute_request</span><span class="nt">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">538</span>         <span class="n">reply_content</span> <span class="o">=</span> <span class="k">yield</span> <span class="n">gen</span><span class="o">.</span><span class="n">maybe_future</span><span class="p">(</span>
+<span class="ne">--&gt; </span><span class="mi">539</span>             <span class="bp">self</span><span class="o">.</span><span class="n">do_execute</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">540</span>                 <span class="n">code</span><span class="p">,</span> <span class="n">silent</span><span class="p">,</span> <span class="n">store_history</span><span class="p">,</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/tornado/gen.py</span> in <span class="ni">wrapper</span><span class="nt">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">233</span>                 <span class="k">try</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">234</span>                     <span class="n">yielded</span> <span class="o">=</span> <span class="n">ctx_run</span><span class="p">(</span><span class="nb">next</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">235</span>                 <span class="k">except</span> <span class="p">(</span><span class="ne">StopIteration</span><span class="p">,</span> <span class="n">Return</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/ipykernel/ipkernel.py</span> in <span class="ni">do_execute</span><span class="nt">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">301</span>                 <span class="c1"># letting shell dispatch to loop runners</span>
+<span class="ne">--&gt; </span><span class="mi">302</span>                 <span class="n">res</span> <span class="o">=</span> <span class="n">shell</span><span class="o">.</span><span class="n">run_cell</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">store_history</span><span class="o">=</span><span class="n">store_history</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="n">silent</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">303</span>         <span class="k">finally</span><span class="p">:</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/ipykernel/zmqshell.py</span> in <span class="ni">run_cell</span><span class="nt">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">538</span>         <span class="bp">self</span><span class="o">.</span><span class="n">_last_traceback</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="ne">--&gt; </span><span class="mi">539</span>         <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">ZMQInteractiveShell</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">run_cell</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">540</span> 
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/IPython/core/interactiveshell.py</span> in <span class="ni">run_cell</span><span class="nt">()</span>
+<span class="g g-Whitespace">   </span><span class="mi">2974</span>         <span class="k">try</span><span class="p">:</span>
+<span class="ne">-&gt; </span><span class="mi">2975</span>             <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_cell</span><span class="p">(</span>
+<span class="g g-Whitespace">   </span><span class="mi">2976</span>                 <span class="n">raw_cell</span><span class="p">,</span> <span class="n">store_history</span><span class="p">,</span> <span class="n">silent</span><span class="p">,</span> <span class="n">shell_futures</span><span class="p">,</span> <span class="n">cell_id</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/IPython/core/interactiveshell.py</span> in <span class="ni">_run_cell</span><span class="nt">()</span>
+<span class="g g-Whitespace">   </span><span class="mi">3029</span>         <span class="k">try</span><span class="p">:</span>
+<span class="ne">-&gt; </span><span class="mi">3030</span>             <span class="k">return</span> <span class="n">runner</span><span class="p">(</span><span class="n">coro</span><span class="p">)</span>
+<span class="g g-Whitespace">   </span><span class="mi">3031</span>         <span class="k">except</span> <span class="ne">BaseException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/IPython/core/async_helpers.py</span> in <span class="ni">_pseudo_sync_runner</span><span class="nt">()</span>
+<span class="g g-Whitespace">     </span><span class="mi">77</span>     <span class="k">try</span><span class="p">:</span>
+<span class="ne">---&gt; </span><span class="mi">78</span>         <span class="n">coro</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+<span class="g g-Whitespace">     </span><span class="mi">79</span>     <span class="k">except</span> <span class="ne">StopIteration</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/IPython/core/interactiveshell.py</span> in <span class="ni">run_cell_async</span><span class="nt">()</span>
+<span class="g g-Whitespace">   </span><span class="mi">3256</span> 
+<span class="ne">-&gt; </span><span class="mi">3257</span>                 <span class="n">has_raised</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_ast_nodes</span><span class="p">(</span><span class="n">code_ast</span><span class="o">.</span><span class="n">body</span><span class="p">,</span> <span class="n">cell_name</span><span class="p">,</span>
+<span class="g g-Whitespace">   </span><span class="mi">3258</span>                        <span class="n">interactivity</span><span class="o">=</span><span class="n">interactivity</span><span class="p">,</span> <span class="n">compiler</span><span class="o">=</span><span class="n">compiler</span><span class="p">,</span> <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">)</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/IPython/core/interactiveshell.py</span> in <span class="ni">run_ast_nodes</span><span class="nt">()</span>
+<span class="g g-Whitespace">   </span><span class="mi">3472</span>                         <span class="n">asy</span> <span class="o">=</span> <span class="n">compare</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+<span class="ne">-&gt; </span><span class="mi">3473</span>                     <span class="k">if</span> <span class="p">(</span><span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_code</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span>  <span class="n">async_</span><span class="o">=</span><span class="n">asy</span><span class="p">)):</span>
+<span class="g g-Whitespace">   </span><span class="mi">3474</span>                         <span class="k">return</span> <span class="kc">True</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/IPython/core/interactiveshell.py</span> in <span class="ni">run_code</span><span class="nt">()</span>
+<span class="g g-Whitespace">   </span><span class="mi">3552</span>                 <span class="k">else</span><span class="p">:</span>
+<span class="ne">-&gt; </span><span class="mi">3553</span>                     <span class="n">exec</span><span class="p">(</span><span class="n">code_obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_global_ns</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_ns</span><span class="p">)</span>
+<span class="g g-Whitespace">   </span><span class="mi">3554</span>             <span class="k">finally</span><span class="p">:</span>
+
+<span class="nn">&lt;ipython-input-8-0e49237a86d4&gt;</span> in <span class="ni">&lt;cell line: 10&gt;</span><span class="nt">()</span>
+<span class="g g-Whitespace">     </span><span class="mi">11</span>   <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2001</span><span class="p">):</span>
+<span class="ne">---&gt; </span><span class="mi">12</span>     <span class="n">train_step</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">images_train</span><span class="p">)</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/flax/nnx/nnx/graph.py</span> in <span class="ni">update_context_manager_wrapper</span><span class="nt">()</span>
+<span class="g g-Whitespace">   </span><span class="mi">1042</span>       <span class="k">with</span> <span class="bp">self</span><span class="p">:</span>
+<span class="ne">-&gt; </span><span class="mi">1043</span>         <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="g g-Whitespace">   </span><span class="mi">1044</span> 
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/flax/nnx/nnx/transforms/transforms.py</span> in <span class="ni">jit_wrapper</span><span class="nt">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">358</span>     <span class="n">graphdef</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">input_graph_nodes</span><span class="p">)</span>
+<span class="ne">--&gt; </span><span class="mi">359</span>     <span class="n">out</span><span class="p">,</span> <span class="n">output_state</span><span class="p">,</span> <span class="n">output_graphdef</span> <span class="o">=</span> <span class="n">jitted_fn</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">360</span>       <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/flax/nnx/nnx/transforms/transforms.py</span> in <span class="ni">jit_fn</span><span class="nt">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">157</span> 
+<span class="ne">--&gt; </span><span class="mi">158</span>   <span class="n">out</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">159</span> 
+
+<span class="nn">&lt;ipython-input-7-b5b28eeeadf6&gt;</span> in <span class="ni">train_step</span><span class="nt">()</span>
+<span class="g g-Whitespace">     </span><span class="mi">13</span> <span class="k">def</span><span class="w"> </span><span class="nf">train_step</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">VAE</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">):</span>
+<span class="ne">---&gt; </span><span class="mi">14</span>   <span class="n">loss</span><span class="p">,</span> <span class="n">grads</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">value_and_grad</span><span class="p">(</span><span class="n">vae_loss</span><span class="p">)(</span><span class="n">model</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="g g-Whitespace">     </span><span class="mi">15</span>   <span class="n">optimizer</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">grads</span><span class="p">)</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/flax/nnx/nnx/graph.py</span> in <span class="ni">update_context_manager_wrapper</span><span class="nt">()</span>
+<span class="g g-Whitespace">   </span><span class="mi">1042</span>       <span class="k">with</span> <span class="bp">self</span><span class="p">:</span>
+<span class="ne">-&gt; </span><span class="mi">1043</span>         <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="g g-Whitespace">   </span><span class="mi">1044</span> 
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/flax/nnx/nnx/transforms/transforms.py</span> in <span class="ni">grad_wrapper</span><span class="nt">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">567</span> 
+<span class="ne">--&gt; </span><span class="mi">568</span>     <span class="n">out</span> <span class="o">=</span> <span class="n">transform</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">569</span>       <span class="n">grad_fn</span><span class="p">,</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/flax/nnx/nnx/transforms/transforms.py</span> in <span class="ni">grad_fn</span><span class="nt">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">511</span> 
+<span class="ne">--&gt; </span><span class="mi">512</span>   <span class="n">out</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">513</span> 
+
+<span class="nn">&lt;ipython-input-6-305266f603a1&gt;</span> in <span class="ni">vae_loss</span><span class="nt">()</span>
+<span class="g g-Whitespace">      </span><span class="mi">1</span> <span class="k">def</span><span class="w"> </span><span class="nf">vae_loss</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">VAE</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">):</span>
+<span class="ne">----&gt; </span><span class="mi">2</span>   <span class="n">logits</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="g g-Whitespace">      </span><span class="mi">3</span>   <span class="n">kl_loss</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
+
+<span class="nn">&lt;ipython-input-5-f5ec22b83e57&gt;</span> in <span class="ni">__call__</span><span class="nt">()</span>
+<span class="g g-Whitespace">     </span><span class="mi">17</span>     <span class="n">x</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">vmap</span><span class="p">(</span><span class="n">jax</span><span class="o">.</span><span class="n">numpy</span><span class="o">.</span><span class="n">ravel</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>  <span class="c1"># flatten</span>
+<span class="ne">---&gt; </span><span class="mi">18</span>     <span class="n">z</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="g g-Whitespace">     </span><span class="mi">19</span>     <span class="n">logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+
+<span class="nn">&lt;ipython-input-3-05c99264f49e&gt;</span> in <span class="ni">__call__</span><span class="nt">()</span>
+<span class="g g-Whitespace">     </span><span class="mi">13</span>     <span class="n">mean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear_mean</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="ne">---&gt; </span><span class="mi">14</span>     <span class="n">std</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">linear_std</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="g g-Whitespace">     </span><span class="mi">15</span> 
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/flax/nnx/nnx/nn/linear.py</span> in <span class="ni">__call__</span><span class="nt">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">380</span>     <span class="p">)</span>
+<span class="ne">--&gt; </span><span class="mi">381</span>     <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dot_general</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">382</span>       <span class="n">inputs</span><span class="p">,</span>
+
+<span class="ne">JaxStackTraceBeforeTransformation</span>: FloatingPointError: invalid value (nan) encountered in jit(dot_general). Because jax_config.debug_nans.value and/or config.jax_debug_infs is set, the de-optimized function (i.e., the function as if the `jit` decorator were removed) was called in an attempt to get a more precise error message. However, the de-optimized function did not produce invalid values during its execution. This behavior can result from `jit` optimizations causing the invalid value to be produced. It may also arise from having nan/inf constants as outputs, like `jax.jit(lambda ...: jax.numpy.nan)(...)`. 
+
+<span class="n">It</span> <span class="n">may</span> <span class="n">be</span> <span class="n">possible</span> <span class="n">to</span> <span class="n">avoid</span> <span class="n">the</span> <span class="n">invalid</span> <span class="n">value</span> <span class="n">by</span> <span class="n">removing</span> <span class="n">the</span> <span class="err">`</span><span class="n">jit</span><span class="err">`</span> <span class="n">decorator</span><span class="p">,</span> <span class="n">at</span> <span class="n">the</span> <span class="n">cost</span> <span class="n">of</span> <span class="n">losing</span> <span class="n">optimizations</span><span class="o">.</span> 
+
+<span class="n">If</span> <span class="n">you</span> <span class="n">see</span> <span class="n">this</span> <span class="n">error</span><span class="p">,</span> <span class="n">consider</span> <span class="n">opening</span> <span class="n">a</span> <span class="n">bug</span> <span class="n">report</span> <span class="n">at</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">google</span><span class="o">/</span><span class="n">jax</span><span class="o">.</span>
+
+<span class="n">The</span> <span class="n">preceding</span> <span class="n">stack</span> <span class="n">trace</span> <span class="ow">is</span> <span class="n">the</span> <span class="n">source</span> <span class="n">of</span> <span class="n">the</span> <span class="n">JAX</span> <span class="n">operation</span> <span class="n">that</span><span class="p">,</span> <span class="n">once</span> <span class="n">transformed</span> <span class="n">by</span> <span class="n">JAX</span><span class="p">,</span> <span class="n">triggered</span> <span class="n">the</span> <span class="n">following</span> <span class="n">exception</span><span class="o">.</span>
+
+<span class="gt">--------------------</span>
+
+<span class="n">The</span> <span class="n">above</span> <span class="n">exception</span> <span class="n">was</span> <span class="n">the</span> <span class="n">direct</span> <span class="n">cause</span> <span class="n">of</span> <span class="n">the</span> <span class="n">following</span> <span class="n">exception</span><span class="p">:</span>
+
+<span class="ne">FloatingPointError</span><span class="g g-Whitespace">                        </span>Traceback (most recent call last)
+<span class="nn">&lt;ipython-input-8-0e49237a86d4&gt;</span> in <span class="ni">&lt;cell line: 10&gt;</span><span class="nt">()</span>
+<span class="g g-Whitespace">     </span><span class="mi">10</span> <span class="k">with</span> <span class="n">jax</span><span class="o">.</span><span class="n">debug_nans</span><span class="p">(</span><span class="kc">True</span><span class="p">):</span>
+<span class="g g-Whitespace">     </span><span class="mi">11</span>   <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2001</span><span class="p">):</span>
+<span class="ne">---&gt; </span><span class="mi">12</span>     <span class="n">train_step</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">images_train</span><span class="p">)</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/flax/nnx/nnx/graph.py</span> in <span class="ni">update_context_manager_wrapper</span><span class="nt">(*args, **kwargs)</span>
+<span class="g g-Whitespace">   </span><span class="mi">1041</span>     <span class="k">def</span><span class="w"> </span><span class="nf">update_context_manager_wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="g g-Whitespace">   </span><span class="mi">1042</span>       <span class="k">with</span> <span class="bp">self</span><span class="p">:</span>
+<span class="ne">-&gt; </span><span class="mi">1043</span>         <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="g g-Whitespace">   </span><span class="mi">1044</span> 
+<span class="g g-Whitespace">   </span><span class="mi">1045</span>     <span class="k">return</span> <span class="n">update_context_manager_wrapper</span>  <span class="c1"># type: ignore</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/flax/nnx/nnx/transforms/transforms.py</span> in <span class="ni">jit_wrapper</span><span class="nt">(*args, **kwargs)</span>
+<span class="g g-Whitespace">    </span><span class="mi">357</span>     <span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">358</span>     <span class="n">graphdef</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">input_graph_nodes</span><span class="p">)</span>
+<span class="ne">--&gt; </span><span class="mi">359</span>     <span class="n">out</span><span class="p">,</span> <span class="n">output_state</span><span class="p">,</span> <span class="n">output_graphdef</span> <span class="o">=</span> <span class="n">jitted_fn</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">360</span>       <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">361</span>       <span class="n">_nnx_jit_static</span><span class="o">=</span><span class="n">JitStaticInputs</span><span class="p">(</span><span class="n">graphdef</span><span class="p">,</span> <span class="n">_constrain_state</span><span class="p">,</span> <span class="n">fun</span><span class="p">),</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/jax/_src/api.py</span> in <span class="ni">_nan_check_posthook</span><span class="nt">(fun, args, kwargs, output)</span>
+<span class="g g-Whitespace">    </span><span class="mi">118</span>     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Invalid nan value encountered in the output of a C++-jit/pmap &quot;</span>
+<span class="g g-Whitespace">    </span><span class="mi">119</span>           <span class="s2">&quot;function. Calling the de-optimized version.&quot;</span><span class="p">)</span>
+<span class="ne">--&gt; </span><span class="mi">120</span>     <span class="n">fun</span><span class="o">.</span><span class="n">_cache_miss</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># probably won&#39;t return</span>
+<span class="g g-Whitespace">    </span><span class="mi">121</span> 
+<span class="g g-Whitespace">    </span><span class="mi">122</span> <span class="k">def</span><span class="w"> </span><span class="nf">_update_debug_special_global</span><span class="p">(</span><span class="n">_</span><span class="p">):</span>
+
+    <span class="p">[</span><span class="o">...</span> <span class="n">skipping</span> <span class="n">hidden</span> <span class="mi">24</span> <span class="n">frame</span><span class="p">]</span>
+
+<span class="nn">/usr/local/lib/python3.10/dist-packages/jax/_src/pjit.py</span> in <span class="ni">_pjit_call_impl_python</span><span class="nt">(jaxpr, in_shardings, out_shardings, in_layouts, out_layouts, resource_env, donated_invars, name, keep_unused, inline, *args)</span>
+<span class="g g-Whitespace">   </span><span class="mi">1697</span>            <span class="s2">&quot;If you see this error, consider opening a bug report at &quot;</span>
+<span class="g g-Whitespace">   </span><span class="mi">1698</span>            <span class="s2">&quot;https://github.com/google/jax.&quot;</span><span class="p">)</span>
+<span class="ne">-&gt; </span><span class="mi">1699</span>     <span class="k">raise</span> <span class="ne">FloatingPointError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+<span class="g g-Whitespace">   </span><span class="mi">1700</span> 
+<span class="g g-Whitespace">   </span><span class="mi">1701</span> 
+
+<span class="ne">FloatingPointError</span>: invalid value (nan) encountered in jit(dot_general). Because jax_config.debug_nans.value and/or config.jax_debug_infs is set, the de-optimized function (i.e., the function as if the `jit` decorator were removed) was called in an attempt to get a more precise error message. However, the de-optimized function did not produce invalid values during its execution. This behavior can result from `jit` optimizations causing the invalid value to be produced. It may also arise from having nan/inf constants as outputs, like `jax.jit(lambda ...: jax.numpy.nan)(...)`. 
+
+<span class="n">It</span> <span class="n">may</span> <span class="n">be</span> <span class="n">possible</span> <span class="n">to</span> <span class="n">avoid</span> <span class="n">the</span> <span class="n">invalid</span> <span class="n">value</span> <span class="n">by</span> <span class="n">removing</span> <span class="n">the</span> <span class="err">`</span><span class="n">jit</span><span class="err">`</span> <span class="n">decorator</span><span class="p">,</span> <span class="n">at</span> <span class="n">the</span> <span class="n">cost</span> <span class="n">of</span> <span class="n">losing</span> <span class="n">optimizations</span><span class="o">.</span> 
+
+<span class="n">If</span> <span class="n">you</span> <span class="n">see</span> <span class="n">this</span> <span class="n">error</span><span class="p">,</span> <span class="n">consider</span> <span class="n">opening</span> <span class="n">a</span> <span class="n">bug</span> <span class="n">report</span> <span class="n">at</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">google</span><span class="o">/</span><span class="n">jax</span><span class="o">.</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>The output here is complicated, because the function we’re evaluating is complicated. The key to “deciphering” this traceback is to look for the places where the traceback touches our implementation.</p>
+<p>In particular here, the output above indicates that NaN values arise during the gradient update:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">ipython</span><span class="o">-</span><span class="nb">input</span><span class="o">-</span><span class="mi">9</span><span class="o">-</span><span class="n">b5b28eeeadf6</span><span class="o">&gt;</span> <span class="ow">in</span> <span class="n">train_step</span><span class="p">()</span>
+     <span class="mi">14</span>   <span class="n">loss</span><span class="p">,</span> <span class="n">grads</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">value_and_grad</span><span class="p">(</span><span class="n">vae_loss</span><span class="p">)(</span><span class="n">model</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="o">---&gt;</span> <span class="mi">15</span>   <span class="n">optimizer</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">grads</span><span class="p">)</span>
+     <span class="mi">16</span>   <span class="k">return</span> <span class="n">loss</span>
+</pre></div>
+</div>
+<p>and further down from this, the details of the gradient update step where the NaN is arising:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">python3</span><span class="mf">.10</span><span class="o">/</span><span class="n">dist</span><span class="o">-</span><span class="n">packages</span><span class="o">/</span><span class="n">optax</span><span class="o">/</span><span class="n">tree_utils</span><span class="o">/</span><span class="n">_tree_math</span><span class="o">.</span><span class="n">py</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="k">lambda</span><span class="o">&gt;</span><span class="p">()</span>
+    <span class="mi">280</span>       <span class="k">lambda</span> <span class="n">g</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="p">(</span>
+<span class="o">--&gt;</span> <span class="mi">281</span>           <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">decay</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">g</span><span class="o">**</span><span class="n">order</span><span class="p">)</span> <span class="o">+</span> <span class="n">decay</span> <span class="o">*</span> <span class="n">t</span> <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="mi">282</span>       <span class="p">),</span>
+</pre></div>
+</div>
+<p>This suggests that the gradient is returning values that lead to <code class="docutils literal notranslate"><span class="pre">NaN</span></code> during the model update. Typically, this would come about when the gradient itself is for some reason diverging.</p>
+<p>A diverging gradient means that something with the loss function may be amiss. Previously, we had <code class="docutils literal notranslate"><span class="pre">loss=NaN</span></code> at iteration 500. Let’s print the progress up to this point:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">VAE</span><span class="p">(</span>
+  <span class="n">image_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
+  <span class="n">hidden_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+  <span class="n">latent_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+  <span class="n">rngs</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">noise</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">ModelAndOptimizer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optax</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">))</span>
+
+<span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">501</span><span class="p">):</span>
+  <span class="n">loss</span> <span class="o">=</span> <span class="n">train_step</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">images_train</span><span class="p">)</span>
+  <span class="k">if</span> <span class="n">epoch</span> <span class="o">%</span> <span class="mi">50</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Epoch </span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s1"> loss: </span><span class="si">{</span><span class="n">loss</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Epoch 0 loss: 16745235.0
+Epoch 50 loss: 19.595727920532227
+Epoch 100 loss: -13.440512657165527
+Epoch 150 loss: -145.24871826171875
+Epoch 200 loss: -683.0828247070312
+Epoch 250 loss: -2291.444091796875
+Epoch 300 loss: -6880.775390625
+</pre></div>
+</div>
+</div>
+</div>
+<p>It looks like the loss value is decreasing toward negative infinity until the point where the values are no longer well-represented by floating point math.</p>
+<p>At this point, we may wish to inspect the values within the loss function itself to see where the diverging loss might be coming from.</p>
+<p>In typical Python programs we can do this by inserting either a <code class="docutils literal notranslate"><span class="pre">print</span></code> statement or a <code class="docutils literal notranslate"><span class="pre">breakpoint</span></code> in the loss function. This may look something like this:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">vae_loss</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">VAE</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">):</span>
+  <span class="n">logits</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+  <span class="n">kl_loss</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
+      <span class="o">-</span><span class="n">jnp</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">std</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="n">std</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">mean</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
+  <span class="n">reconstruction_loss</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
+    <span class="n">optax</span><span class="o">.</span><span class="n">sigmoid_binary_cross_entropy</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+  <span class="p">)</span>
+  <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;kl loss&quot;</span><span class="p">,</span> <span class="n">kl_loss</span><span class="p">)</span>
+  <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;reconstruction loss&quot;</span><span class="p">,</span> <span class="n">reconstruction_loss</span><span class="p">)</span>
+  <span class="k">return</span> <span class="n">reconstruction_loss</span> <span class="o">+</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">kl_loss</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">VAE</span><span class="p">(</span>
+  <span class="n">image_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
+  <span class="n">hidden_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+  <span class="n">latent_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+  <span class="n">rngs</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">noise</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">ModelAndOptimizer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optax</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">))</span>
+<span class="n">train_step</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">images_train</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>kl loss Traced&lt;ShapedArray(float32[])&gt;with&lt;JVPTrace(level=3/0)&gt; with
+  primal = Traced&lt;ShapedArray(float32[])&gt;with&lt;DynamicJaxprTrace(level=1/0)&gt;
+  tangent = Traced&lt;ShapedArray(float32[])&gt;with&lt;JaxprTrace(level=2/0)&gt; with
+    pval = (ShapedArray(float32[]), None)
+    recipe = JaxprEqnRecipe(eqn_id=&lt;object object at 0x7b9be70b1b20&gt;, in_tracers=(Traced&lt;ShapedArray(float32[1347]):JaxprTrace(level=2/0)&gt;,), out_tracer_refs=[&lt;weakref at 0x7b9be6aecb30; to &#39;JaxprTracer&#39; at 0x7b9be6aecae0&gt;], out_avals=[ShapedArray(float32[])], primitive=pjit, params={&#39;jaxpr&#39;: { lambda ; a:f32[1347]. let
+    b:f32[] = reduce_sum[axes=(0,)] a
+    c:f32[] = div b 1347.0
+  in (c,) }, &#39;in_shardings&#39;: (UnspecifiedValue,), &#39;out_shardings&#39;: (UnspecifiedValue,), &#39;in_layouts&#39;: (None,), &#39;out_layouts&#39;: (None,), &#39;resource_env&#39;: None, &#39;donated_invars&#39;: (False,), &#39;name&#39;: &#39;_mean&#39;, &#39;keep_unused&#39;: False, &#39;inline&#39;: True}, effects=set(), source_info=&lt;jax._src.source_info_util.SourceInfo object at 0x7b9be6ae38b0&gt;, ctx=JaxprEqnContext(compute_type=None,threefry_partitionable=False),xla_metadata={})
+reconstruction loss Traced&lt;ShapedArray(float32[])&gt;with&lt;JVPTrace(level=3/0)&gt; with
+  primal = Traced&lt;ShapedArray(float32[])&gt;with&lt;DynamicJaxprTrace(level=1/0)&gt;
+  tangent = Traced&lt;ShapedArray(float32[])&gt;with&lt;JaxprTrace(level=2/0)&gt; with
+    pval = (ShapedArray(float32[]), None)
+    recipe = JaxprEqnRecipe(eqn_id=&lt;object object at 0x7b9be70b2040&gt;, in_tracers=(Traced&lt;ShapedArray(float32[1347,8,8]):JaxprTrace(level=2/0)&gt;,), out_tracer_refs=[&lt;weakref at 0x7b9be6aed850; to &#39;JaxprTracer&#39; at 0x7b9be6aed800&gt;], out_avals=[ShapedArray(float32[])], primitive=pjit, params={&#39;jaxpr&#39;: { lambda ; a:f32[1347,8,8]. let
+    b:f32[] = reduce_sum[axes=(0, 1, 2)] a
+    c:f32[] = div b 86208.0
+  in (c,) }, &#39;in_shardings&#39;: (UnspecifiedValue,), &#39;out_shardings&#39;: (UnspecifiedValue,), &#39;in_layouts&#39;: (None,), &#39;out_layouts&#39;: (None,), &#39;resource_env&#39;: None, &#39;donated_invars&#39;: (False,), &#39;name&#39;: &#39;_mean&#39;, &#39;keep_unused&#39;: False, &#39;inline&#39;: True}, effects=set(), source_info=&lt;jax._src.source_info_util.SourceInfo object at 0x7b9be6af89a0&gt;, ctx=JaxprEqnContext(compute_type=None,threefry_partitionable=False),xla_metadata={})
+</pre></div>
+</div>
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Array(16745235., dtype=float32)
+</pre></div>
+</div>
+</div>
+</div>
+<p>But here rather than printing the value, we’re getting some kind of <code class="docutils literal notranslate"><span class="pre">Traced</span></code> object. You’ll encounter this frequently when inspecting the progress of JAX programs: tracers are the mechanism that JAX uses to implement transformations like <code class="docutils literal notranslate"><span class="pre">jax.jit</span></code> and <code class="docutils literal notranslate"><span class="pre">jax.grad</span></code>, and you can read more about them in <a class="reference external" href="https://jax.readthedocs.io/en/latest/key-concepts.html#tracing">JAX Key Concepts: Tracing</a>.</p>
+<p>In this example, the workaround is to use another tool from the <a class="reference external" href="https://jax.readthedocs.io/en/latest/debugging/index.html#interactive-inspection-with-jax-debug">Debugging runtime values</a> guide: namely <a class="reference external" href="https://jax.readthedocs.io/en/latest/_autosummary/jax.debug.print.html#jax.debug.print"><code class="docutils literal notranslate"><span class="pre">jax.debug.print</span></code></a>, which allows us to print runtime values even when they’re traced:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">vae_loss</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">VAE</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">):</span>
+  <span class="n">logits</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+  <span class="n">kl_loss</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
+      <span class="o">-</span><span class="n">jnp</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">std</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="n">std</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">mean</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
+  <span class="n">reconstruction_loss</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
+    <span class="n">optax</span><span class="o">.</span><span class="n">sigmoid_binary_cross_entropy</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+  <span class="p">)</span>
+  <span class="n">jax</span><span class="o">.</span><span class="n">debug</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;kl_loss: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">kl_loss</span><span class="p">)</span>
+  <span class="n">jax</span><span class="o">.</span><span class="n">debug</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;reconstruction_loss: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">reconstruction_loss</span><span class="p">)</span>
+  <span class="k">return</span> <span class="n">reconstruction_loss</span> <span class="o">+</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">kl_loss</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">VAE</span><span class="p">(</span>
+  <span class="n">image_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
+  <span class="n">hidden_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+  <span class="n">latent_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+  <span class="n">rngs</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">noise</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">ModelAndOptimizer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optax</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">))</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+  <span class="n">train_step</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">images_train</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>kl_loss: 167451888.0
+reconstruction_loss: 44.51668167114258
+kl_loss: 21651530.0
+reconstruction_loss: 6.270397186279297
+kl_loss: 4448844.5
+reconstruction_loss: -14.727174758911133
+kl_loss: 1285240.625
+</pre></div>
+</div>
+</div>
+</div>
+<p>Let’s iterate a few hundred more times (we’ll use the IPython <code class="docutils literal notranslate"><span class="pre">%%capture</span></code> magic to avoid printing all the output on the first several hundred iterations) and then do one more run to print these intermediate values:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">%%</span><span class="n">capture</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">300</span><span class="p">):</span>
+  <span class="n">train_step</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">images_train</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">loss</span> <span class="o">=</span> <span class="n">train_step</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">images_train</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>kl_loss: 2462.782470703125
+reconstruction_loss: -8067.7255859375
+</pre></div>
+</div>
+</div>
+</div>
+<p>The output above suggests that the large negative value is coming from the <code class="docutils literal notranslate"><span class="pre">reconstruction_loss</span></code> term. Let’s return to this and inspect what it’s actually doing:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">reconstruction_loss</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
+  <span class="n">optax</span><span class="o">.</span><span class="n">sigmoid_binary_cross_entropy</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>This is a binary cross entropy described at <a class="reference external" href="https://optax.readthedocs.io/en/latest/api/losses.html#optax.losses.sigmoid_binary_cross_entropy"><code class="docutils literal notranslate"><span class="pre">optax.sigmoid_binary_cross_entropy</span></code></a>. Based on the Optax documentation, the first input should be a logit, and the second input is assumed to be a binary label (i.e. a <code class="docutils literal notranslate"><span class="pre">0</span></code> or <code class="docutils literal notranslate"><span class="pre">1</span></code>) – but in the current implementation <code class="docutils literal notranslate"><span class="pre">x</span></code> is associated with <code class="docutils literal notranslate"><span class="pre">images_train</span></code>, which is not a binary label!</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">images_train</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[[ 0.  3. 13. 16.  9.  0.  0.  0.]
+ [ 0. 10. 15. 13. 15.  2.  0.  0.]
+ [ 0. 15.  4.  4. 16.  1.  0.  0.]
+ [ 0.  0.  0.  5. 16.  2.  0.  0.]
+ [ 0.  0.  1. 14. 13.  0.  0.  0.]
+ [ 0.  0. 10. 16.  5.  0.  0.  0.]
+ [ 0.  4. 16. 13.  8. 10.  9.  1.]
+ [ 0.  2. 16. 16. 14. 12.  9.  1.]]
+</pre></div>
+</div>
+</div>
+</div>
+<p>This is likely the source of the issue: we forgot to normalize the input images to the range <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">1)</span></code>!</p>
+<p>Let’s fix this by binarizing the inputs, and then run the training loop again (redefining the loss function to remove the debug statements):</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">images_normed</span> <span class="o">=</span> <span class="p">(</span><span class="n">digits</span><span class="o">.</span><span class="n">images</span> <span class="o">/</span> <span class="mi">16</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.5</span>
+<span class="n">splits</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">images_normed</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">images_train</span><span class="p">,</span> <span class="n">images_test</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">asarray</span><span class="p">,</span> <span class="n">splits</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">vae_loss</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">VAE</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">):</span>
+  <span class="n">logits</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+  <span class="n">kl_loss</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
+      <span class="o">-</span><span class="n">jnp</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">std</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="n">std</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">mean</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
+  <span class="n">reconstruction_loss</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
+    <span class="n">optax</span><span class="o">.</span><span class="n">sigmoid_binary_cross_entropy</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+  <span class="p">)</span>
+  <span class="k">return</span> <span class="n">reconstruction_loss</span> <span class="o">+</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">kl_loss</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">VAE</span><span class="p">(</span>
+  <span class="n">image_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
+  <span class="n">hidden_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+  <span class="n">latent_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+  <span class="n">rngs</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">noise</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">ModelAndOptimizer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optax</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">))</span>
+
+<span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2001</span><span class="p">):</span>
+  <span class="n">loss</span> <span class="o">=</span> <span class="n">train_step</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">images_train</span><span class="p">)</span>
+  <span class="k">if</span> <span class="n">epoch</span> <span class="o">%</span> <span class="mi">500</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Epoch </span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s1"> loss: </span><span class="si">{</span><span class="n">loss</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Epoch 0 loss: 0.7710005640983582
+Epoch 500 loss: 0.3110124468803406
+Epoch 1000 loss: 0.2782602906227112
+Epoch 1500 loss: 0.26861754059791565
+Epoch 2000 loss: 0.26275068521499634
+</pre></div>
+</div>
+</div>
+</div>
+<p>The loss values are now “behaving” without showing NaNs.</p>
+<p>We have successfully debugged the initial NaN problem, which was not in the <code class="docutils literal notranslate"><span class="pre">VAE</span></code> model but rather in the input data.</p>
+</section>
+<section id="exploring-the-vae-model-results">
+<h2>Exploring the VAE model results<a class="headerlink" href="#exploring-the-vae-model-results" title="Link to this heading">#</a></h2>
+<p>Now that we have a trained <code class="docutils literal notranslate"><span class="pre">VAE</span></code> model, let’s explore what it can be used for.</p>
+<p>First, let’s pass the test data through the model to output the result of the associated latent space representation for each input.</p>
+<p>Pass the <code class="docutils literal notranslate"><span class="pre">logits</span></code> through a <code class="docutils literal notranslate"><span class="pre">sigmoid</span></code> function to recover predicted images in the input space:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">logits</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">images_test</span><span class="p">)</span>
+<span class="n">images_pred</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">logits</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Let’s visualize several of these inputs and outputs:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">),</span>
+                       <span class="n">subplot_kw</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;xticks&#39;</span><span class="p">:[],</span> <span class="s1">&#39;yticks&#39;</span><span class="p">:[]},</span>
+                       <span class="n">gridspec_kw</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="mf">0.1</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+  <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">images_test</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;binary&#39;</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">)</span>
+  <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">images_pred</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;binary&#39;</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="_images/c4c33d17aa88f20de4a4a1fad5624ca36d08810709012e057013c0e0e3543d86.png" src="_images/c4c33d17aa88f20de4a4a1fad5624ca36d08810709012e057013c0e0e3543d86.png" />
+</div>
+</div>
+<p>The top row here are the input images, and the bottom row are what the model “thinks” these images look like, given their latent space representation.
+There’s not perfect fidelity, but the essential features are recovered.</p>
+<p>We can go a step further and generate a set of new images from scratch by sampling randomly from the latent space. Let’s generate 36 new digits this way:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1"># generate new images by sampling the latent space</span>
+<span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">36</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">latent_size</span><span class="p">))</span>
+<span class="n">logits</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">decoder</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+<span class="n">images_gen</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">logits</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
+                       <span class="n">subplot_kw</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;xticks&#39;</span><span class="p">:[],</span> <span class="s1">&#39;yticks&#39;</span><span class="p">:[]},</span>
+                       <span class="n">gridspec_kw</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="mf">0.1</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">36</span><span class="p">):</span>
+  <span class="n">ax</span><span class="o">.</span><span class="n">flat</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">images_gen</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;binary&#39;</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="_images/d0e44799c7aa3cc7b7aa48ac3807b36cab5504d41e525c3d7a5fddb9b95a0e7d.png" src="_images/d0e44799c7aa3cc7b7aa48ac3807b36cab5504d41e525c3d7a5fddb9b95a0e7d.png" />
+</div>
+</div>
+<p>Another possibility here is to use the latent model to interpolate between two entries in the training set through the latent model space.
+Here’s an interpolation between a digit <code class="docutils literal notranslate"><span class="pre">9</span></code> and a digit <code class="docutils literal notranslate"><span class="pre">3</span></code>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">z</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">encoder</span><span class="p">(</span><span class="n">images_train</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">64</span><span class="p">))</span>
+<span class="n">zrange</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">z</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">z</span><span class="p">[</span><span class="mi">9</span><span class="p">],</span> <span class="mi">10</span><span class="p">)</span>
+
+<span class="n">logits</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">decoder</span><span class="p">(</span><span class="n">zrange</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+<span class="n">images_gen</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">logits</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                       <span class="n">subplot_kw</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;xticks&#39;</span><span class="p">:[],</span> <span class="s1">&#39;yticks&#39;</span><span class="p">:[]},</span>
+                       <span class="n">gridspec_kw</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="mf">0.1</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+  <span class="n">ax</span><span class="o">.</span><span class="n">flat</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">images_gen</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;binary&#39;</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="_images/539b8e837c1b1ee3a70c68e4e25249f46bf63af4bb86059d8f491b7ac1df4b06.png" src="_images/539b8e837c1b1ee3a70c68e4e25249f46bf63af4bb86059d8f491b7ac1df4b06.png" />
+</div>
+</div>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">#</a></h2>
+<p>This tutorial offered an example of defining and training a generative model - a simplified VAE - and approaches to debugging JAX programs using the <a class="reference external" href="https://jax.readthedocs.io/en/latest/debugging/flags.html#jax-debug-nans-configuration-option-and-context-manager"><code class="docutils literal notranslate"><span class="pre">jax.debug_nans</span></code></a> configuration and the <a class="reference external" href="https://jax.readthedocs.io/en/latest/_autosummary/jax.debug.print.html#jax.debug.print"><code class="docutils literal notranslate"><span class="pre">jax.debug.print</span></code></a> function.</p>
+<p>You can learn more about debugging on the JAX documentation site in <a class="reference external" href="https://jax.readthedocs.io/en/latest/debugging/index.html">Debugging runtime values</a> and <a class="reference external" href="https://jax.readthedocs.io/en/latest/debugging.html">Introduction to debugging</a>.</p>
+</section>
+</section>
+
+<div class="section ablog__blog_comments">
+   
+</div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="neural_net_basics.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Part 1: JAX neural net basics</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="digits_diffusion_model.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Part 3: Train a diffusion model for image generation</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-the-data">Loading the data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-the-vae-with-flax">Defining the VAE with Flax</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#debugging-nans-in-jax">Debugging NaNs in JAX</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exploring-the-vae-model-results">Exploring the VAE model results</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By JAX team
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, JAX team.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

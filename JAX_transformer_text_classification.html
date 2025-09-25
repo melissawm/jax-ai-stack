@@ -1,0 +1,1510 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Text classification with a transformer language model using JAX &#8212; JAX AI Stack</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css?v=6644e6bb" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=1dc24ef2" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="_static/documentation_options.js?v=c1d4a9c3"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'JAX_transformer_text_classification';</script>
+    <link rel="icon" href="_static/favicon.png"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Machine Translation with encoder-decoder transformer model" href="JAX_machine_translation.html" />
+    <link rel="prev" title="Basic text classification with 1D CNN" href="JAX_basic_text_classification.html" /> 
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>   
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/ai-stack-logo.svg" class="logo__image only-light" alt="JAX AI Stack - Home"/>
+    <script>document.write(`<img src="_static/ai-stack-logo.svg" class="logo__image only-dark" alt="JAX AI Stack - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="index.html">
+                    JAX AI Stack
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="blog.html">JAX AI Stack Blog</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing the stack</a></li>
+
+<li class="toctree-l1 has-children"><a class="reference internal" href="getting_started.html">Getting started with JAX for ML</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="neural_net_basics.html">Part 1: JAX neural net basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="digits_vae.html">Part 2: Debug a variational autoencoder (VAE)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="digits_diffusion_model.html">Part 3: Train a diffusion model for image generation</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="JAX_visualizing_models_metrics.html">Visualize JAX model metrics with TensorBoard</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="data_loaders.html">Introduction to Data Loaders</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="data_loaders_on_cpu_with_jax.html">Introduction to Data Loaders on CPU with JAX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_loaders_on_gpu_with_jax.html">Introduction to Data Loaders on GPU with JAX</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="pytorch_users.html">From PyTorch to JAX</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="JAX_for_PyTorch_users.html">JAX for PyTorch users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="JAX_porting_PyTorch_model.html">Porting a PyTorch model to JAX</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Example applications</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="JAX_for_LLM_pretraining.html">Train a miniGPT language model with JAX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_basic_text_classification.html">Basic text classification with 1D CNN</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Text classification with a transformer language model using JAX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_machine_translation.html">Machine Translation with encoder-decoder transformer model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_examples_image_segmentation.html">Image segmentation with UNETR model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_image_captioning.html">Image Captioning with Vision Transformer (ViT) model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_Vision_transformer.html">Train a Vision Transformer (ViT) for image classification with JAX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_time_series_classification.html">Time series classification with CNN</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer resources</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contribute to documentation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/jax-ml/jax-ai-stack" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/JAX_transformer_text_classification.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Text classification with a transformer language model using JAX</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setup">Setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-and-preprocessing-the-data">Loading and preprocessing the data</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-the-data">Loading the data</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#apply-efficient-data-loading-and-preprocessing-using-grain">Apply efficient data loading and preprocessing using Grain</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#define-the-transformer-model-with-flax-and-jax">Define the transformer model with Flax and JAX</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-the-loss-function-and-training-step-related-functions">Defining the loss function and training step-related functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-the-model">Training the model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#evaluate-the-model">Evaluate the model</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                   <section class="tex2jax_ignore mathjax_ignore" id="text-classification-with-a-transformer-language-model-using-jax">
+<h1>Text classification with a transformer language model using JAX<a class="headerlink" href="#text-classification-with-a-transformer-language-model-using-jax" title="Link to this heading">#</a></h1>
+<p><a class="reference external" href="https://colab.research.google.com/github/jax-ml/jax-ai-stack/blob/main/docs/source/JAX_transformer_text_classification.ipynb"><img alt="Open in Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
+<p>This tutorial demonstrates how to build a text classifier using a transformer language model using JAX, <a class="reference external" href="http://flax.readthedocs.io">Flax NNX</a> and <a class="reference external" href="http://optax.readthedocs.io">Optax</a>. We will perform sentiment analysis on movie reviews from the <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/datasets/imdb">IMDB dataset</a>, classifying them as positive or negative.</p>
+<p>Here, you will learn how to:</p>
+<ul class="simple">
+<li><p>Load and preprocess the dataset.</p></li>
+<li><p>Define the transformer model with Flax NNX and JAX.</p></li>
+<li><p>Create loss and training step functions.</p></li>
+<li><p>Train the model.</p></li>
+<li><p>Evaluate the model with an example.</p></li>
+</ul>
+<p>If you are new to JAX for AI, check out the <a class="reference external" href="https://jax-ai-stack.readthedocs.io/en/latest/neural_net_basics.html">introductory tutorial</a>, which covers neural network building with <a class="reference external" href="https://flax.readthedocs.io/en/latest/nnx_basics.html">Flax NNX</a>.</p>
+<section id="setup">
+<h2>Setup<a class="headerlink" href="#setup" title="Link to this heading">#</a></h2>
+<p>JAX installation is covered in <a class="reference external" href="https://jax.readthedocs.io/en/latest/installation.html">this guide</a> on the JAX documentation site. We will use <a class="reference external" href="https://google-grain.readthedocs.io/en/latest/index.html">Grain</a> for data loading, and <a class="reference external" href="https://tqdm.github.io/">tqdm</a> for a progress bar to monitor the training progress.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Required packages</span>
+<span class="c1"># !pip install -U grain tqdm requests matplotlib</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Import the necessary modules, including JAX NumPy, Flax NNX, Optax, Grain, tqdm, NumPy and matplotlib:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">textwrap</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">typing</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">jax</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flax</span><span class="w"> </span><span class="kn">import</span> <span class="n">nnx</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">optax</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">grain.python</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">grain</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tqdm</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="loading-and-preprocessing-the-data">
+<h2>Loading and preprocessing the data<a class="headerlink" href="#loading-and-preprocessing-the-data" title="Link to this heading">#</a></h2>
+<section id="loading-the-data">
+<h3>Loading the data<a class="headerlink" href="#loading-the-data" title="Link to this heading">#</a></h3>
+<p>This section details loading, preprocessing, and preparing the <a class="reference external" href="https://ai.stanford.edu/~amaas/data/sentiment/">IMDB dataset</a> movie review dataset.  The dataset contains 25,000 movie reviews from IMDB labeled by sentiment (positive/negative). Reviews are encoded as lists of word indices, where words are indexed by frequency. Positive and negative sentiments have integer labels 1 or 0, respectively.</p>
+<p>Let’s create two functions: <code class="docutils literal notranslate"><span class="pre">prepare_imdb_dataset()</span></code> that loads and prepares the dataset, and <code class="docutils literal notranslate"><span class="pre">pad_sequences()</span></code> for padding the (NumPy) array sequences to a fixed length:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">prepare_imdb_dataset</span><span class="p">(</span><span class="n">num_words</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">index_from</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">oov_char</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Download and preprocess the IMDB dataset from TensorFlow Datasets.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        num_words (int): The maximum number of words to keep in the vocabulary.</span>
+<span class="sd">        index_from (int): The starting index for word indices.</span>
+<span class="sd">        oov_char (int): The character to use for out-of-vocabulary words. Defaults to 2.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A tuple containing the training and test sets with labels.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://storage.googleapis.com/tensorflow/tf-keras-datasets/imdb.npz&quot;</span><span class="p">)</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+
+    <span class="c1"># The training and test sets.</span>
+    <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">content</span><span class="p">),</span> <span class="n">allow_pickle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;x_train&quot;</span><span class="p">],</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;y_train&quot;</span><span class="p">]</span>
+        <span class="n">x_test</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;x_test&quot;</span><span class="p">],</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;y_test&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Shuffle the training and test sets.</span>
+    <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">113</span><span class="p">)</span>
+    <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x_train</span><span class="p">))</span>
+    <span class="n">rng</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
+    <span class="n">x_train</span> <span class="o">=</span> <span class="n">x_train</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+    <span class="n">y_train</span> <span class="o">=</span> <span class="n">y_train</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+
+    <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x_test</span><span class="p">))</span>
+    <span class="n">rng</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
+    <span class="n">x_test</span> <span class="o">=</span> <span class="n">x_test</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+    <span class="n">y_test</span> <span class="o">=</span> <span class="n">y_test</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+
+    <span class="c1"># Adjust word indices to start from the specified index.</span>
+    <span class="n">x_train</span> <span class="o">=</span> <span class="p">[[</span><span class="n">w</span> <span class="o">+</span> <span class="n">index_from</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">x_train</span><span class="p">]</span>
+    <span class="n">x_test</span> <span class="o">=</span> <span class="p">[[</span><span class="n">w</span> <span class="o">+</span> <span class="n">index_from</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">x_test</span><span class="p">]</span>
+
+    <span class="c1"># Combine training and test sets, then truncates/pads sequences.</span>
+    <span class="n">xs</span> <span class="o">=</span> <span class="n">x_train</span> <span class="o">+</span> <span class="n">x_test</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span><span class="p">])</span>
+    <span class="n">xs</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">[</span><span class="n">w</span> <span class="k">if</span> <span class="n">w</span> <span class="o">&lt;</span> <span class="n">num_words</span> <span class="k">else</span> <span class="n">oov_char</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xs</span>
+    <span class="p">]</span>
+
+    <span class="n">idx</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_train</span><span class="p">)</span>
+    <span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">xs</span><span class="p">[:</span><span class="n">idx</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;object&quot;</span><span class="p">),</span> <span class="n">labels</span><span class="p">[:</span><span class="n">idx</span><span class="p">]</span>
+    <span class="n">x_test</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">xs</span><span class="p">[</span><span class="n">idx</span><span class="p">:],</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;object&quot;</span><span class="p">),</span> <span class="n">labels</span><span class="p">[</span><span class="n">idx</span><span class="p">:]</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">),</span> <span class="p">(</span><span class="n">x_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">pad_sequences</span><span class="p">(</span><span class="n">arrs</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Iterable</span><span class="p">,</span> <span class="n">max_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Pad array sequences to a fixed length.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        arrs (typing.Iterable): A list of arrays.</span>
+<span class="sd">        max_len (int): The desired maximum length.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A NumPy array of padded sequences.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Ensure that each sample is the same length</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">arr</span> <span class="ow">in</span> <span class="n">arrs</span><span class="p">:</span>
+        <span class="n">arr_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">arr_len</span> <span class="o">&lt;</span> <span class="n">max_len</span><span class="p">:</span>
+            <span class="n">padded_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="p">(</span><span class="n">max_len</span> <span class="o">-</span> <span class="n">arr_len</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="s1">&#39;constant&#39;</span><span class="p">,</span> <span class="n">constant_values</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">padded_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="n">arr_len</span> <span class="o">-</span> <span class="n">max_len</span><span class="p">:])</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">padded_arr</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">index_from</span> <span class="o">=</span> <span class="mi">3</span>  <span class="c1"># Ensures that 0 encodes the padding token.</span>
+<span class="n">vocab_size</span> <span class="o">=</span> <span class="mi">20000</span>  <span class="c1"># Considers only the top 20,000 words.</span>
+<span class="n">maxlen</span> <span class="o">=</span> <span class="mi">200</span>  <span class="c1"># Limits each review to the first 200 words.</span>
+
+<span class="c1"># Instantiate the training and test sets.</span>
+<span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">),</span> <span class="p">(</span><span class="n">x_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span> <span class="o">=</span> <span class="n">prepare_imdb_dataset</span><span class="p">(</span><span class="n">num_words</span><span class="o">=</span><span class="n">vocab_size</span><span class="p">,</span> <span class="n">index_from</span><span class="o">=</span><span class="n">index_from</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x_train</span><span class="p">),</span> <span class="s2">&quot;Training sequences&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x_test</span><span class="p">),</span> <span class="s2">&quot;Validation sequences&quot;</span><span class="p">)</span>
+
+<span class="c1"># Pad array sequences to a fixed length.</span>
+<span class="n">x_train</span> <span class="o">=</span> <span class="n">pad_sequences</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">max_len</span><span class="o">=</span><span class="n">maxlen</span><span class="p">)</span>
+<span class="n">x_test</span> <span class="o">=</span> <span class="n">pad_sequences</span><span class="p">(</span><span class="n">x_test</span><span class="p">,</span> <span class="n">max_len</span><span class="o">=</span><span class="n">maxlen</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>25000 Training sequences
+25000 Validation sequences
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="apply-efficient-data-loading-and-preprocessing-using-grain">
+<h2>Apply efficient data loading and preprocessing using Grain<a class="headerlink" href="#apply-efficient-data-loading-and-preprocessing-using-grain" title="Link to this heading">#</a></h2>
+<p>We will utilize the Grain library for efficient data loading and preprocessing. Grain supports custom setups where data sources may come in different forms, and in this tutorial we will implement the <code class="docutils literal notranslate"><span class="pre">grain.RandomAccessDataSource</span></code> (a Grain data source) interface. (To learn more, you can check out <a class="reference external" href="https://google-grain.readthedocs.io/en/latest/tutorials/data_sources/index.html">PyGrain Data Sources</a>.)</p>
+<p>Our dataset is comprised of relatively small NumPy arrays, so the <code class="docutils literal notranslate"><span class="pre">grain.RandomAccessDataSource</span></code> is not complicated:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Implement a custom data source for Grain to handle the IMDB dataset.</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DataSource</span><span class="p">(</span><span class="n">grain</span><span class="o">.</span><span class="n">RandomAccessDataSource</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_x</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_y</span> <span class="o">=</span> <span class="n">y</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;encoded_indices&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_y</span><span class="p">[</span><span class="n">idx</span><span class="p">]}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_x</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instantiate the training and test set data sources.</span>
+<span class="n">train_source</span> <span class="o">=</span> <span class="n">DataSource</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+<span class="n">test_source</span> <span class="o">=</span> <span class="n">DataSource</span><span class="p">(</span><span class="n">x_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p><strong>Note:</strong> We are using a single-device setup, so <a class="reference external" href="https://docs.jax.dev/en/latest/notebooks/Distributed_arrays_and_automatic_parallelization.html">device parallelism</a> or sharding for <a class="reference external" href="https://en.wikipedia.org/wiki/Single_program,_multiple_data">Single-Program Multi-Data</a> is not needed in this example. During sharding, the training data is run via multiple parts - batches - in parallel and simultaneously across different devices, such as GPUs and Google TPUs, and larger batch sizes can speed up training. You can learn more about it in the <a class="reference external" href="https://jax-ai-stack.readthedocs.io/en/latest/JAX_for_LLM_pretraining.html">miniGPT with JAX tutorial</a> and JAX documentation’s <a class="reference external" href="https://docs.jax.dev/en/latest/notebooks/Distributed_arrays_and_automatic_parallelization.html">tensor parallelism</a> page.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the batch sizes for the dataset.</span>
+<span class="n">seed</span> <span class="o">=</span> <span class="mi">12</span>
+<span class="n">train_batch_size</span> <span class="o">=</span> <span class="mi">128</span>
+<span class="n">test_batch_size</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">train_batch_size</span>
+
+<span class="c1"># Define `grain.IndexSampler`s for training and testing data.</span>
+<span class="n">train_sampler</span> <span class="o">=</span> <span class="n">grain</span><span class="o">.</span><span class="n">IndexSampler</span><span class="p">(</span>
+    <span class="nb">len</span><span class="p">(</span><span class="n">train_source</span><span class="p">),</span>
+    <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+    <span class="n">shard_options</span><span class="o">=</span><span class="n">grain</span><span class="o">.</span><span class="n">NoSharding</span><span class="p">(),</span>  <span class="c1"># No sharding since this is a single-device setup.</span>
+    <span class="n">num_epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>                      <span class="c1"># Iterate over the dataset for one epoch.</span>
+<span class="p">)</span>
+
+<span class="n">test_sampler</span> <span class="o">=</span> <span class="n">grain</span><span class="o">.</span><span class="n">IndexSampler</span><span class="p">(</span>
+    <span class="nb">len</span><span class="p">(</span><span class="n">test_source</span><span class="p">),</span>
+    <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+    <span class="n">shard_options</span><span class="o">=</span><span class="n">grain</span><span class="o">.</span><span class="n">NoSharding</span><span class="p">(),</span>  <span class="c1"># No sharding since this is a single-device setup.</span>
+    <span class="n">num_epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>                      <span class="c1"># Iterate over the dataset for one epoch.</span>
+<span class="p">)</span>
+
+
+<span class="c1"># Create `grain.DataLoader`s for training and test sets.</span>
+<span class="n">train_loader</span> <span class="o">=</span> <span class="n">grain</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span>
+    <span class="n">data_source</span><span class="o">=</span><span class="n">train_source</span><span class="p">,</span>
+    <span class="n">sampler</span><span class="o">=</span><span class="n">train_sampler</span><span class="p">,</span>  <span class="c1"># A `grain.IndexSampler` determining how to access the data.</span>
+    <span class="n">worker_count</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>         <span class="c1"># The number of child processes launched to parallelize the transformations.</span>
+    <span class="n">worker_buffer_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>   <span class="c1"># The number count of output batches to produce in advance per worker.</span>
+    <span class="n">operations</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">grain</span><span class="o">.</span><span class="n">Batch</span><span class="p">(</span><span class="n">train_batch_size</span><span class="p">,</span> <span class="n">drop_remainder</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">test_loader</span> <span class="o">=</span> <span class="n">grain</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span>
+    <span class="n">data_source</span><span class="o">=</span><span class="n">test_source</span><span class="p">,</span>
+    <span class="n">sampler</span><span class="o">=</span><span class="n">test_sampler</span><span class="p">,</span>  <span class="c1"># A `grain.IndexSampler` to determine how to access the data.</span>
+    <span class="n">worker_count</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>        <span class="c1"># The number of child processes launched to parallelize the transformations.</span>
+    <span class="n">worker_buffer_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>  <span class="c1"># The number count of output batches to produce in advance per worker.</span>
+    <span class="n">operations</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">grain</span><span class="o">.</span><span class="n">Batch</span><span class="p">(</span><span class="n">test_batch_size</span><span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="define-the-transformer-model-with-flax-and-jax">
+<h2>Define the transformer model with Flax and JAX<a class="headerlink" href="#define-the-transformer-model-with-flax-and-jax" title="Link to this heading">#</a></h2>
+<p>In this section, we’ll construct the transformer model using JAX and Flax NNX.</p>
+<p>Let’s begin with the transformer block, subclassing <code class="docutils literal notranslate"><span class="pre">flax.nnx.Module</span></code>. This class processes the embedded sequences.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">TransformerBlock</span><span class="p">(</span><span class="n">nnx</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; A single Transformer block that processes the embedded sequences.</span>
+
+<span class="sd">    Each Transformer block processes input sequences via self-attention and feed-forward networks.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        embed_dim (int): Embedding dimensionality.</span>
+<span class="sd">        num_heads (int): Number of attention heads.</span>
+<span class="sd">        ff_dim (int): Dimensionality of the feed-forward network.</span>
+<span class="sd">        rngs (flax.nnx.Rngs): A Flax NNX stream of JAX PRNG keys.</span>
+<span class="sd">        rate (float): Dropout rate. Defaults to 0.1.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">num_heads</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">ff_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rngs</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">,</span> <span class="n">rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">):</span>
+        <span class="c1"># Multi-Head Attention (MHA) using `flax.nnx.MultiHeadAttention`.</span>
+        <span class="c1"># Specifies tensor sharding (depending on the mesh cofiguration).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attention</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">MultiHeadAttention</span><span class="p">(</span>
+            <span class="n">num_heads</span><span class="o">=</span><span class="n">num_heads</span><span class="p">,</span> <span class="n">in_features</span><span class="o">=</span><span class="n">embed_dim</span><span class="p">,</span> <span class="n">qkv_features</span><span class="o">=</span><span class="n">embed_dim</span><span class="p">,</span> <span class="n">decode</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span>
+        <span class="p">)</span>
+        <span class="c1"># First linear transformation for the feed-forward network using `flax.nnx.Linear`.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dense_1</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="n">embed_dim</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="n">ff_dim</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+        <span class="c1"># Second linear transformation for the feed-forward network with `flax.nnx.Linear`.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dense_2</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="n">ff_dim</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="n">ff_dim</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+
+        <span class="c1"># First layer normalization using `flax.nnx.LayerNorm`.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layer_norm_1</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">LayerNorm</span><span class="p">(</span><span class="n">num_features</span><span class="o">=</span><span class="n">embed_dim</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+        <span class="c1"># Second layer normalization with `flax.nnx.LayerNorm`.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layer_norm_2</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">LayerNorm</span><span class="p">(</span><span class="n">num_features</span><span class="o">=</span><span class="n">ff_dim</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+
+        <span class="c1"># First dropout using `flax.nnx.Dropout`.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dropout_1</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">rate</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+        <span class="c1"># Second dropout using `flax.nnx.Dropout`.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dropout_2</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">rate</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+
+    <span class="c1"># Apply the transformer block to the input sequence.</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">):</span>
+        <span class="c1"># Apply Multi-Head Attention.</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attention</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
+        <span class="c1"># Apply the first dropout.</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropout_1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="c1"># Apply the first layer normalization.</span>
+        <span class="n">x_norm_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_norm_1</span><span class="p">(</span><span class="n">inputs</span> <span class="o">+</span> <span class="n">x</span><span class="p">)</span>
+        <span class="c1"># The feed-forward network.</span>
+        <span class="c1"># Apply the first linear transformation.</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dense_1</span><span class="p">(</span><span class="n">x_norm_1</span><span class="p">)</span>
+        <span class="c1"># Apply the ReLU activation with `jax.nnx.relu`.</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="c1"># Apply the second linear transformation.</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dense_2</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="c1"># Apply the second dropout.</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropout_2</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="c1"># Apply the second layer normalization and return the output of the Transformer block.</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_norm_2</span><span class="p">(</span><span class="n">x_norm_1</span> <span class="o">+</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Next, let’s create a class called <code class="docutils literal notranslate"><span class="pre">TokenAndPositionEmbedding()</span></code> that transforms tokens and positions into embeddings that will be fed into the transformer (via <code class="docutils literal notranslate"><span class="pre">TransformerBlock</span></code>) by subclassing <code class="docutils literal notranslate"><span class="pre">flax.nnx.Module</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">TokenAndPositionEmbedding()</span></code> class will combine token embeddings (words in an input sentence) with positional embeddings (the position of each word in a sentence). (It handles embedding both word tokens and their positions within the sequence.)</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">TokenAndPositionEmbedding</span><span class="p">(</span><span class="n">nnx</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Combines token embeddings with positional embeddings.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        maxlen (int): The maximum sequence length.</span>
+<span class="sd">        vocal_size (int): The vocabulary size.</span>
+<span class="sd">        embed_dim (int): Embedding dimensionality.</span>
+<span class="sd">        rngs (flax.nnx.Rngs): A Flax NNX stream of JAX PRNG keys.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Initializes the token embedding layer (using `flax.nnx.Embed`).</span>
+    <span class="c1"># Handles token and positional embeddings.</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_length</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">vocab_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rngs</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">):</span>
+        <span class="c1"># Each unique word has an embedding vector.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">token_emb</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Embed</span><span class="p">(</span><span class="n">num_embeddings</span><span class="o">=</span><span class="n">vocab_size</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="n">embed_dim</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+        <span class="c1"># Initialize positional embeddings (using `flax.nnx.Embed`).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pos_emb</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Embed</span><span class="p">(</span><span class="n">num_embeddings</span><span class="o">=</span><span class="n">max_length</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="n">embed_dim</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+
+    <span class="c1"># Generates embeddings for the input tokens and their positions.</span>
+    <span class="c1"># Takes a token sequence (integers) and returns the combined token and positional embeddings.</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">):</span>
+        <span class="n">maxlen</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">x</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1"># Generate a sequence of positions for the input tokens.</span>
+        <span class="n">positions</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="n">maxlen</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># Look up the positional embeddings for each position in the input sequence.</span>
+        <span class="n">positions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos_emb</span><span class="p">(</span><span class="n">positions</span><span class="p">)</span>
+        <span class="c1"># Look up the token embeddings for each token in the input sequence.</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">token_emb</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="c1"># Combine token and positional embeddings.</span>
+        <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="n">positions</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Next, we’ll construct the transformer model, <code class="docutils literal notranslate"><span class="pre">MyModel()</span></code>, subclassing <code class="docutils literal notranslate"><span class="pre">flax.nnx.Module</span></code>, which includes <code class="docutils literal notranslate"><span class="pre">TokenAndPositionEmbedding()</span></code> for transforming tokens and positions into embeddings, transformer blocks (<code class="docutils literal notranslate"><span class="pre">TransformerBlock()</span></code>) for processing the embedded sequences, and other layers.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">embed_dim</span> <span class="o">=</span> <span class="mi">32</span>  <span class="c1"># The embedding size for each token.</span>
+<span class="n">num_heads</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># The number of attention heads.</span>
+<span class="n">ff_dim</span> <span class="o">=</span> <span class="mi">32</span>  <span class="c1"># The hidden layer size in the feed-forward network inside the transformer.</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MyModel</span><span class="p">(</span><span class="n">nnx</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rngs</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Initializes the transformer block with the `TokenAndPositionEmbedding()`,</span>
+<span class="sd">        `TransformerBlock()`, and other layers.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            rngs (flax.nnx.Rngs): A Flax NNX stream of JAX PRNG keys.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">embedding_layer</span> <span class="o">=</span> <span class="n">TokenAndPositionEmbedding</span><span class="p">(</span><span class="n">maxlen</span><span class="p">,</span> <span class="n">vocab_size</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transformer_block</span> <span class="o">=</span> <span class="n">TransformerBlock</span><span class="p">(</span><span class="n">embed_dim</span><span class="p">,</span> <span class="n">num_heads</span><span class="p">,</span> <span class="n">ff_dim</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dropout1</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dense1</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="n">embed_dim</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dropout2</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dense2</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+
+    <span class="c1"># Processes the input sequence through the transformer model.</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">embedding_layer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformer_block</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,))</span>  <span class="c1"># global average pooling</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropout1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dense1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropout2</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dense2</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Instantiate the model, <code class="docutils literal notranslate"><span class="pre">MyModel()</span></code>, as <code class="docutils literal notranslate"><span class="pre">model</span></code> and visualize it by calling <code class="docutils literal notranslate"><span class="pre">flax.nnx.display()</span></code>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">MyModel</span><span class="p">(</span><span class="n">rngs</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<span class="n">nnx</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>MyModel(
+  embedding_layer=TokenAndPositionEmbedding(
+    token_emb=Embed(
+      embedding=Param(
+        value=Array(shape=(20000, 32), dtype=float32)
+      ),
+      num_embeddings=20000,
+      features=32,
+      dtype=dtype(&#39;float32&#39;),
+      param_dtype=&lt;class &#39;jax.numpy.float32&#39;&gt;,
+      embedding_init=&lt;function variance_scaling.&lt;locals&gt;.init at 0x7f0cab141e10&gt;
+    ),
+    pos_emb=Embed(
+      embedding=Param(
+        value=Array(shape=(200, 32), dtype=float32)
+      ),
+      num_embeddings=200,
+      features=32,
+      dtype=dtype(&#39;float32&#39;),
+      param_dtype=&lt;class &#39;jax.numpy.float32&#39;&gt;,
+      embedding_init=&lt;function variance_scaling.&lt;locals&gt;.init at 0x7f0cab141e10&gt;
+    )
+  ),
+  transformer_block=TransformerBlock(
+    attention=MultiHeadAttention(
+      num_heads=2,
+      in_features=32,
+      qkv_features=32,
+      out_features=32,
+      dtype=None,
+      param_dtype=&lt;class &#39;jax.numpy.float32&#39;&gt;,
+      broadcast_dropout=True,
+      dropout_rate=0.0,
+      deterministic=None,
+      precision=None,
+      kernel_init=&lt;function variance_scaling.&lt;locals&gt;.init at 0x7f0cab141b40&gt;,
+      out_kernel_init=None,
+      bias_init=&lt;function zeros at 0x7f0cabbdec20&gt;,
+      out_bias_init=None,
+      use_bias=True,
+      attention_fn=&lt;function dot_product_attention at 0x7f0cab1428c0&gt;,
+      decode=False,
+      normalize_qk=False,
+      qkv_dot_general=None,
+      out_dot_general=None,
+      qkv_dot_general_cls=None,
+      out_dot_general_cls=None,
+      head_dim=16,
+      query=LinearGeneral(
+        in_features=(32,),
+        out_features=(2, 16),
+        axis=(-1,),
+        batch_axis=FrozenDict({}),
+        use_bias=True,
+        dtype=None,
+        param_dtype=&lt;class &#39;jax.numpy.float32&#39;&gt;,
+        kernel_init=&lt;function variance_scaling.&lt;locals&gt;.init at 0x7f0cab141b40&gt;,
+        bias_init=&lt;function zeros at 0x7f0cabbdec20&gt;,
+        precision=None,
+        dot_general=None,
+        dot_general_cls=None,
+        kernel=Param(
+          value=Array(shape=(32, 2, 16), dtype=float32)
+        ),
+        bias=Param(
+          value=Array(shape=(2, 16), dtype=float32)
+        )
+      ),
+      key=LinearGeneral(
+        in_features=(32,),
+        out_features=(2, 16),
+        axis=(-1,),
+        batch_axis=FrozenDict({}),
+        use_bias=True,
+        dtype=None,
+        param_dtype=&lt;class &#39;jax.numpy.float32&#39;&gt;,
+        kernel_init=&lt;function variance_scaling.&lt;locals&gt;.init at 0x7f0cab141b40&gt;,
+        bias_init=&lt;function zeros at 0x7f0cabbdec20&gt;,
+        precision=None,
+        dot_general=None,
+        dot_general_cls=None,
+        kernel=Param(
+          value=Array(shape=(32, 2, 16), dtype=float32)
+        ),
+        bias=Param(
+          value=Array(shape=(2, 16), dtype=float32)
+        )
+      ),
+      value=LinearGeneral(
+        in_features=(32,),
+        out_features=(2, 16),
+        axis=(-1,),
+        batch_axis=FrozenDict({}),
+        use_bias=True,
+        dtype=None,
+        param_dtype=&lt;class &#39;jax.numpy.float32&#39;&gt;,
+        kernel_init=&lt;function variance_scaling.&lt;locals&gt;.init at 0x7f0cab141b40&gt;,
+        bias_init=&lt;function zeros at 0x7f0cabbdec20&gt;,
+        precision=None,
+        dot_general=None,
+        dot_general_cls=None,
+        kernel=Param(
+          value=Array(shape=(32, 2, 16), dtype=float32)
+        ),
+        bias=Param(
+          value=Array(shape=(2, 16), dtype=float32)
+        )
+      ),
+      query_ln=None,
+      key_ln=None,
+      out=LinearGeneral(
+        in_features=(2, 16),
+        out_features=(32,),
+        axis=(-2, -1),
+        batch_axis=FrozenDict({}),
+        use_bias=True,
+        dtype=None,
+        param_dtype=&lt;class &#39;jax.numpy.float32&#39;&gt;,
+        kernel_init=&lt;function variance_scaling.&lt;locals&gt;.init at 0x7f0cab141b40&gt;,
+        bias_init=&lt;function zeros at 0x7f0cabbdec20&gt;,
+        precision=None,
+        dot_general=None,
+        dot_general_cls=None,
+        kernel=Param(
+          value=Array(shape=(2, 16, 32), dtype=float32)
+        ),
+        bias=Param(
+          value=Array(shape=(32,), dtype=float32)
+        )
+      ),
+      rngs=None,
+      cached_key=None,
+      cached_value=None,
+      cache_index=None
+    ),
+    dense_1=Linear(
+      kernel=Param(
+        value=Array(shape=(32, 32), dtype=float32)
+      ),
+      bias=Param(
+        value=Array(shape=(32,), dtype=float32)
+      ),
+      in_features=32,
+      out_features=32,
+      use_bias=True,
+      dtype=None,
+      param_dtype=&lt;class &#39;jax.numpy.float32&#39;&gt;,
+      precision=None,
+      kernel_init=&lt;function variance_scaling.&lt;locals&gt;.init at 0x7f0cab141b40&gt;,
+      bias_init=&lt;function zeros at 0x7f0cabbdec20&gt;,
+      dot_general=&lt;function dot_general at 0x7f0cac220790&gt;
+    ),
+    dense_2=Linear(
+      kernel=Param(
+        value=Array(shape=(32, 32), dtype=float32)
+      ),
+      bias=Param(
+        value=Array(shape=(32,), dtype=float32)
+      ),
+      in_features=32,
+      out_features=32,
+      use_bias=True,
+      dtype=None,
+      param_dtype=&lt;class &#39;jax.numpy.float32&#39;&gt;,
+      precision=None,
+      kernel_init=&lt;function variance_scaling.&lt;locals&gt;.init at 0x7f0cab141b40&gt;,
+      bias_init=&lt;function zeros at 0x7f0cabbdec20&gt;,
+      dot_general=&lt;function dot_general at 0x7f0cac220790&gt;
+    ),
+    layer_norm_1=LayerNorm(
+      scale=Param(
+        value=Array(shape=(32,), dtype=float32)
+      ),
+      bias=Param(
+        value=Array(shape=(32,), dtype=float32)
+      ),
+      num_features=32,
+      epsilon=1e-06,
+      dtype=None,
+      param_dtype=&lt;class &#39;jax.numpy.float32&#39;&gt;,
+      use_bias=True,
+      use_scale=True,
+      bias_init=&lt;function zeros at 0x7f0cabbdec20&gt;,
+      scale_init=&lt;function ones at 0x7f0cabbdedd0&gt;,
+      reduction_axes=-1,
+      feature_axes=-1,
+      axis_name=None,
+      axis_index_groups=None,
+      use_fast_variance=True
+    ),
+    layer_norm_2=LayerNorm(
+      scale=Param(
+        value=Array(shape=(32,), dtype=float32)
+      ),
+      bias=Param(
+        value=Array(shape=(32,), dtype=float32)
+      ),
+      num_features=32,
+      epsilon=1e-06,
+      dtype=None,
+      param_dtype=&lt;class &#39;jax.numpy.float32&#39;&gt;,
+      use_bias=True,
+      use_scale=True,
+      bias_init=&lt;function zeros at 0x7f0cabbdec20&gt;,
+      scale_init=&lt;function ones at 0x7f0cabbdedd0&gt;,
+      reduction_axes=-1,
+      feature_axes=-1,
+      axis_name=None,
+      axis_index_groups=None,
+      use_fast_variance=True
+    ),
+    dropout_1=Dropout(rate=0.1, broadcast_dims=(), deterministic=False, rng_collection=&#39;dropout&#39;, rngs=Rngs(
+      default=RngStream(
+        key=RngKey(
+          value=Array((), dtype=key&lt;fry&gt;) overlaying:
+          [0 0],
+          tag=&#39;default&#39;
+        ),
+        count=RngCount(
+          value=Array(22, dtype=uint32),
+          tag=&#39;default&#39;
+        )
+      )
+    )),
+    dropout_2=Dropout(rate=0.1, broadcast_dims=(), deterministic=False, rng_collection=&#39;dropout&#39;, rngs=Rngs(...))
+  ),
+  dropout1=Dropout(rate=0.1, broadcast_dims=(), deterministic=False, rng_collection=&#39;dropout&#39;, rngs=Rngs(...)),
+  dense1=Linear(
+    kernel=Param(
+      value=Array(shape=(32, 20), dtype=float32)
+    ),
+    bias=Param(
+      value=Array(shape=(20,), dtype=float32)
+    ),
+    in_features=32,
+    out_features=20,
+    use_bias=True,
+    dtype=None,
+    param_dtype=&lt;class &#39;jax.numpy.float32&#39;&gt;,
+    precision=None,
+    kernel_init=&lt;function variance_scaling.&lt;locals&gt;.init at 0x7f0cab141b40&gt;,
+    bias_init=&lt;function zeros at 0x7f0cabbdec20&gt;,
+    dot_general=&lt;function dot_general at 0x7f0cac220790&gt;
+  ),
+  dropout2=Dropout(rate=0.1, broadcast_dims=(), deterministic=False, rng_collection=&#39;dropout&#39;, rngs=Rngs(...)),
+  dense2=Linear(
+    kernel=Param(
+      value=Array(shape=(20, 2), dtype=float32)
+    ),
+    bias=Param(
+      value=Array(shape=(2,), dtype=float32)
+    ),
+    in_features=20,
+    out_features=2,
+    use_bias=True,
+    dtype=None,
+    param_dtype=&lt;class &#39;jax.numpy.float32&#39;&gt;,
+    precision=None,
+    kernel_init=&lt;function variance_scaling.&lt;locals&gt;.init at 0x7f0cab141b40&gt;,
+    bias_init=&lt;function zeros at 0x7f0cabbdec20&gt;,
+    dot_general=&lt;function dot_general at 0x7f0cac220790&gt;
+  )
+)
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="defining-the-loss-function-and-training-step-related-functions">
+<h2>Defining the loss function and training step-related functions<a class="headerlink" href="#defining-the-loss-function-and-training-step-related-functions" title="Link to this heading">#</a></h2>
+<p>Before training the model, we need to construct an <code class="docutils literal notranslate"><span class="pre">flax.nnx.Optimizer</span></code> object with our <code class="docutils literal notranslate"><span class="pre">MyModel</span></code> transformer and the Adam optimizer.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">num_epochs</span> <span class="o">=</span> <span class="mi">10</span> <span class="c1"># Number of epochs during training.</span>
+<span class="n">learning_rate</span> <span class="o">=</span> <span class="mf">0.0001</span> <span class="c1"># The learning rate.</span>
+<span class="n">momentum</span> <span class="o">=</span> <span class="mf">0.9</span> <span class="c1"># Momentum for Adam.</span>
+
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">ModelAndOptimizer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optax</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="n">learning_rate</span><span class="p">,</span> <span class="n">momentum</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Next, we define the loss function - <code class="docutils literal notranslate"><span class="pre">compute_losses_and_logits()</span></code> - using <code class="docutils literal notranslate"><span class="pre">optax.softmax_cross_entropy_with_integer_labels</span></code>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">compute_losses_and_logits</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">batch_tokens</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">):</span>
+    <span class="n">logits</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">batch_tokens</span><span class="p">)</span>
+
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">optax</span><span class="o">.</span><span class="n">softmax_cross_entropy_with_integer_labels</span><span class="p">(</span>
+        <span class="n">logits</span><span class="o">=</span><span class="n">logits</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">labels</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">loss</span><span class="p">,</span> <span class="n">logits</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Next, let’s define the training step - <code class="docutils literal notranslate"><span class="pre">train_step()</span></code> - using the <code class="docutils literal notranslate"><span class="pre">flax.nnx.jit</span></code> transformation decorator. The function takes in <code class="docutils literal notranslate"><span class="pre">model</span></code> (our transformer model), <code class="docutils literal notranslate"><span class="pre">optimizer</span></code> (Adam, as defined earlier) and the <code class="docutils literal notranslate"><span class="pre">batch</span></code> size as arguments. Then, let’s define the evaluation step function (<code class="docutils literal notranslate"><span class="pre">eval_step()</span></code>), which takes <code class="docutils literal notranslate"><span class="pre">model</span></code>, <code class="docutils literal notranslate"><span class="pre">batch</span></code> and <code class="docutils literal notranslate"><span class="pre">eval_metrics</span></code> (loss and accuracy - details further below) as arguments.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nd">@nnx</span><span class="o">.</span><span class="n">jit</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">train_step</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">]</span>
+<span class="p">):</span>
+    <span class="n">batch_tokens</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;encoded_indices&quot;</span><span class="p">])</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+
+    <span class="n">grad_fn</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">value_and_grad</span><span class="p">(</span><span class="n">compute_losses_and_logits</span><span class="p">,</span> <span class="n">has_aux</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">logits</span><span class="p">),</span> <span class="n">grads</span> <span class="o">=</span> <span class="n">grad_fn</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">batch_tokens</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+
+    <span class="n">optimizer</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">grads</span><span class="p">)</span>  <span class="c1"># In-place updates.</span>
+
+    <span class="k">return</span> <span class="n">loss</span>
+
+<span class="nd">@nnx</span><span class="o">.</span><span class="n">jit</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">eval_step</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">],</span> <span class="n">eval_metrics</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">MultiMetric</span>
+<span class="p">):</span>
+    <span class="n">batch_tokens</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;encoded_indices&quot;</span><span class="p">])</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="n">loss</span><span class="p">,</span> <span class="n">logits</span> <span class="o">=</span> <span class="n">compute_losses_and_logits</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">batch_tokens</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+
+    <span class="n">eval_metrics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+        <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span>
+        <span class="n">logits</span><span class="o">=</span><span class="n">logits</span><span class="p">,</span>
+        <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>For metrics, let’s set the evaluation metrics using <code class="docutils literal notranslate"><span class="pre">flax.nnx.MultiMetric</span></code>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">eval_metrics</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">MultiMetric</span><span class="p">(</span>
+    <span class="n">loss</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">Average</span><span class="p">(</span><span class="s1">&#39;loss&#39;</span><span class="p">),</span>
+    <span class="n">accuracy</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">Accuracy</span><span class="p">(),</span>
+<span class="p">)</span>
+
+<span class="n">train_metrics_history</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;train_loss&quot;</span><span class="p">:</span> <span class="p">[],</span>
+<span class="p">}</span>
+
+<span class="n">eval_metrics_history</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;test_loss&quot;</span><span class="p">:</span> <span class="p">[],</span>
+    <span class="s2">&quot;test_accuracy&quot;</span><span class="p">:</span> <span class="p">[],</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Next, set up a function called <code class="docutils literal notranslate"><span class="pre">train_one_epoch()</span></code> for training one epoch, and a function called <code class="docutils literal notranslate"><span class="pre">evaluate_model()</span></code> for computing metrics on the training and test sets:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">bar_format</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{desc}</span><span class="s2">[</span><span class="si">{n_fmt}</span><span class="s2">/</span><span class="si">{total_fmt}</span><span class="s2">]</span><span class="si">{postfix}</span><span class="s2"> [</span><span class="si">{elapsed}</span><span class="s2">&lt;</span><span class="si">{remaining}</span><span class="s2">]&quot;</span>
+<span class="n">train_total_steps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_train</span><span class="p">)</span> <span class="o">//</span> <span class="n">train_batch_size</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">train_one_epoch</span><span class="p">(</span><span class="n">epoch</span><span class="p">):</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+    <span class="k">with</span> <span class="n">tqdm</span><span class="o">.</span><span class="n">tqdm</span><span class="p">(</span>
+        <span class="n">desc</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;[train] epoch: </span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">num_epochs</span><span class="si">}</span><span class="s2">, &quot;</span><span class="p">,</span>
+        <span class="n">total</span><span class="o">=</span><span class="n">train_total_steps</span><span class="p">,</span>
+        <span class="n">bar_format</span><span class="o">=</span><span class="n">bar_format</span><span class="p">,</span>
+        <span class="n">leave</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="k">as</span> <span class="n">pbar</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">train_loader</span><span class="p">:</span>
+            <span class="n">loss</span> <span class="o">=</span> <span class="n">train_step</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">batch</span><span class="p">)</span>
+            <span class="n">train_metrics_history</span><span class="p">[</span><span class="s2">&quot;train_loss&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+            <span class="n">pbar</span><span class="o">.</span><span class="n">set_postfix</span><span class="p">({</span><span class="s2">&quot;loss&quot;</span><span class="p">:</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()})</span>
+            <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">evaluate_model</span><span class="p">(</span><span class="n">epoch</span><span class="p">):</span>
+    <span class="c1"># Compute the metrics on the training and test sets after each training epoch.</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+
+    <span class="n">eval_metrics</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>  <span class="c1"># Reset the eval metrics</span>
+    <span class="k">for</span> <span class="n">test_batch</span> <span class="ow">in</span> <span class="n">test_loader</span><span class="p">:</span>
+        <span class="n">eval_step</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">test_batch</span><span class="p">,</span> <span class="n">eval_metrics</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">metric</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">eval_metrics</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">eval_metrics_history</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;test_</span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[test] epoch: </span><span class="si">{</span><span class="n">epoch</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">num_epochs</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- total loss: </span><span class="si">{</span><span class="n">eval_metrics_history</span><span class="p">[</span><span class="s1">&#39;test_loss&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">0.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- Accuracy: </span><span class="si">{</span><span class="n">eval_metrics_history</span><span class="p">[</span><span class="s1">&#39;test_accuracy&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">0.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="training-the-model">
+<h2>Training the model<a class="headerlink" href="#training-the-model" title="Link to this heading">#</a></h2>
+<p>Train the model over 10 epochs:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
+<span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_epochs</span><span class="p">):</span>
+    <span class="n">train_one_epoch</span><span class="p">(</span><span class="n">epoch</span><span class="p">)</span>
+    <span class="n">evaluate_model</span><span class="p">(</span><span class="n">epoch</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[test] epoch: 1/10
+- total loss: 0.6879
+- Accuracy: 0.5661
+[test] epoch: 2/10
+- total loss: 0.6734
+- Accuracy: 0.6507
+[test] epoch: 3/10
+- total loss: 0.6177
+- Accuracy: 0.7316
+[test] epoch: 4/10
+- total loss: 0.5404
+- Accuracy: 0.7890
+[test] epoch: 5/10
+- total loss: 0.4995
+- Accuracy: 0.8159
+[test] epoch: 6/10
+- total loss: 0.4806
+- Accuracy: 0.8280
+[test] epoch: 7/10
+- total loss: 0.4714
+- Accuracy: 0.8349
+[test] epoch: 8/10
+- total loss: 0.4665
+- Accuracy: 0.8394
+[test] epoch: 9/10
+- total loss: 0.4602
+- Accuracy: 0.8453
+[test] epoch: 10/10
+- total loss: 0.4560
+- Accuracy: 0.8486
+CPU times: user 27min 44s, sys: 12min 14s, total: 39min 59s
+Wall time: 8min 19s
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[train] epoch: 0/10, [192/195], loss=0.693 [00:36&lt;00:00]
+[train] epoch: 1/10, [192/195], loss=0.678 [00:35&lt;00:00]
+[train] epoch: 2/10, [192/195], loss=0.594 [00:35&lt;00:00]
+[train] epoch: 3/10, [192/195], loss=0.511 [00:35&lt;00:00]
+[train] epoch: 4/10, [192/195], loss=0.466 [00:35&lt;00:00]
+[train] epoch: 5/10, [192/195], loss=0.463 [00:35&lt;00:00]
+[train] epoch: 6/10, [192/195], loss=0.435 [00:35&lt;00:00]
+[train] epoch: 7/10, [192/195], loss=0.421 [00:35&lt;00:00]
+[train] epoch: 8/10, [192/195], loss=0.409 [00:35&lt;00:00]
+[train] epoch: 9/10, [192/195], loss=0.389 [00:35&lt;00:00]
+</pre></div>
+</div>
+</div>
+</div>
+<p>Let’s visualize the training loss:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">train_metrics_history</span><span class="p">[</span><span class="s2">&quot;train_loss&quot;</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Loss value during the training&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;matplotlib.legend.Legend at 0x7f0c9d1c5b70&gt;
+</pre></div>
+</div>
+<img alt="_images/2276b74db8ce10a52318fd5da174e6287822fa6330700518881151ecd0a0c0b5.png" src="_images/2276b74db8ce10a52318fd5da174e6287822fa6330700518881151ecd0a0c0b5.png" />
+</div>
+</div>
+<p>We can also plot the accuracy and loss metrics on the test set:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Loss value on test set&quot;</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">eval_metrics_history</span><span class="p">[</span><span class="s2">&quot;test_loss&quot;</span><span class="p">])</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Accuracy on test set&quot;</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">eval_metrics_history</span><span class="p">[</span><span class="s2">&quot;test_accuracy&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&lt;matplotlib.lines.Line2D at 0x7f0c9d1c4c40&gt;]
+</pre></div>
+</div>
+<img alt="_images/c2e22d5116525a2cb89f044d6b24190479b077cec196641c2c324c108d669b2e.png" src="_images/c2e22d5116525a2cb89f044d6b24190479b077cec196641c2c324c108d669b2e.png" />
+</div>
+</div>
+<p>The model achieves around 85% accuracy after just 10 epochs. Based on the loss plot, during the last few epochs the loss value didn’t improve much, which may indicate that our model converged.</p>
+</section>
+<section id="evaluate-the-model">
+<h2>Evaluate the model<a class="headerlink" href="#evaluate-the-model" title="Link to this heading">#</a></h2>
+<p>To inspect the model using a few predictions, let’s download “indices to words” dictionary to decode our samples. Then we will decode a few samples and print them together with a prediced and an actual label.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://storage.googleapis.com/tensorflow/tf-keras-datasets/imdb_word_index.json&quot;</span><span class="p">)</span>
+<span class="n">response</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+<span class="n">word_map</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="p">:</span> <span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">content</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">_label_to_str</span><span class="p">(</span><span class="n">label</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="s2">&quot;positive&quot;</span> <span class="k">if</span> <span class="n">label</span> <span class="k">else</span> <span class="s2">&quot;negative&quot;</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">show_reviews</span><span class="p">(</span><span class="n">indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x_test</span><span class="p">[</span><span class="n">idx</span><span class="p">][</span><span class="n">x_test</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">y_test</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="n">y_pred</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x_test</span><span class="p">[</span><span class="n">idx</span><span class="p">][</span><span class="kc">None</span><span class="p">,</span> <span class="p">:])</span><span class="o">.</span><span class="n">argmax</span><span class="p">()</span>
+        <span class="n">review</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">w_x</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">w_x</span> <span class="o">-</span> <span class="n">index_from</span> <span class="k">if</span> <span class="n">w_x</span> <span class="o">&gt;=</span> <span class="n">index_from</span> <span class="k">else</span> <span class="n">w_x</span>
+            <span class="n">review</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">word_map</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="si">}</span><span class="s2"> &quot;</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Review:&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">review</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Predicted sentiment: &quot;</span><span class="p">,</span> <span class="n">_label_to_str</span><span class="p">(</span><span class="n">y_pred</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Actual sentiment: &quot;</span><span class="p">,</span> <span class="n">_label_to_str</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">show_reviews</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">600</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">1800</span><span class="p">,</span> <span class="mi">2000</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Review:
+please give this one a miss br br kristy swanson and the rest of the
+cast rendered terrible performances the show is flat flat flat br br i
+don&#39;t know how michael madison could have allowed this one on his
+plate he almost seemed to know this wasn&#39;t going to work out and his
+performance was quite lacklustre so all you madison fans give this a
+miss
+Predicted sentiment:  negative
+Actual sentiment:  negative 
+
+Review:
+this is a funny movie the bob eddie show feel of it could lead to a
+sequel but i doubt it will make enough money br br deniro proves he
+can be a great straight man again with some hilarious and spontaneous
+moments eddie was fun to watch working with people instead of cgi
+animals and and rene russo well she&#39;s just fun to watch anyway and
+she&#39;s played her part excellent br br some wild and unusual stunts
+especially the garbage truck scene this was worth seeing in the
+theater we needed a good laugh and got many from the movie and the
+great out takes at the end do not leave at the start of the credits br
+br at least a 7
+Predicted sentiment:  positive
+Actual sentiment:  positive 
+
+Review:
+terrible absolutely terrible long confusing and and after about three
+hours of this painful mess the ending truly is the final nail in the
+coffin not even the magnificent sexy beautiful goddess and and can
+save this poor adaptation of agatha and work the plot drags and drags
+and time goes by slowly and suddenly you realize that you don&#39;t even
+have any idea of what&#39;s going on anymore by the end even with the
+usual explanation by the villain there&#39;s still a lot that&#39;s left
+unexplained and and it&#39;s over a complete waste of time and without a
+doubt one of the worst to bear the name of agatha christie
+Predicted sentiment:  negative
+Actual sentiment:  negative 
+
+Review:
+whoa this is one of the worst movies i have ever seen the packaging
+for the film is better than the film itself my girlfriend and i
+watched it this past weekend and we only continued to watch it in the
+hopes that it would get better it didn&#39;t br br the picture quality is
+poor it looks like it was shot on video and transferred to film the
+lighting is not great which makes it harder to read the actors&#39; facial
+expressions the acting itself was cheesy but i guess it&#39;s acceptable
+for yet another teenage horror flick the sound was a huge problem
+sometimes you have to rewind the video because the sound is unclear
+and or and br br it holds no real merit of it&#39;s own trying to ride on
+the and of sleepy hollow don&#39;t bother with this one
+Predicted sentiment:  negative
+Actual sentiment:  negative 
+
+Review:
+i am a big gone with the wind nut but i was disappointed that both
+gone with the wind the movie and scarlett the mini series are so
+different from the books gone with the wind left so many things out in
+the movie that were in the book and they did the same with scarlett
+both were good movies but i really liked both books better there were
+so many characters left out of scarlett and the ages of some
+characters didn&#39;t seem to match up with the book the time lines don&#39;t
+match up either scarlett realizes she is pregnant on the ship to
+ireland in the book but she realizes it when she is throwing up while
+in also sally is made out to be an ugly monkey like woman in the book
+and the movie casted jean smart to play her who is obviously not an
+ugly woman over all scarlett is a good movie and it helps anyone who
+was disappointed in the way gone with the wind ended to see what might
+have happened if margaret mitchell had lived to write a sequel herself
+Predicted sentiment:  negative
+Actual sentiment:  positive 
+
+Review:
+if you liked the richard chamberlain version of the bourne identity
+then you will like this too aiden quinn does this one brilliantly you
+can&#39;t help but wonder if he is really out there i reckon he and the
+other main cast members probably had nightmares for weeks after doing
+this movie as it&#39;s so intense when i first saw it i was just and
+channels on the remote late one evening i got hooked within minutes
+look up www answers com for and and who is the character that carlos
+the is based on for both i remember reading about and arrest in the
+paper in 1997 it was front page for weeks through the trial after his
+arrest
+Predicted sentiment:  positive
+Actual sentiment:  positive
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+
+<div class="section ablog__blog_comments">
+   
+</div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="JAX_basic_text_classification.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Basic text classification with 1D CNN</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="JAX_machine_translation.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Machine Translation with encoder-decoder transformer model</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setup">Setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-and-preprocessing-the-data">Loading and preprocessing the data</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-the-data">Loading the data</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#apply-efficient-data-loading-and-preprocessing-using-grain">Apply efficient data loading and preprocessing using Grain</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#define-the-transformer-model-with-flax-and-jax">Define the transformer model with Flax and JAX</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-the-loss-function-and-training-step-related-functions">Defining the loss function and training step-related functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-the-model">Training the model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#evaluate-the-model">Evaluate the model</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By JAX team
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, JAX team.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

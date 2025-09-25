@@ -1,0 +1,532 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>AI Innovators: How JAX on TPU is helping Escalante advance AI-driven protein design &#8212; JAX AI Stack</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css?v=6644e6bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=1dc24ef2" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=c1d4a9c3"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'blog/2025-09-25';</script>
+    <link rel="icon" href="../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>   
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/ai-stack-logo.svg" class="logo__image only-light" alt="JAX AI Stack - Home"/>
+    <script>document.write(`<img src="../_static/ai-stack-logo.svg" class="logo__image only-dark" alt="JAX AI Stack - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../index.html">
+                    JAX AI Stack
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../blog.html">JAX AI Stack Blog</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installing the stack</a></li>
+
+<li class="toctree-l1 has-children"><a class="reference internal" href="../getting_started.html">Getting started with JAX for ML</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../neural_net_basics.html">Part 1: JAX neural net basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../digits_vae.html">Part 2: Debug a variational autoencoder (VAE)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../digits_diffusion_model.html">Part 3: Train a diffusion model for image generation</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../JAX_visualizing_models_metrics.html">Visualize JAX model metrics with TensorBoard</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../data_loaders.html">Introduction to Data Loaders</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../data_loaders_on_cpu_with_jax.html">Introduction to Data Loaders on CPU with JAX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_loaders_on_gpu_with_jax.html">Introduction to Data Loaders on GPU with JAX</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../pytorch_users.html">From PyTorch to JAX</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../JAX_for_PyTorch_users.html">JAX for PyTorch users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../JAX_porting_PyTorch_model.html">Porting a PyTorch model to JAX</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Example applications</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../JAX_for_LLM_pretraining.html">Train a miniGPT language model with JAX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../JAX_basic_text_classification.html">Basic text classification with 1D CNN</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../JAX_transformer_text_classification.html">Text classification with a transformer language model using JAX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../JAX_machine_translation.html">Machine Translation with encoder-decoder transformer model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../JAX_examples_image_segmentation.html">Image segmentation with UNETR model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../JAX_image_captioning.html">Image Captioning with Vision Transformer (ViT) model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../JAX_Vision_transformer.html">Train a Vision Transformer (ViT) for image classification with JAX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../JAX_time_series_classification.html">Time series classification with CNN</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer resources</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contribute to documentation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/jax-ml/jax-ai-stack" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/blog/2025-09-25.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>AI Innovators: How JAX on TPU is helping Escalante advance AI-driven protein design</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-new-approach-to-protein-design">A new approach to protein design</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#explore-the-jax-scientific-computing-ecosystem"><strong>Explore the JAX scientific computing ecosystem</strong></a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                   <section class="tex2jax_ignore mathjax_ignore" id="ai-innovators-how-jax-on-tpu-is-helping-escalante-advance-ai-driven-protein-design">
+<h1>AI Innovators: How JAX on TPU is helping Escalante advance AI-driven protein design<a class="headerlink" href="#ai-innovators-how-jax-on-tpu-is-helping-escalante-advance-ai-driven-protein-design" title="Link to this heading">#</a></h1>
+<p><img alt="" src="../_images/jax.max-2500x2500.jpg" /></p>
+<p><em><strong>Srikanth Kilaru, Senior Product Manager, Google ML Frameworks</strong></em></p>
+<p><em>As a Python library for accelerator-oriented array computation and program transformation, <a class="reference external" href="http://jax.dev">JAX</a> is widely recognized for its power in training large-scale AI models. But its core design as a system for composable function transformations unlocks its potential in a much broader scientific landscape. Following <a class="reference external" href="https://developers.googleblog.com/en/jax-symbolic-power-unlocks-new-frontiers-in-scientific-computing/">our recent post on solving high-order partial differential equations</a>, or PDEs, we’re excited to highlight another frontier where JAX is making a significant impact: <a class="reference external" href="https://laskerfoundation.org/winners/alphafold-a-technology-for-predicting-protein-structures/">AI-driven protein engineering</a>.</em></p>
+<p><em>I recently spoke with April Schleck and Nick Boyd, two co-founders of <a class="reference external" href="https://escalante.bio/">Escalante</a>, a startup using AI to train models that predict the impact of drugs on cellular protein expression levels. Their story is a powerful illustration of how JAX’s fundamental design choices — especially its functional and composable nature — are enabling researchers to tackle multi-faceted scientific challenges in ways that are difficult to achieve with other frameworks.</em></p>
+<section id="a-new-approach-to-protein-design">
+<h2>A new approach to protein design<a class="headerlink" href="#a-new-approach-to-protein-design" title="Link to this heading">#</a></h2>
+<p>April and Nick explained that Escalante’s long-term vision is to train machine learning (ML) models that can design drugs from the ground up. Unlike fields like natural language processing, which benefit from vast amounts of public data, biology currently lacks the specific datasets needed to train models that truly understand cellular systems. Thus, their immediate focus is to solve this data problem by using current AI tools to build new kinds of lab assays that can generate these massive, relevant biological datasets.</p>
+<p>This short-term mission puts them squarely in the field of protein engineering, which they described as a complex, multi-objective optimization problem. When designing a new protein, they aren’t just optimizing one thing; it needs to bind to a specific target, while also being soluble, thermostable, and expressible in bacteria. Each of these properties is predicted by a different ML model (see figure below), ranging from complex architectures like <a class="reference external" href="https://deepmind.google/science/alphafold/">AlphaFold 2</a> <a class="reference external" href="https://github.com/google-deepmind/alphafold">(implemented in JAX)</a> to simpler, custom-trained models. Their core challenge is to combine all these different objectives into a single optimization loop.</p>
+<p>This is where, as April put it, “JAX became a game-changer for us.” She noted that while combining many AI models might be theoretically possible in other frameworks, JAX’s functional nature makes it incredibly natural to integrate a dozen different ones into a single loss function (see figure below).</p>
+<p><img alt="" src="../_images/image3_99Is5bh.max-900x900.png" />
+<em>Easily combine multiple objectives represented by different loss terms and models</em></p>
+<p>In the above code, Nick explained that there are at least two different ways models are being combined — some loss terms that are being linearly combined (e.g. the AF loss + the ESM pseudo log likelihood loss), and some terms where models are being composed serially (e.g., in the first Boltz-1 term we first fold the sequence with Boltz-1 and then compute the sequence likelihood after inverse folding with another model, ProteinMPNN).</p>
+<p>To make this work, they embraced the JAX ecosystem, even translating models from PyTorch themselves — a prime example being their <a class="reference external" href="https://github.com/nboyd/joltz">JAX translation of the Boltz-2</a> structure prediction model.</p>
+<p>This approach gives what April called an “expressive language for protein design,” where models can be composed, added, and transformed to define a final objective. April said that the most incredible part is that this entire, complex graph of models “can be wrapped in a single <a class="reference external" href="https://docs.jax.dev/en/latest/jit-compilation.html">jax.jit</a> call that gives great performance” — something they found very difficult to do in other frameworks.</p>
+<p>Instead of a typical training run that optimizes a model’s weights, their workflow inverts the process to optimize the <em>input</em> itself, using a collection of fixed, pre-trained neural networks as a complex, multi-objective loss function. The approach is mechanically analogous to Google’s <a class="reference external" href="https://github.com/google/deepdream">DeepDream</a>. Just as DeepDream takes a fixed, pre-trained image classifier and uses gradient ascent to iteratively modify an input image’s pixels to maximize a chosen layer’s activation, Escalante’s method starts with a random protein sequence. This sequence is fed through a committee of “expert” models — each one a pre-trained scorer for a different desirable property, like binding affinity or stability. The outputs from all the models are combined into a single, differentiable objective functional. They then calculate a gradient of this final score with respect to the input sequence via backpropagation. An optimizer then uses this gradient to update the sequence, nudging it in a direction that better satisfies the collective requirements of all the models. This cycle repeats, evolving the random initial input into a novel, optimized protein sequence that the entire ensemble of models “believes” is ideal.</p>
+<p>Nick said that the choice of JAX was critical for this process. Its ability to compile and automatically differentiate complex code makes it ideal for optimizing the sophisticated loss functions at the heart of their work with Escalante’s library of tools for their protein design work, <a class="reference external" href="https://github.com/escalante-bio/mosaic">Mosaic</a>. Furthermore, the framework’s native integration with TPU hardware via the <a class="reference external" href="https://openxla.org/">XLA</a> compiler allowed them to easily scale these workloads.</p>
+<p>Escalante is sampling many potential protein designs for solving a problem (by optimizing the loss function). Each sampling job might generate 1K - 50K potential designs, which are then ranked and filtered. By the end of the process, they test only about 10 designs in the wet lab. This has led them to adopt a unique infrastructure pattern. Using <a class="reference external" href="https://cloud.google.com/kubernetes-engine">Google Kubernetes Engine)</a> (GKE), they instantly spin up 2,000 to 4,000 spot TPUs, run their optimization jobs for about half an hour, and then shut them all down.</p>
+<p>Nick also shared the compelling economics driving this choice. Given current spot pricing, <strong>adopting <a class="reference external" href="https://cloud.google.com/tpu/docs/v6e">Cloud TPU v6e</a> (Trillium) over an H100 GPU translated to a gain of 3.65x in performance per dollar for their large-scale jobs</strong>. He stressed that this cost-effectiveness is critical for their long-term goal of designing protein binders against the entire human proteome, a task that requires immense computational scale.</p>
+<p>To build their system, they rely on key libraries within the JAX ecosystem like <a class="reference external" href="https://docs.kidger.site/equinox/">Equinox</a> and <a class="reference external" href="https://optax.readthedocs.io/">Optax</a>. Nick prefers Equinox because it feels like “vanilla JAX,” calling its concept of representing a model as a simple PyTree “beautiful and easy to reason about.” Optax, meanwhile, gives them the flexibility to easily swap in different optimization algorithms for their design loops.</p>
+<p>They emphasized that this entire stack — JAX’s functional core, its powerful ecosystem libraries, and the scalable TPU hardware — is what makes their research possible.</p>
+<section id="explore-the-jax-scientific-computing-ecosystem">
+<h3><strong>Explore the JAX scientific computing ecosystem</strong><a class="headerlink" href="#explore-the-jax-scientific-computing-ecosystem" title="Link to this heading">#</a></h3>
+<p>Stories like this are part of a vibrant new ecosystem in computational biology, one spawned in major part by the <a class="reference external" href="https://deepmind.google/discover/blog/demis-hassabis-john-jumper-awarded-nobel-prize-in-chemistry/">Nobel Prize-winning work on AlphaFold from Google DeepMind’s Demis Hassabis and John Jumper</a>. Escalante’s work is a powerful example of how the foundational ideas of predicting protein structure are now being used to actively design new ones.</p>
+<p>We are excited to see community contributions like Escalante’s <a class="reference external" href="https://github.com/escalante-bio/mosaic">Mosaic library</a>, which contains the tools for their protein design work and is now available on GitHub. It’s a fantastic addition to the landscape of JAX-native scientific tools.</p>
+<p>Stories like this highlight a growing trend: JAX is much more than a framework for deep learning. Its powerful system of <a class="reference external" href="https://docs.jax.dev/en/latest/key-concepts.html">program transformations</a>, like <a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.grad.html">grad</a> and <a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.jit.html">jit</a>, makes it a foundational library for the paradigm of <a class="reference external" href="https://docs.jax.dev/en/latest/automatic-differentiation.html">differentiable programming</a>, empowering a new generation of scientific discovery. The JAX team at Google is committed to supporting and growing this vibrant ecosystem, and that starts with hearing directly from you.</p>
+<ul class="simple">
+<li><p><strong>Share your story:</strong> Are you using JAX to tackle a challenging problem?</p></li>
+<li><p><strong>Help guide our roadmap:</strong> Are there new features or capabilities that would unlock your next breakthrough?</p></li>
+</ul>
+<p>Your feature requests are essential for guiding the evolution of JAX. Please reach out to the team to share your work or discuss what you need from JAX via <a class="reference external" href="https://github.com/jax-ml/jax-ai-stack/issues">GitHub</a>.</p>
+<p>Our sincere thanks to April and Nick for sharing their insightful journey with us. We’re excited to see how they and other researchers continue to leverage JAX to solve the world’s most complex scientific problems.</p>
+</section>
+</section>
+</section>
+
+<div class="section ablog__blog_comments">
+     
+<div class="section ablog__prev-next">
+  <span class="ablog__prev">
+     
+    <a href="2025-10-30-big-conf.html">
+      
+      <i class="fa fa-arrow-circle-left"></i>
+      
+      <span>JAX AI Stack at BigConf 2025!</span>
+    </a>
+    
+  </span>
+  <span class="ablog__spacer">&nbsp;</span>
+  <span class="ablog__next">
+    
+  </span>
+</div>
+  
+</div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-new-approach-to-protein-design">A new approach to protein design</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#explore-the-jax-scientific-computing-ecosystem"><strong>Explore the JAX scientific computing ecosystem</strong></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By JAX team
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, JAX team.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

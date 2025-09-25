@@ -1,0 +1,1517 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Train a miniGPT language model with JAX &#8212; JAX AI Stack</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css?v=6644e6bb" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=1dc24ef2" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="_static/documentation_options.js?v=c1d4a9c3"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'JAX_for_LLM_pretraining';</script>
+    <link rel="icon" href="_static/favicon.png"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Basic text classification with 1D CNN" href="JAX_basic_text_classification.html" />
+    <link rel="prev" title="Porting a PyTorch model to JAX" href="JAX_porting_PyTorch_model.html" /> 
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>   
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/ai-stack-logo.svg" class="logo__image only-light" alt="JAX AI Stack - Home"/>
+    <script>document.write(`<img src="_static/ai-stack-logo.svg" class="logo__image only-dark" alt="JAX AI Stack - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="index.html">
+                    JAX AI Stack
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="blog.html">JAX AI Stack Blog</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing the stack</a></li>
+
+<li class="toctree-l1 has-children"><a class="reference internal" href="getting_started.html">Getting started with JAX for ML</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="neural_net_basics.html">Part 1: JAX neural net basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="digits_vae.html">Part 2: Debug a variational autoencoder (VAE)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="digits_diffusion_model.html">Part 3: Train a diffusion model for image generation</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="JAX_visualizing_models_metrics.html">Visualize JAX model metrics with TensorBoard</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="data_loaders.html">Introduction to Data Loaders</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="data_loaders_on_cpu_with_jax.html">Introduction to Data Loaders on CPU with JAX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_loaders_on_gpu_with_jax.html">Introduction to Data Loaders on GPU with JAX</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="pytorch_users.html">From PyTorch to JAX</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="JAX_for_PyTorch_users.html">JAX for PyTorch users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="JAX_porting_PyTorch_model.html">Porting a PyTorch model to JAX</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Example applications</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Train a miniGPT language model with JAX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_basic_text_classification.html">Basic text classification with 1D CNN</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_transformer_text_classification.html">Text classification with a transformer language model using JAX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_machine_translation.html">Machine Translation with encoder-decoder transformer model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_examples_image_segmentation.html">Image segmentation with UNETR model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_image_captioning.html">Image Captioning with Vision Transformer (ViT) model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_Vision_transformer.html">Train a Vision Transformer (ViT) for image classification with JAX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_time_series_classification.html">Time series classification with CNN</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer resources</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contribute to documentation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/jax-ml/jax-ai-stack" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/JAX_for_LLM_pretraining.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Train a miniGPT language model with JAX</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setup">Setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#define-the-minigpt-model-with-flax-and-jax-automatic-parallelism">Define the miniGPT model with Flax and JAX automatic parallelism</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#leveraging-jax-s-data-and-tensor-parallelism">Leveraging JAX’s data and tensor parallelism</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#jax-sharding-mesh">jax.sharding.Mesh</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-and-preprocessing-the-data">Loading and preprocessing the data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-the-loss-function-and-training-step-function">Defining the loss function and training step function</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-the-model">Training the model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#saving-the-checkpoint">Saving the checkpoint</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#profiling-for-hyperparameter-tuning">Profiling for hyperparameter tuning</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                   <section class="tex2jax_ignore mathjax_ignore" id="train-a-minigpt-language-model-with-jax">
+<h1>Train a miniGPT language model with JAX<a class="headerlink" href="#train-a-minigpt-language-model-with-jax" title="Link to this heading">#</a></h1>
+<p><a class="reference external" href="https://colab.research.google.com/github/jax-ml/jax-ai-stack/blob/main/docs/source/JAX_for_LLM_pretraining.ipynb"><img alt="Open in Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
+<p>This tutorial demonstrates how to use JAX, <a class="reference external" href="http://flax.readthedocs.io">Flax NNX</a> and <a class="reference external" href="http://optax.readthedocs.io">Optax</a> for language model (pre)training using data and tensor <a class="reference external" href="https://jax.readthedocs.io/en/latest/notebooks/Distributed_arrays_and_automatic_parallelization">parallelism</a> for <a class="reference external" href="https://en.wikipedia.org/wiki/Single_program,_multiple_data">Single-Program Multi-Data</a>). It was originally inspired by the <a class="reference external" href="https://keras.io/examples/generative/text_generation_with_miniature_gpt/">Keras miniGPT tutorial</a>.</p>
+<p>Here, you will learn how to:</p>
+<ul class="simple">
+<li><p>Define the miniGPT model with Flax and JAX automatic parallelism</p></li>
+<li><p>Load and preprocess the dataset</p></li>
+<li><p>Create the loss and training step functions</p></li>
+<li><p>Train the model on Google Colab’s Cloud TPU v2</p></li>
+<li><p>Profile for hyperparameter tuning</p></li>
+</ul>
+<p>If you are new to JAX for AI, check out the <a class="reference external" href="https://jax-ai-stack.readthedocs.io/en/latest/neural_net_basics.html">introductory tutorial</a>, which covers neural network building with <a class="reference external" href="https://flax.readthedocs.io/en/latest/nnx_basics.html">Flax NNX</a>.</p>
+<section id="setup">
+<h2>Setup<a class="headerlink" href="#setup" title="Link to this heading">#</a></h2>
+<p>JAX installation is covered in <a class="reference external" href="https://jax.readthedocs.io/en/latest/installation.html">this guide</a> on the JAX documentation site. We will use <a class="reference external" href="https://github.com/openai/tiktoken">Tiktoken</a> for tokenization and <a class="reference external" href="https://google-grain.readthedocs.io/en/latest/index.html">Grain</a> for data loading.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="err">!</span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">Uq</span> <span class="n">tiktoken</span> <span class="n">grain</span> <span class="n">matplotlib</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ <span class=" -Color -Color-Green">780.7/780.7 kB</span> <span class=" -Color -Color-Red">6.5 MB/s</span> eta <span class=" -Color -Color-Cyan">0:00:00</span>
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ <span class=" -Color -Color-Green">2.2/2.2 MB</span> <span class=" -Color -Color-Red">54.7 MB/s</span> eta <span class=" -Color -Color-Cyan">0:00:00</span>
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ <span class=" -Color -Color-Green">289.6/289.6 kB</span> <span class=" -Color -Color-Red">8.4 MB/s</span> eta <span class=" -Color -Color-Cyan">0:00:00</span>
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ <span class=" -Color -Color-Green">270.5/270.5 kB</span> <span class=" -Color -Color-Red">13.2 MB/s</span> eta <span class=" -Color -Color-Cyan">0:00:00</span>
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ <span class=" -Color -Color-Green">62.5/62.5 kB</span> <span class=" -Color -Color-Red">2.1 MB/s</span> eta <span class=" -Color -Color-Cyan">0:00:00</span>
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ <span class=" -Color -Color-Green">15.3/15.3 MB</span> <span class=" -Color -Color-Red">61.0 MB/s</span> eta <span class=" -Color -Color-Cyan">0:00:00</span>
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ <span class=" -Color -Color-Green">128.1/128.1 kB</span> <span class=" -Color -Color-Red">6.7 MB/s</span> eta <span class=" -Color -Color-Cyan">0:00:00</span>
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ <span class=" -Color -Color-Green">42.4/42.4 kB</span> <span class=" -Color -Color-Red">1.0 MB/s</span> eta <span class=" -Color -Color-Cyan">0:00:00</span>
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ <span class=" -Color -Color-Green">49.5/49.5 kB</span> <span class=" -Color -Color-Red">1.0 MB/s</span> eta <span class=" -Color -Color-Cyan">0:00:00</span>
+?25h<span class=" -Color -Color-Red">ERROR: pip&#39;s dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.</span>
+<span class=" -Color -Color-Red">tensorflow 2.15.0 requires ml-dtypes~=0.2.0, but you have ml-dtypes 0.4.0 which is incompatible.</span>
+<span class=" -Color -Color-Red">   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span> <span class=" -Color -Color-Green">1.2/1.2 MB</span> <span class=" -Color -Color-Red">15.8 MB/s</span> eta <span class=" -Color -Color-Cyan">0:00:00</span>
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ <span class=" -Color -Color-Green">419.0/419.0 kB</span> <span class=" -Color -Color-Red">20.0 MB/s</span> eta <span class=" -Color -Color-Cyan">0:00:00</span>
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ <span class=" -Color -Color-Green">8.3/8.3 MB</span> <span class=" -Color -Color-Red">99.4 MB/s</span> eta <span class=" -Color -Color-Cyan">0:00:00</span>
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ <span class=" -Color -Color-Green">61.0/61.0 kB</span> <span class=" -Color -Color-Red">3.6 MB/s</span> eta <span class=" -Color -Color-Cyan">0:00:00</span>
+?25h
+</pre></div>
+</div>
+</div>
+</div>
+<p><strong>Note:</strong> If you are using <a class="reference external" href="https://colab.research.google.com/">Google Colab</a>, select the free Google Cloud TPU v2 as the hardware accelerator.</p>
+<p>Check the available JAX devices, or <a class="reference external" href="https://jax.readthedocs.io/en/latest/_autosummary/jax.Device.html"><code class="docutils literal notranslate"><span class="pre">jax.Device</span></code></a>, with <a class="reference external" href="https://jax.readthedocs.io/en/latest/_autosummary/jax.devices.html"><code class="docutils literal notranslate"><span class="pre">jax.devices()</span></code></a>. The output of the cell below will show a list of 8 (eight) devices.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">jax</span>
+<span class="n">jax</span><span class="o">.</span><span class="n">devices</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[TpuDevice(id=0, process_index=0, coords=(0,0,0), core_on_chip=0),
+ TpuDevice(id=1, process_index=0, coords=(0,0,0), core_on_chip=1),
+ TpuDevice(id=2, process_index=0, coords=(1,0,0), core_on_chip=0),
+ TpuDevice(id=3, process_index=0, coords=(1,0,0), core_on_chip=1),
+ TpuDevice(id=4, process_index=0, coords=(0,1,0), core_on_chip=0),
+ TpuDevice(id=5, process_index=0, coords=(0,1,0), core_on_chip=1),
+ TpuDevice(id=6, process_index=0, coords=(1,1,0), core_on_chip=0),
+ TpuDevice(id=7, process_index=0, coords=(1,1,0), core_on_chip=1)]
+</pre></div>
+</div>
+</div>
+</div>
+<p>Get the <a class="reference external" href="https://huggingface.co/datasets/roneneldan/TinyStories">TinyStories dataset from Hugging Face</a>. We only use the training split.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="err">!</span><span class="n">wget</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">huggingface</span><span class="o">.</span><span class="n">co</span><span class="o">/</span><span class="n">datasets</span><span class="o">/</span><span class="n">roneneldan</span><span class="o">/</span><span class="n">TinyStories</span><span class="o">/</span><span class="n">resolve</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">TinyStories</span><span class="o">-</span><span class="n">train</span><span class="o">.</span><span class="n">txt</span><span class="err">?</span><span class="n">download</span><span class="o">=</span><span class="n">true</span> <span class="o">-</span><span class="n">O</span> <span class="n">TinyStories</span><span class="o">-</span><span class="n">train</span><span class="o">.</span><span class="n">txt</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>--2024-11-01 02:50:38--  https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStories-train.txt?download=true
+Resolving huggingface.co (huggingface.co)... 65.8.243.46, 65.8.243.92, 65.8.243.90, ...
+Connecting to huggingface.co (huggingface.co)|65.8.243.46|:443... connected.
+HTTP request sent, awaiting response... 302 Found
+Location: https://cdn-lfs.hf.co/repos/42/7f/427f7497b6c6596c18b46d5a72e61364fcad12aa433c60a0dbd4d344477b9d81/c5cf5e22ff13614e830afbe61a99fbcbe8bcb7dd72252b989fa1117a368d401f?response-content-disposition=attachment%3B+filename*%3DUTF-8%27%27TinyStories-train.txt%3B+filename%3D%22TinyStories-train.txt%22%3B&amp;response-content-type=text%2Fplain&amp;Expires=1730688639&amp;Policy=eyJTdGF0ZW1lbnQiOlt7IkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTczMDY4ODYzOX19LCJSZXNvdXJjZSI6Imh0dHBzOi8vY2RuLWxmcy5oZi5jby9yZXBvcy80Mi83Zi80MjdmNzQ5N2I2YzY1OTZjMThiNDZkNWE3MmU2MTM2NGZjYWQxMmFhNDMzYzYwYTBkYmQ0ZDM0NDQ3N2I5ZDgxL2M1Y2Y1ZTIyZmYxMzYxNGU4MzBhZmJlNjFhOTlmYmNiZThiY2I3ZGQ3MjI1MmI5ODlmYTExMTdhMzY4ZDQwMWY%7EcmVzcG9uc2UtY29udGVudC1kaXNwb3NpdGlvbj0qJnJlc3BvbnNlLWNvbnRlbnQtdHlwZT0qIn1dfQ__&amp;Signature=oQHJBcHVix9N1HnNsJSj7KK-BoqdXdl6NRh%7E1ilGx-ROnLrZxKINfonOtva5e5Xf9KQVNl6QQkx5gNw4iMTmS6JRFB%7EcXdTcFjrHSnBxwLRZkMCBKAv3oHhRnJ6I2rV8iBAZTq%7E-caDCLFvBrgT9pcEFakh3-5mSp%7ER7hnNqE5lcE5n7tzXS0l-8tOShDmR5aUCFPStZHfPbyS3MwCAdc2KoqXdqzRf9M4WvXWB78El7WGxse0DrTQFbGGW1kjpvBOqzljH0Qn6WqsiBockhHDbwE1nQmGfxKrbreXenAKdOsUTN9fuRKl-6srhI2xGKFpfu3IGDEN%7Ebmwg8CnwAfQ__&amp;Key-Pair-Id=K3RPWS32NSSJCE [following]
+--2024-11-01 02:50:39--  https://cdn-lfs.hf.co/repos/42/7f/427f7497b6c6596c18b46d5a72e61364fcad12aa433c60a0dbd4d344477b9d81/c5cf5e22ff13614e830afbe61a99fbcbe8bcb7dd72252b989fa1117a368d401f?response-content-disposition=attachment%3B+filename*%3DUTF-8%27%27TinyStories-train.txt%3B+filename%3D%22TinyStories-train.txt%22%3B&amp;response-content-type=text%2Fplain&amp;Expires=1730688639&amp;Policy=eyJTdGF0ZW1lbnQiOlt7IkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTczMDY4ODYzOX19LCJSZXNvdXJjZSI6Imh0dHBzOi8vY2RuLWxmcy5oZi5jby9yZXBvcy80Mi83Zi80MjdmNzQ5N2I2YzY1OTZjMThiNDZkNWE3MmU2MTM2NGZjYWQxMmFhNDMzYzYwYTBkYmQ0ZDM0NDQ3N2I5ZDgxL2M1Y2Y1ZTIyZmYxMzYxNGU4MzBhZmJlNjFhOTlmYmNiZThiY2I3ZGQ3MjI1MmI5ODlmYTExMTdhMzY4ZDQwMWY%7EcmVzcG9uc2UtY29udGVudC1kaXNwb3NpdGlvbj0qJnJlc3BvbnNlLWNvbnRlbnQtdHlwZT0qIn1dfQ__&amp;Signature=oQHJBcHVix9N1HnNsJSj7KK-BoqdXdl6NRh%7E1ilGx-ROnLrZxKINfonOtva5e5Xf9KQVNl6QQkx5gNw4iMTmS6JRFB%7EcXdTcFjrHSnBxwLRZkMCBKAv3oHhRnJ6I2rV8iBAZTq%7E-caDCLFvBrgT9pcEFakh3-5mSp%7ER7hnNqE5lcE5n7tzXS0l-8tOShDmR5aUCFPStZHfPbyS3MwCAdc2KoqXdqzRf9M4WvXWB78El7WGxse0DrTQFbGGW1kjpvBOqzljH0Qn6WqsiBockhHDbwE1nQmGfxKrbreXenAKdOsUTN9fuRKl-6srhI2xGKFpfu3IGDEN%7Ebmwg8CnwAfQ__&amp;Key-Pair-Id=K3RPWS32NSSJCE
+Resolving cdn-lfs.hf.co (cdn-lfs.hf.co)... 3.167.152.12, 3.167.152.119, 3.167.152.37, ...
+Connecting to cdn-lfs.hf.co (cdn-lfs.hf.co)|3.167.152.12|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 1924281556 (1.8G) [text/plain]
+Saving to: ‘TinyStories-train.txt’
+
+TinyStories-train.t 100%[===================&gt;]   1.79G  38.1MB/s    in 45s     
+
+2024-11-01 02:51:24 (40.7 MB/s) - ‘TinyStories-train.txt’ saved [1924281556/1924281556]
+</pre></div>
+</div>
+</div>
+</div>
+<p>Import the necessary modules, including JAX NumPy, Flax NNX, Optax, Grain, pandas, and Tiktoken:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">jax</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">jax.sharding</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mesh</span><span class="p">,</span> <span class="n">PartitionSpec</span> <span class="k">as</span> <span class="n">P</span><span class="p">,</span> <span class="n">NamedSharding</span> <span class="c1"># For data and model parallelism (explained in more detail later)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">jax.experimental</span><span class="w"> </span><span class="kn">import</span> <span class="n">mesh_utils</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">flax.nnx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nnx</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">optax</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">grain.python</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pygrain</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tiktoken</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="define-the-minigpt-model-with-flax-and-jax-automatic-parallelism">
+<h2>Define the miniGPT model with Flax and JAX automatic parallelism<a class="headerlink" href="#define-the-minigpt-model-with-flax-and-jax-automatic-parallelism" title="Link to this heading">#</a></h2>
+<section id="leveraging-jax-s-data-and-tensor-parallelism">
+<h3>Leveraging JAX’s data and tensor parallelism<a class="headerlink" href="#leveraging-jax-s-data-and-tensor-parallelism" title="Link to this heading">#</a></h3>
+<p>One of the most powerful features of JAX is <a class="reference external" href="https://jax.readthedocs.io/en/latest/notebooks/Distributed_arrays_and_automatic_parallelization">device parallelism</a> for SPMD.</p>
+<ul class="simple">
+<li><p>The data parallelism technique enables, for example, the training data to run via multiple parts (this is called sharding) - batches - in parallel and simultaneously across different devices, such as GPUs and Google TPUs. This allows to use larger batch sizes to speed up training.</p></li>
+<li><p>Tensor parallelism allows us to split the model parameter tensors across several devices (sharding model tensors).</p></li>
+<li><p>You can learn more about the basics of JAX parallelism in more detail in the <a class="reference external" href="https://jax.readthedocs.io/en/latest/sharded-computation.html">Introduction to parallel programming</a> on the JAX documentation site.</p></li>
+</ul>
+<p>In this example, we’ll utilize a 4-way data parallel and 2-way tensor parallel setup. The free Google Cloud TPU v2 on Google Colab offers 4 chips, each with 2 TPU cores. The TPU v2 architeture aligns with the proposed setup.</p>
+</section>
+<section id="jax-sharding-mesh">
+<h3>jax.sharding.Mesh<a class="headerlink" href="#jax-sharding-mesh" title="Link to this heading">#</a></h3>
+<p>Earlier, we imported <a class="reference external" href="https://jax.readthedocs.io/en/latest/jax.sharding.html#jax.sharding.Mesh"><code class="docutils literal notranslate"><span class="pre">jax.sharding.Mesh</span></code></a> - is a multidimensional NumPy array of JAX devices, where each axis of the mesh has a name, such as <code class="docutils literal notranslate"><span class="pre">'x'</span></code> or <code class="docutils literal notranslate"><span class="pre">'y'</span></code>. This will help encapsulate the information about the TPU resource organization for distributing computations across the devices.</p>
+<p>Our <code class="docutils literal notranslate"><span class="pre">Mesh</span></code> will have two arguments:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">devices</span></code>: This will take the value of <a class="reference external" href="https://jax.readthedocs.io/en/latest/jax.experimental.mesh_utils.html"><code class="docutils literal notranslate"><span class="pre">jax.experimental.mesh_utils((4,</span> <span class="pre">2))</span></code></a>, enabling us to build a device mesh. It is a NumPy ndarray with JAX devices (a list of devices from the JAX backend as obtained from <a class="reference external" href="https://jax.readthedocs.io/en/latest/_autosummary/jax.devices.html#jax.devices"><code class="docutils literal notranslate"><span class="pre">jax.devices()</span></code></a>)..</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">axis_names</span></code>, where:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">batch</span></code>: 4 devices along the first axis - i.e. sharded into 4 - for data parallelism; and</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">model</span></code>: 2 devices along the second axis - i.e. sharded into 2 -  for tensor paralleism, mapping to the TPU v2 cores.</p></li>
+</ul>
+</li>
+</ul>
+<p>This matches the <code class="docutils literal notranslate"><span class="pre">(4,</span> <span class="pre">2)</span></code> structure in the Colab’s TPU v2 setup.</p>
+<p>Let’s instantiate <code class="docutils literal notranslate"><span class="pre">Mesh</span></code> as <code class="docutils literal notranslate"><span class="pre">mesh</span></code> and declare the TPU configuration to define how data and model parameters are distributed across the devices:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a `Mesh` object representing TPU device arrangement.</span>
+<span class="n">mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">mesh_utils</span><span class="o">.</span><span class="n">create_device_mesh</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span> <span class="p">(</span><span class="s1">&#39;batch&#39;</span><span class="p">,</span> <span class="s1">&#39;model&#39;</span><span class="p">))</span>
+
+<span class="c1">### Alternatively, we could use the 8-way data parallelism with only one line of code change.</span>
+<span class="c1">### JAX enables quick experimentation with different partitioning strategies</span>
+<span class="c1">### like this. We will come back to this point at the end of this tutorial.</span>
+<span class="c1"># mesh = Mesh(mesh_utils.create_device_mesh((8, 1)), (&#39;batch&#39;, &#39;model&#39;))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>We will use the GPT-2 tokenizer from the <a class="reference external" href="https://github.com/openai/tiktoken">Tiktoken</a> library:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tokenizer</span> <span class="o">=</span> <span class="n">tiktoken</span><span class="o">.</span><span class="n">get_encoding</span><span class="p">(</span><span class="s2">&quot;gpt2&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>To leverage model parallelism, we need to instruct the JAX compiler how to shard the model tensors across the TPU devices. Earlier, we also imported <a class="reference external" href="https://jax.readthedocs.io/en/latest/jax.sharding.html#jax.sharding.PartitionSpec"><code class="docutils literal notranslate"><span class="pre">jax.sharding.PartitionSpec</span></code></a> and <a class="reference external" href="https://jax.readthedocs.io/en/latest/jax.sharding.html#jax.sharding.NamedSharding"><code class="docutils literal notranslate"><span class="pre">jax.sharding.NamedSharding</span></code></a>:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://jax.readthedocs.io/en/latest/jax.sharding.html#jax.sharding.PartitionSpec"><code class="docutils literal notranslate"><span class="pre">PartitionSpec</span></code></a> (using alias <code class="docutils literal notranslate"><span class="pre">P</span></code>) defines how tensors are sharded across the devices in our <code class="docutils literal notranslate"><span class="pre">Mesh</span></code>. Its elements describe how an input dimension is partitioned across mesh dimensions. For example, in <code class="docutils literal notranslate"><span class="pre">PartitionSpec('x',</span> <span class="pre">'y')</span></code> the first dimension of data is sharded across <code class="docutils literal notranslate"><span class="pre">x</span></code> axis of the mesh, and the second one - across the <code class="docutils literal notranslate"><span class="pre">y</span></code> axis.</p>
+<ul>
+<li><p>We’ll use <code class="docutils literal notranslate"><span class="pre">PartitionSpec</span></code> to describe how to shard a tensor across, for example, the <code class="docutils literal notranslate"><span class="pre">model</span></code> axis or be replicated on other dimensions (which is denoted by <code class="docutils literal notranslate"><span class="pre">None</span></code>).</p></li>
+</ul>
+</li>
+<li><p><a class="reference external" href="https://jax.readthedocs.io/en/latest/jax.sharding.html#jax.sharding.NamedSharding"><code class="docutils literal notranslate"><span class="pre">NamedSharding</span></code></a> is a (<code class="docutils literal notranslate"><span class="pre">Mesh</span></code>, <code class="docutils literal notranslate"><span class="pre">PartitionSpec</span></code>) pair that describes how to shard a model tensor across our <code class="docutils literal notranslate"><span class="pre">mesh</span></code>.</p></li>
+<li><p>We combine <code class="docutils literal notranslate"><span class="pre">Mesh</span></code> (the TPU resources) with <code class="docutils literal notranslate"><span class="pre">PartitionSpec</span></code> and create a <code class="docutils literal notranslate"><span class="pre">NamedSharding</span></code>, which instructs how to shard each model tensor across the TPU devices.</p></li>
+</ul>
+<p>Additionally, we’ll use Flax NNX’s <a class="reference external" href="https://flax.readthedocs.io/en/latest/api_reference/flax.nnx/spmd.html#flax.nnx.with_partitioning"><code class="docutils literal notranslate"><span class="pre">flax.nnx.with_partitioning</span></code></a> to let each model layer know that the model weights or tensors need to be sharded according to our specification. We need to do this for every tensor/layer in the model.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">nnx.with_partitioning</span></code> will take two arguments, such as the <code class="docutils literal notranslate"><span class="pre">initializer</span></code> (such as <a class="reference external" href="https://flax.readthedocs.io/en/latest/api_reference/flax.nnx/nn/initializers.html#flax.nnx.initializers.xavier_uniform"><code class="docutils literal notranslate"><span class="pre">flax.nnx.initializers.xavier_uniform</span></code></a> and <a class="reference external" href="https://flax.readthedocs.io/en/latest/api_reference/flax.nnx/nn/initializers.html#flax.nnx.initializers.zeros_init"><code class="docutils literal notranslate"><span class="pre">flax.nnx.initializers.zeros_init</span></code></a>) and <code class="docutils literal notranslate"><span class="pre">sharding</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">NamedSharding(Mesh,</span> <span class="pre">PartitionSpec)</span></code> or <code class="docutils literal notranslate"><span class="pre">NamedSharding(mesh,</span> <span class="pre">P('model')</span></code> in our case).</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Define a triangular mask for causal attention with `jax.numpy.tril` and `jax.numpy.ones`.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">causal_attention_mask</span><span class="p">(</span><span class="n">seq_len</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">tril</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">seq_len</span><span class="p">,</span> <span class="n">seq_len</span><span class="p">)))</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">TransformerBlock</span><span class="p">(</span><span class="n">nnx</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; A single Transformer block.</span>
+
+<span class="sd">    Each Transformer block processes input sequences via self-attention and feed-forward networks.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        embed_dim (int): Embedding dimensionality.</span>
+<span class="sd">        num_heads (int): Number of attention heads.</span>
+<span class="sd">        ff_dim (int): Dimensionality of the feed-forward network.</span>
+<span class="sd">        rngs (flax.nnx.Rngs): A Flax NNX stream of JAX PRNG keys.</span>
+<span class="sd">        rate (float): Dropout rate. Defaults to 0.1.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">num_heads</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">ff_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">rngs</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">,</span> <span class="n">rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">):</span>
+        <span class="c1"># Multi-Head Attention (MHA) with `flax.nnx.MultiHeadAttention`.</span>
+        <span class="c1"># Specifies tensor sharding (depending on the mesh configuration)</span>
+        <span class="c1"># where we shard the weights across devices for parallel computation.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mha</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">MultiHeadAttention</span><span class="p">(</span><span class="n">num_heads</span><span class="o">=</span><span class="n">num_heads</span><span class="p">,</span>
+                                          <span class="n">in_features</span><span class="o">=</span><span class="n">embed_dim</span><span class="p">,</span>
+                                          <span class="n">kernel_init</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">with_partitioning</span><span class="p">(</span><span class="n">nnx</span><span class="o">.</span><span class="n">initializers</span><span class="o">.</span><span class="n">xavier_uniform</span><span class="p">(),</span> <span class="n">NamedSharding</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">P</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;model&#39;</span><span class="p">))),</span>
+                                          <span class="n">bias_init</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">with_partitioning</span><span class="p">(</span><span class="n">nnx</span><span class="o">.</span><span class="n">initializers</span><span class="o">.</span><span class="n">zeros_init</span><span class="p">(),</span> <span class="n">NamedSharding</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">P</span><span class="p">(</span><span class="s1">&#39;model&#39;</span><span class="p">))),</span>
+                                          <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+        <span class="c1"># The first dropout with `flax.nnx.Dropout`.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dropout1</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">rate</span><span class="o">=</span><span class="n">rate</span><span class="p">)</span>
+        <span class="c1"># First layer normalization with `flax.nnx.LayerNorm`.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layer_norm1</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">LayerNorm</span><span class="p">(</span><span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span>
+                                         <span class="n">num_features</span><span class="o">=</span><span class="n">embed_dim</span><span class="p">,</span>
+                                         <span class="n">scale_init</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">with_partitioning</span><span class="p">(</span><span class="n">nnx</span><span class="o">.</span><span class="n">initializers</span><span class="o">.</span><span class="n">ones_init</span><span class="p">(),</span> <span class="n">NamedSharding</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">P</span><span class="p">(</span><span class="s1">&#39;model&#39;</span><span class="p">))),</span>
+                                         <span class="n">bias_init</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">with_partitioning</span><span class="p">(</span><span class="n">nnx</span><span class="o">.</span><span class="n">initializers</span><span class="o">.</span><span class="n">zeros_init</span><span class="p">(),</span> <span class="n">NamedSharding</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">P</span><span class="p">(</span><span class="s1">&#39;model&#39;</span><span class="p">))),</span>
+                                         <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+        <span class="c1"># The first linear transformation for the feed-forward network with `flax.nnx.Linear`.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linear1</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="n">embed_dim</span><span class="p">,</span>
+                                  <span class="n">out_features</span><span class="o">=</span><span class="n">ff_dim</span><span class="p">,</span>
+                                  <span class="n">kernel_init</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">with_partitioning</span><span class="p">(</span><span class="n">nnx</span><span class="o">.</span><span class="n">initializers</span><span class="o">.</span><span class="n">xavier_uniform</span><span class="p">(),</span> <span class="n">NamedSharding</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">P</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;model&#39;</span><span class="p">))),</span>
+                                  <span class="n">bias_init</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">with_partitioning</span><span class="p">(</span><span class="n">nnx</span><span class="o">.</span><span class="n">initializers</span><span class="o">.</span><span class="n">zeros_init</span><span class="p">(),</span> <span class="n">NamedSharding</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">P</span><span class="p">(</span><span class="s1">&#39;model&#39;</span><span class="p">))),</span>
+                                  <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+        <span class="c1"># The second linear transformation for the feed-forward network with `flax.nnx.Linear`.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linear2</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="n">ff_dim</span><span class="p">,</span>
+                                  <span class="n">out_features</span><span class="o">=</span><span class="n">embed_dim</span><span class="p">,</span>
+                                  <span class="n">kernel_init</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">with_partitioning</span><span class="p">(</span><span class="n">nnx</span><span class="o">.</span><span class="n">initializers</span><span class="o">.</span><span class="n">xavier_uniform</span><span class="p">(),</span> <span class="n">NamedSharding</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">P</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;model&#39;</span><span class="p">))),</span>
+                                  <span class="n">bias_init</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">with_partitioning</span><span class="p">(</span><span class="n">nnx</span><span class="o">.</span><span class="n">initializers</span><span class="o">.</span><span class="n">zeros_init</span><span class="p">(),</span> <span class="n">NamedSharding</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">P</span><span class="p">(</span><span class="s1">&#39;model&#39;</span><span class="p">))),</span>
+                                  <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+        <span class="c1"># The second dropout with `flax.nnx.Dropout`.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dropout2</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">rate</span><span class="o">=</span><span class="n">rate</span><span class="p">)</span>
+        <span class="c1"># Second layer normalization with `flax.nnx.LayerNorm`.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layer_norm2</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">LayerNorm</span><span class="p">(</span><span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span>
+                                         <span class="n">num_features</span><span class="o">=</span><span class="n">embed_dim</span><span class="p">,</span>
+                                         <span class="n">scale_init</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">with_partitioning</span><span class="p">(</span><span class="n">nnx</span><span class="o">.</span><span class="n">initializers</span><span class="o">.</span><span class="n">ones_init</span><span class="p">(),</span> <span class="n">NamedSharding</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">P</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;model&#39;</span><span class="p">))),</span>
+                                         <span class="n">bias_init</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">with_partitioning</span><span class="p">(</span><span class="n">nnx</span><span class="o">.</span><span class="n">initializers</span><span class="o">.</span><span class="n">zeros_init</span><span class="p">(),</span> <span class="n">NamedSharding</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">P</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;model&#39;</span><span class="p">))),</span>
+                                         <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+
+
+    <span class="c1"># Apply the Transformer block to the input sequence.</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">training</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="n">input_shape</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">seq_len</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">input_shape</span>
+
+        <span class="c1"># Instantiate the causal attention mask.</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">causal_attention_mask</span><span class="p">(</span><span class="n">seq_len</span><span class="p">)</span>
+
+        <span class="c1"># Apply Multi-Head Attention with the causal attention mask.</span>
+        <span class="n">attention_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mha</span><span class="p">(</span>
+            <span class="n">inputs_q</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
+            <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span>
+            <span class="n">decode</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+        <span class="c1"># Apply the first dropout.</span>
+        <span class="n">attention_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropout1</span><span class="p">(</span><span class="n">attention_output</span><span class="p">,</span> <span class="n">deterministic</span><span class="o">=</span><span class="ow">not</span> <span class="n">training</span><span class="p">)</span>
+        <span class="c1"># Apply the first layer normalization.</span>
+        <span class="n">out1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_norm1</span><span class="p">(</span><span class="n">inputs</span> <span class="o">+</span> <span class="n">attention_output</span><span class="p">)</span>
+
+        <span class="c1"># The feed-forward network.</span>
+        <span class="c1"># Apply the first linear transformation.</span>
+        <span class="n">ffn_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear1</span><span class="p">(</span><span class="n">out1</span><span class="p">)</span>
+        <span class="c1"># Apply the ReLU activation with `flax.nnx.relu`.</span>
+        <span class="n">ffn_output</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">ffn_output</span><span class="p">)</span>
+        <span class="c1"># Apply the second linear transformation.</span>
+        <span class="n">ffn_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear2</span><span class="p">(</span><span class="n">ffn_output</span><span class="p">)</span>
+        <span class="c1"># Apply the second dropout.</span>
+        <span class="n">ffn_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropout2</span><span class="p">(</span><span class="n">ffn_output</span><span class="p">,</span> <span class="n">deterministic</span><span class="o">=</span><span class="ow">not</span> <span class="n">training</span><span class="p">)</span>
+        <span class="c1"># Apply the second layer normalization and return the output of the Transformer block.</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_norm2</span><span class="p">(</span><span class="n">out1</span> <span class="o">+</span> <span class="n">ffn_output</span><span class="p">)</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">TokenAndPositionEmbedding</span><span class="p">(</span><span class="n">nnx</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Combines token embeddings (words in an input sentence) with</span>
+<span class="sd">    positional embeddings (the position of each word in a sentence).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        maxlen (int): Matimum sequence length.</span>
+<span class="sd">        vocal_size (int): Vocabulary size.</span>
+<span class="sd">        embed_dim (int): Embedding dimensionality.</span>
+<span class="sd">        rngs (flax.nnx.Rngs): A Flax NNX stream of JAX PRNG keys.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">maxlen</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">vocab_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">rngs</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">):</span>
+        <span class="c1"># Initialize token embeddings (using `flax.nnx.Embed`).</span>
+        <span class="c1"># Each unique word has an embedding vector.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">token_emb</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Embed</span><span class="p">(</span><span class="n">num_embeddings</span><span class="o">=</span><span class="n">vocab_size</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="n">embed_dim</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+        <span class="c1"># Initialize positional embeddings (using `flax.nnx.Embed`).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pos_emb</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Embed</span><span class="p">(</span><span class="n">num_embeddings</span><span class="o">=</span><span class="n">maxlen</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="n">embed_dim</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+
+    <span class="c1"># Takes a token sequence (integers) and returns the combined token and positional embeddings.</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="c1"># Generate a sequence of positions for the input tokens.</span>
+        <span class="n">positions</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="c1"># Look up the positional embeddings for each position in the input sequence.</span>
+        <span class="n">position_embedding</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos_emb</span><span class="p">(</span><span class="n">positions</span><span class="p">)</span>
+        <span class="c1"># Look up the token embeddings for each token in the input sequence.</span>
+        <span class="n">token_embedding</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">token_emb</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="c1"># Combine token and positional embeddings.</span>
+        <span class="k">return</span> <span class="n">token_embedding</span> <span class="o">+</span> <span class="n">position_embedding</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MiniGPT</span><span class="p">(</span><span class="n">nnx</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; A miniGPT transformer model, inherits from `flax.nnx.Module`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        maxlen (int): Maximum sequence length.</span>
+<span class="sd">        vocab_size (int): Vocabulary size.</span>
+<span class="sd">        embed_dim (int): Embedding dimensionality.</span>
+<span class="sd">        num_heads (int): Number of attention heads.</span>
+<span class="sd">        feed_forward_dim (int): Dimensionality of the feed-forward network.</span>
+<span class="sd">        num_transformer_blocks (int): Number of transformer blocks. Each block contains attention and feed-forward networks.</span>
+<span class="sd">        rngs (nnx.Rngs): A Flax NNX stream of JAX PRNG keys.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Initialize miniGPT model components.</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">maxlen</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">vocab_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">num_heads</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">feed_forward_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">num_transformer_blocks</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rngs</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">):</span>
+        <span class="c1"># Initiliaze the `TokenAndPositionEmbedding` that combines token and positional embeddings.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">embedding_layer</span> <span class="o">=</span> <span class="n">TokenAndPositionEmbedding</span><span class="p">(</span>
+                    <span class="n">maxlen</span><span class="p">,</span> <span class="n">vocab_size</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span>
+                <span class="p">)</span>
+        <span class="c1"># Create a list of `TransformerBlock` instances.</span>
+        <span class="c1"># Each block processes input sequences using attention and feed-forward networks.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transformer_blocks</span> <span class="o">=</span> <span class="p">[</span><span class="n">TransformerBlock</span><span class="p">(</span>
+            <span class="n">embed_dim</span><span class="p">,</span> <span class="n">num_heads</span><span class="p">,</span> <span class="n">feed_forward_dim</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span>
+        <span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_transformer_blocks</span><span class="p">)]</span>
+        <span class="c1"># Initialize the output `flax.nnx.Linear` layer producing logits over the vocabulary for next-token prediction.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_layer</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="n">embed_dim</span><span class="p">,</span>
+                                       <span class="n">out_features</span><span class="o">=</span><span class="n">vocab_size</span><span class="p">,</span>
+                                       <span class="n">kernel_init</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">with_partitioning</span><span class="p">(</span><span class="n">nnx</span><span class="o">.</span><span class="n">initializers</span><span class="o">.</span><span class="n">xavier_uniform</span><span class="p">(),</span> <span class="n">NamedSharding</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">P</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;model&#39;</span><span class="p">))),</span>
+                                       <span class="n">bias_init</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">with_partitioning</span><span class="p">(</span><span class="n">nnx</span><span class="o">.</span><span class="n">initializers</span><span class="o">.</span><span class="n">zeros_init</span><span class="p">(),</span> <span class="n">NamedSharding</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">P</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;model&#39;</span><span class="p">))),</span>
+                                       <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">training</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="c1"># Pass the input tokens through the `embedding_layer` to get token embeddings.</span>
+        <span class="c1"># Apply each transformer block sequentially to the embedded input, use the `training` flag for the behavior of `flax.nnx.Dropout`.</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">embedding_layer</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">transformer_block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformer_blocks</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">transformer_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">)</span>
+        <span class="c1"># Pass the output of the transformer blocks through the output layer,</span>
+        <span class="c1"># and obtain logits for each token in the vocabulary (for next token prediction).</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_layer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">outputs</span>
+
+    <span class="c1"># Text generation.</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_text</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">start_tokens</span><span class="p">:</span> <span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">top_k</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+        <span class="c1"># Sample the next token from a probability distribution based on</span>
+        <span class="c1"># `logits` and `tok_k` (top-k) sampling strategy.</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">sample_from</span><span class="p">(</span><span class="n">logits</span><span class="p">):</span>
+            <span class="n">logits</span><span class="p">,</span> <span class="n">indices</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">lax</span><span class="o">.</span><span class="n">top_k</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">top_k</span><span class="p">)</span>
+            <span class="c1"># Convert logits to probabilities (using `flax.nnx.softmax`).</span>
+            <span class="n">logits</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">logits</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">PRNGKey</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">indices</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">logits</span><span class="p">)</span>
+
+        <span class="c1"># Generate text one token at a time until the maximum token limit is reached (`maxlen`).</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">generate_step</span><span class="p">(</span><span class="n">start_tokens</span><span class="p">):</span>
+            <span class="n">pad_len</span> <span class="o">=</span> <span class="n">maxlen</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">start_tokens</span><span class="p">)</span>
+            <span class="c1"># Index of the last token in the current sequence.</span>
+            <span class="n">sample_index</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">start_tokens</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="c1"># If the input is longer than `maxlen`, then truncate it.</span>
+            <span class="k">if</span> <span class="n">pad_len</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">start_tokens</span><span class="p">[:</span><span class="n">maxlen</span><span class="p">])</span>
+                <span class="n">sample_index</span> <span class="o">=</span> <span class="n">maxlen</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="c1"># If the input is shorter than `maxlen`, then pad it (`pad_len`).</span>
+            <span class="k">elif</span> <span class="n">pad_len</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">start_tokens</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">pad_len</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">start_tokens</span><span class="p">)</span>
+
+            <span class="c1"># Add a batch dimension.</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="n">logits</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">next_token</span> <span class="o">=</span> <span class="n">sample_from</span><span class="p">(</span><span class="n">logits</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">sample_index</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">next_token</span>
+
+        <span class="c1"># Store generated tokens.</span>
+        <span class="n">generated</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Generate tokens until the end-of-text token is encountered or the maximum token limit is reached.</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_tokens</span><span class="p">):</span>
+            <span class="n">next_token</span> <span class="o">=</span> <span class="n">generate_step</span><span class="p">(</span><span class="n">start_tokens</span> <span class="o">+</span> <span class="n">generated</span><span class="p">)</span>
+            <span class="c1"># Truncate whatever is after &#39;&lt;|endoftext|&gt;&#39; (stop word)</span>
+            <span class="k">if</span> <span class="n">next_token</span> <span class="o">==</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;&lt;|endoftext|&gt;&#39;</span><span class="p">,</span> <span class="n">allowed_special</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;&lt;|endoftext|&gt;&#39;</span><span class="p">})[</span><span class="mi">0</span><span class="p">]:</span>
+              <span class="c1"># Stop text generation if the end-of-text token is encountered.</span>
+              <span class="k">break</span>
+            <span class="n">generated</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">next_token</span><span class="p">))</span>
+        <span class="c1"># Decode the generated token IDs into text.</span>
+        <span class="k">return</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">start_tokens</span> <span class="o">+</span> <span class="n">generated</span><span class="p">)</span>
+
+<span class="c1"># Creates the miniGPT model with 4 transformer blocks.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_model</span><span class="p">(</span><span class="n">rngs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">MiniGPT</span><span class="p">(</span><span class="n">maxlen</span><span class="p">,</span> <span class="n">vocab_size</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">,</span> <span class="n">num_heads</span><span class="p">,</span> <span class="n">feed_forward_dim</span><span class="p">,</span> <span class="n">num_transformer_blocks</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Set some hyperparameters.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">vocab_size</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">n_vocab</span>
+<span class="n">num_transformer_blocks</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="n">maxlen</span> <span class="o">=</span> <span class="mi">256</span>
+<span class="n">embed_dim</span> <span class="o">=</span> <span class="mi">256</span>
+<span class="n">num_heads</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="n">feed_forward_dim</span> <span class="o">=</span> <span class="mi">256</span>
+<span class="n">batch_size</span> <span class="o">=</span> <span class="mi">256</span> <span class="c1"># You can set a bigger batch size if you use Kaggle&#39;s Cloud TPU.</span>
+<span class="n">num_epochs</span> <span class="o">=</span> <span class="mi">1</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="loading-and-preprocessing-the-data">
+<h2>Loading and preprocessing the data<a class="headerlink" href="#loading-and-preprocessing-the-data" title="Link to this heading">#</a></h2>
+<p>Data loading and preprocessing with <a class="reference external" href="https://github.com/google/grain">Grain</a>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TextDataset</span><span class="p">:</span>
+    <span class="n">data</span><span class="p">:</span> <span class="nb">list</span>
+    <span class="n">maxlen</span><span class="p">:</span> <span class="nb">int</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="c1"># Use Tiktoken for tokenization</span>
+        <span class="n">encoding</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">allowed_special</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;&lt;|endoftext|&gt;&#39;</span><span class="p">})[:</span><span class="bp">self</span><span class="o">.</span><span class="n">maxlen</span><span class="p">]</span>  <span class="c1"># Tokenize and truncate</span>
+        <span class="k">return</span> <span class="n">encoding</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maxlen</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">encoding</span><span class="p">))</span>  <span class="c1"># Pad to maxlen</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">load_and_preprocess_data</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">maxlen</span><span class="p">):</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+      <span class="n">text</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+    <span class="n">stories</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;&lt;|endoftext|&gt;&#39;</span><span class="p">)</span>
+    <span class="n">stories</span> <span class="o">=</span> <span class="p">[</span><span class="n">story</span><span class="o">+</span><span class="s1">&#39;&lt;|endoftext|&gt;&#39;</span> <span class="k">for</span> <span class="n">story</span> <span class="ow">in</span> <span class="n">stories</span> <span class="k">if</span> <span class="n">story</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="n">stories</span><span class="p">})</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">TextDataset</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">maxlen</span><span class="p">)</span>
+
+    <span class="n">sampler</span> <span class="o">=</span> <span class="n">pygrain</span><span class="o">.</span><span class="n">IndexSampler</span><span class="p">(</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">),</span>
+        <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
+        <span class="n">shard_options</span><span class="o">=</span><span class="n">pygrain</span><span class="o">.</span><span class="n">NoSharding</span><span class="p">(),</span>
+        <span class="n">num_epochs</span><span class="o">=</span><span class="n">num_epochs</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">dl</span> <span class="o">=</span> <span class="n">pygrain</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span>
+        <span class="n">data_source</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
+        <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
+        <span class="n">operations</span><span class="o">=</span><span class="p">[</span><span class="n">pygrain</span><span class="o">.</span><span class="n">Batch</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">drop_remainder</span><span class="o">=</span><span class="kc">True</span><span class="p">)],</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">dl</span>
+
+<span class="n">text_dl</span> <span class="o">=</span> <span class="n">load_and_preprocess_data</span><span class="p">(</span><span class="s1">&#39;TinyStories-train.txt&#39;</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">maxlen</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="defining-the-loss-function-and-training-step-function">
+<h2>Defining the loss function and training step function<a class="headerlink" href="#defining-the-loss-function-and-training-step-function" title="Link to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Defines the loss function using `optax.softmax_cross_entropy_with_integer_labels`.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">loss_fn</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">batch</span><span class="p">):</span>
+    <span class="n">logits</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">optax</span><span class="o">.</span><span class="n">softmax_cross_entropy_with_integer_labels</span><span class="p">(</span><span class="n">logits</span><span class="o">=</span><span class="n">logits</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">loss</span><span class="p">,</span> <span class="n">logits</span>
+
+<span class="c1"># Define the training step with the `flax.nnx.jit` transformation decorator.</span>
+<span class="nd">@nnx</span><span class="o">.</span><span class="n">jit</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">train_step</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">MiniGPT</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span> <span class="n">metrics</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">MultiMetric</span><span class="p">,</span> <span class="n">batch</span><span class="p">):</span>
+    <span class="n">grad_fn</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">value_and_grad</span><span class="p">(</span><span class="n">loss_fn</span><span class="p">,</span> <span class="n">has_aux</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">logits</span><span class="p">),</span> <span class="n">grads</span> <span class="o">=</span> <span class="n">grad_fn</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">batch</span><span class="p">)</span>
+    <span class="n">metrics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span> <span class="n">logits</span><span class="o">=</span><span class="n">logits</span><span class="p">,</span> <span class="n">lables</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">optimizer</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">grads</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="training-the-model">
+<h2>Training the model<a class="headerlink" href="#training-the-model" title="Link to this heading">#</a></h2>
+<p>Start training. It takes ~50 minutes on Colab.</p>
+<p>Note that for data parallel, we are sharding the training data along the <code class="docutils literal notranslate"><span class="pre">batch</span></code> axis using <code class="docutils literal notranslate"><span class="pre">jax.device_put</span></code> with <code class="docutils literal notranslate"><span class="pre">NamedSharding</span></code>.</p>
+<p>We are also using the <code class="docutils literal notranslate"><span class="pre">jax.vmap</span></code> transformation to produce the target sequences faster.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">create_model</span><span class="p">(</span><span class="n">rngs</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">ModelAndOptimizer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optax</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">))</span>
+<span class="n">metrics</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">MultiMetric</span><span class="p">(</span>
+  <span class="n">loss</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">Average</span><span class="p">(</span><span class="s1">&#39;loss&#39;</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">rng</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">PRNGKey</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="n">start_prompt</span> <span class="o">=</span> <span class="s2">&quot;Once upon a time&quot;</span>
+<span class="n">start_tokens</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">start_prompt</span><span class="p">)[:</span><span class="n">maxlen</span><span class="p">]</span>
+<span class="n">generated_text</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">generate_text</span><span class="p">(</span>
+    <span class="n">maxlen</span><span class="p">,</span> <span class="n">start_tokens</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Initial generated text:</span><span class="se">\n</span><span class="si">{</span><span class="n">generated_text</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="n">metrics_history</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="s1">&#39;train_loss&#39;</span><span class="p">:</span> <span class="p">[],</span>
+<span class="p">}</span>
+
+<span class="n">prep_target_batch</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">vmap</span><span class="p">(</span><span class="k">lambda</span> <span class="n">tokens</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">tokens</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">]))))</span>
+
+<span class="n">step</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_epochs</span><span class="p">):</span>
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">text_dl</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">jax</span><span class="o">.</span><span class="n">devices</span><span class="p">())</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+          <span class="k">continue</span>  <span class="c1"># skip the remaining elements</span>
+        <span class="n">input_batch</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">target_batch</span> <span class="o">=</span> <span class="n">prep_target_batch</span><span class="p">(</span><span class="n">input_batch</span><span class="p">)</span>
+        <span class="n">train_step</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">jax</span><span class="o">.</span><span class="n">device_put</span><span class="p">((</span><span class="n">input_batch</span><span class="p">,</span> <span class="n">target_batch</span><span class="p">),</span> <span class="n">NamedSharding</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">P</span><span class="p">(</span><span class="s1">&#39;batch&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))))</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">200</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+          <span class="k">for</span> <span class="n">metric</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">metrics</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+              <span class="n">metrics_history</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;train_</span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+          <span class="n">metrics</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+          <span class="n">elapsed_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+          <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Step </span><span class="si">{</span><span class="n">step</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">, Loss: </span><span class="si">{</span><span class="n">metrics_history</span><span class="p">[</span><span class="s1">&#39;train_loss&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">, Elapsed Time: </span><span class="si">{</span><span class="n">elapsed_time</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
+          <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+          <span class="n">generated_text</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">generate_text</span><span class="p">(</span>
+              <span class="n">maxlen</span><span class="p">,</span> <span class="n">start_tokens</span>
+          <span class="p">)</span>
+          <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Generated text:</span><span class="se">\n</span><span class="si">{</span><span class="n">generated_text</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">step</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<span class="c1"># Final text generation</span>
+<span class="n">generated_text</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">generate_text</span><span class="p">(</span>
+    <span class="n">maxlen</span><span class="p">,</span> <span class="n">start_tokens</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Final generated text:</span><span class="se">\n</span><span class="si">{</span><span class="n">generated_text</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Initial generated text:
+Once upon a time Christina Raven Liqu Everyday seaw Spl digit mini Hungarian wasteful USC recurrent brawl towers summAvailability manualsidsAvailability Jord staleEarlier 303 Latter soakinginated pierced acquaint propaganda differentlyBesides Splambling Significant processing locals FoundingFlickrverbalSquaresth pixels CON repetitivebass%; dartsKN ushered sim wasteful Qi510 174 (_ Hillaryall hopeddalePref recurrentbassoves AOL ushered Hunt manuals NietzscheidsBY Equ souls correctedresaKN ghamblinguador contest cornerback bannedKN realizedSix summlargest gh fastest req influences cursingosureelse delighted wrecked donors codsedentiallyindaletteogenicAI summ wasteful USCesm shaped Garrett resistance grandchildren souls babyStatementambling fastestirin AWSiden groundedKen%; aboarddogs seaw Sultan Sachs Sonic ArchivesINE darts belts asylumei simette expands targetintergroupon Graveyard Graveyard398Jordan 66 medication Leadership 174?: seaw manuals summ asylumrw slice manualsiries Prometheus� Seat correctedINE denomination summ vastlyKNKN belts?: contest PamelaidiumKN themHI seawKN minions summ squadKN Joker sacredamblingKNuckyKNette 69 Xan 69ourse notificationuku Sitting cosmeticakesGro McAuliffeilles Graveyard differe &lt;-Jordan Archives 180 Puppet cabinetodcast spir305 bannedambling 66 medicationbass victory relatingakespe Rover GarrettPrefppo sim recurrent manualsidsrg eveningsossus asylum Puppet hydra SultanProxy 66 chew Jokeranswer%;Loc Australian awaidiumdale landed Luahangはambling SuddenlyKN victory victory victory victory
+
+Step 200, Loss: 4.541538715362549, Elapsed Time: 119.14 seconds
+Generated text:
+Once upon a time was a time was was was was very little girl, day was so happy, her little girl, her little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little little!!!!
+
+Step 400, Loss: 2.8348119258880615, Elapsed Time: 103.58 seconds
+Generated text:
+Once upon a time there was a small cat named Jack. Tim was a little girl who lived in the world and wanted to explore the forest. The dog, he had a new toy car and his mommy and daddy. He wanted to be so much. He went to help the ball. He said to be careful to go and said, &quot;What&#39;s wrong!&quot;
+After they found the other kids said, Timmy was so excited and he could see his friend. Timmy said, &quot;Let&#39;s play in the other animals, but I want to help.&quot;
+Timmy smiled and they played with a while. Timmy said, &quot;It&#39;s not listen to play. &quot;Thank you. &quot;You are happy.&quot;
+
+
+Step 600, Loss: 2.3290421962738037, Elapsed Time: 69.78 seconds
+Generated text:
+Once upon a time, there was a little girl named Lily. She was very curious and loved to play outside in the garden. One day, she was playing with her toys and saw a big box with a shiny red ball. The ball was shiny and wanted to climb it, but she didn&#39;t want to be too far. 
+&quot;Hi, I can&#39;t get my toy!&quot; said, but Lily said, &quot;No, you are not yours.&quot; 
+Lily&#39;s mom smiled and said, &quot;You can help me go to me!&quot;
+&quot;I want to get some candy and it,&quot; she said. &quot;That&#39;s a big dog.&quot;
+The cat said, &quot;No, we need to go home. I&#39;m going to find some.&quot; 
+Her mom said, &quot;Okay, you will get to play with me.&quot;
+Lily smiled and said, &quot;I want to get my favorite toy first!&quot; 
+Her mom said, &quot;Okay, but they don&#39;t know. They both thought it is so much fun to go on their mom and have fun. They played together, but they did not wait to be friends and they had fun together. 
+
+
+Step 800, Loss: 2.049470901489258, Elapsed Time: 84.69 seconds
+Generated text:
+Once upon a time, there was a little girl named Lucy was playing in the garden. She loved to run and play outside and she had lots of fun. She would always look at all day and her friends in the garden.
+One day, she was playing outside when she heard a strange noise coming from a loud noise. It was coming from a dark and it started to shake. It was a big dog, so scared.
+Her mom came into the room and said, &quot;That&#39;s not safe!&quot;
+The dog smiled and said, &quot;Don&#39;t worry, I will find my friend.&quot; Lucy and the dog started to walk in the grass, but soon she heard the sound coming from the garden, and she heard a noise. The dog ran back inside, but the door opened and saw that the shadow had a hole in a hole. Lucy and the dog became friends, and they played together all the things and they never found a beautiful spot to get home.
+
+
+Step 1000, Loss: 1.8924535512924194, Elapsed Time: 76.64 seconds
+Generated text:
+Once upon a time, there was a girl named Amy. Amy loved to go outside and play with her friends. One day, Amy saw a big tree and asked her friends, &quot;Can I have some best friends?&quot; The tree was so big that it made a special tree to get in the tree. 
+Amy went to the tree and asked, &quot;Can I go on my tree?&quot; The tree replied, &quot;Sure, let&#39;s play together!&quot; 
+So, Amy and the tree were very excited. Amy started to play, but it was too heavy for the tree. She started to climb and forth, but it was so far away. Amy&#39;s mom saw how fast it was. She asked, &quot;Why do you think this, but I want to get to be my friend?&quot; Amy said, &quot;No, it&#39;s too late, so we can&#39;t play together!&quot; Amy&#39;s friend started to fight and said, &quot;I&#39;ll be friends. Let&#39;s play together!&quot; Amy and Amy laughed, and laughed together, and they became best friends and they had a fun day together.
+
+
+Step 1200, Loss: 1.7993096113204956, Elapsed Time: 80.74 seconds
+Generated text:
+Once upon a time, there was a little girl named Amy. She loved to go outside and play in the sunshine. One day, she went outside to play with her friends. They went on a sunny day and found a shiny ball. 
+Amy wanted to see the ball and it started to fly it. But then, a little girl came to her friend. Her friend saw her and asked if she could join the bird. The bird said yes and Lily took it to her house.
+Amy was very happy and she started to sing and dance with her friend. They sang together and danced until the sun came up. They laughed and danced together, laughing and having fun. They played together all day and the day long.
+
+
+Step 1400, Loss: 1.7445931434631348, Elapsed Time: 69.74 seconds
+Generated text:
+Once upon a time, there was a girl named Sue. She was only three years old. Sue loved to explore. One day, she saw a little bird sitting on a branch. Sue was scared. She ran up to her mom and said, &quot;Mom, what&#39;s that noise?&quot; Her mom smiled and said, &quot;It&#39;s okay, Sue. We don&#39;t have any more fun!&quot;
+Sue and her mom looked around the house and found a small bird that made her feel better. It was a little bird. Sue and her mom went outside and played in the sun. They had a great time playing and laughing.
+At the end of the day, Sue said, &quot;Thank you, Mommy! You&#39;re welcome! You are very lucky to be a friend.&quot; Her mom smiled and said, &quot;Thank you, mommy. I love your new friend!&quot;
+
+
+Step 1600, Loss: 1.6877646446228027, Elapsed Time: 74.16 seconds
+Generated text:
+Once upon a time, a boy named Jack was walking down the street. He was feeling very scared. His mom told him that he had to go outside and get to play. 
+One day, Jack noticed a little boy playing in the park. He wanted to play with the equipment too, but he was scared. 
+Jack ran over and asked, &quot;Why did you get me?&quot; His mom said, &quot;I don&#39;t want to be scared. I&#39;m sorry I can&#39;t have the equipment to take the equipment to play.&quot; 
+Jack thought about the equipment he would make it even more fun with the equipment. So, he started to build the equipment. When he was finished, Jack felt a bit better. 
+The equipment was a way to the playground, but he knew that his mom was not alone, she had to help him get better. She asked him to stay in the playground, but Jack was still happy to have the equipment to stay, but Jack couldn&#39;t.
+Jack learned that being kind was important to help and not be afraid of being ignorant and selfish. He was still happy, but he was still very selfish and always asked the equipment for help.
+
+
+Step 1800, Loss: 1.6456927061080933, Elapsed Time: 85.76 seconds
+Generated text:
+Once upon a time, there was a little girl named Mia. Mia loved to play outside in the park. One day, Mia found a shiny coin in the park. She wanted it for her birthday party, but it was too expensive. Mia thought it would not buy the coin for her birthday.
+So, Mia decided to ask her mom for the coin to buy the coin. The coin looked for a long time and said yes. Mia put the coin back in the park, but it was gone. Mia was very sad.
+So, Mia asked her mom if she could have a special day. Her mom said yes and they both went home with the coin. Mia was so happy! She said yes, but the coin was gone forever.
+
+
+Step 2000, Loss: 1.6211789846420288, Elapsed Time: 69.42 seconds
+Generated text:
+Once upon a time, there was a small boy named Tim. Tim was a small boy named Timmy. Timmy loved to play with his toy car and he loved to make noises with it.
+One day, Timmy and his toy car went to the park with his toy car. Timmy&#39;s car got stuck in the car and it crashed. Timmy&#39;s car was too fast and it hit a tree with the wheel.
+Timmy was sad because he loved his car so much. He knew he could help make his toy car better. He said, &quot;I will make you happy! Let&#39;s play together and make a new car.&quot; And Timmy and his toy car had fun together and they became good friends.
+
+
+Step 2200, Loss: 1.578463077545166, Elapsed Time: 68.18 seconds
+Generated text:
+Once upon a time, there was a little girl named Lucy. She was only three years old and loved to play with her toys. One day, she found a special treasure, a big, scary toy that was very big and she was so excited to take it home. 
+But, one day, Lucy found a shiny jewel that she was very happy to find it. She opened the door and saw a beautiful necklace in the corner of the room. She wanted to see what it was like. She asked her friend, the necklace, and the necklace said, &quot;Can I take it home now?&quot; 
+Lucy smiled and said, &quot;I can borrow it with a special diamond. It&#39;s very special because it belongs to someone else.&quot;
+The diamond was so happy to see Lucy and said, &quot;Thank you, Lucy. You are a great friend!&quot;
+
+
+Step 2400, Loss: 1.5326989889144897, Elapsed Time: 73.51 seconds
+Generated text:
+Once upon a time, there was a little boy named Timmy. Timmy loved to play outside in the sun. One day, Timmy saw a beautiful flower. It was so pretty!
+Timmy asked his mom, &quot;What is this flower?&quot;
+His mom replied, &quot;It&#39;s a flower. Do you want to play with it?&quot;
+Timmy nodded his head and said, &quot;Yes, please.&quot;
+Timmy was so happy and he played with the flower. They laughed and played until the sun went down.
+Suddenly, they heard a loud noise. It was a little kitten. The kitten was scared and didn&#39;t know what to do. Timmy&#39;s mom told him it was a bad ending.
+
+
+Step 2600, Loss: 1.5533288717269897, Elapsed Time: 70.30 seconds
+Generated text:
+Once upon a time, there was a little girl named Lily. She was very happy because she had a pretty blouse. One day, Lily was playing with her friend Jack came over to play. She asked, &quot;Can I play with you?&quot; 
+Jack said, &quot;Sure, let&#39;s play with your friends!&quot; Lily was excited and said, &quot;Okay, let&#39;s play!&quot; They ran around the room and played with their new friends. 
+As they were playing, Lily accidentally knocked over the blouse and it fell off the blouse. Jack said, &quot;Ouch!&quot; 
+Lily felt embarrassed and said, &quot;It&#39;s okay, Lily. I&#39;m sorry. I didn&#39;t mean to break the blouse. Let&#39;s play with it again!&quot; 
+They both started to play and soon the blouse was over. They played together and had a lot of fun. Lily felt so happy that she didn&#39;t make her friend laugh again. She realized that sometimes things don&#39;t seem too bad and we should be different, but they still have a solution.
+
+
+Step 2800, Loss: 1.5323652029037476, Elapsed Time: 80.58 seconds
+Generated text:
+Once upon a time, there was a little boy named Tim. Tim was a good boy. He liked to play with his toys and his dog, Max. One day, Tim went to the park with his mom.
+&quot;Hi, Tim! I want to play with you. Do you want to play with me?&quot; Tim asked.
+&quot;Yes, Tim. Let&#39;s play together!&quot; his mom said.
+Tim and Max played together all day. They laughed and had lots of fun. Tim and Max were good friends.
+&quot;Can we play with our friends?&quot; Max asked.
+&quot;Yes, but we can play together,&quot; his mom said.
+Tim and Max played together. They laughed and had fun. Tim and Max were happy to play with them. They were best friends.
+
+
+Step 3000, Loss: 1.5298235416412354, Elapsed Time: 70.76 seconds
+Generated text:
+Once upon a time, there was a little girl named Lily. She was three years old and loved to explore the world around her. One day, Lily found a shiny jewel on the ground. She picked it up and looked inside the jewel. She picked it up and examined it. She showed it to her mom and they were so proud of her. 
+After she was finished playing, Lily went to bed. She had so much fun that she didn&#39;t realize it was her mom had made a mistake. Her mom explained that sometimes it&#39;s important to be responsible and to listen to others. Lily was very careful and listened to her mom&#39;s advice.
+From that day on, Lily was careful and she never forgot about the jewel. She always made sure to be careful when she played. And always remember to always be careful when things happened.
+
+
+Step 3200, Loss: 1.471197485923767, Elapsed Time: 72.75 seconds
+Generated text:
+Once upon a time, there was a little boy named Tim. Tim was a curious little boy who loved to play. One day, he found a toy car in the garden. It was red and shiny. Tim was very happy and excited.
+As Tim went outside to play, he saw a little bird in the grass. The bird had a red car. Tim wanted to help the bird. He said, &quot;Hello, little bird. Can you help me lift my toy?&quot; The bird looked at Tim and said, &quot;Yes, please! It is so nice to be careful. You are smart and smart.&quot;
+Tim was very happy to help the bird. He thanked the bird and the bird flew away. Tim learned that helping others can make us feel good and smart. He learned that helping others can make us happy too.
+
+
+Step 3400, Loss: 1.5036591291427612, Elapsed Time: 71.77 seconds
+Generated text:
+Once upon a time there was a boy named Tim. He loved to go outside and play. One day, he saw a big tree with lots of branches. He wanted to climb it, but his mom said no.
+Tim tried to climb the tree, but it was too high. He was getting higher and higher until he could see what was on the top. Then he heard a loud noise coming from outside. He peeked out from the ground and saw a small bird flying above.
+Tim was so happy to be able to reach the top. He jumped and jumped up and down the tree with excitement. When he was finally caught the bird, it flew down to the tree. Tim was so proud of his success.
+He thanked the bird and continued climbing. He was very happy that he had climbed the tree, even though he couldn&#39;t get down from the tree. From then on, he made sure to stay away from the top of the tree, safe and sound.
+
+
+Step 3600, Loss: 1.4788475036621094, Elapsed Time: 76.91 seconds
+Generated text:
+Once upon a time, there was a little boy named Timmy. Timmy loved to play with his toys and watch cartoons. One day, Timmy&#39;s mommy asked him to help his mommy. Timmy was excited to help, so he got a new toy from his grandma&#39;s house. 
+After a few days, Timmy&#39;s mommy gave him a special gift. Timmy was so excited to receive such a gift! It was a special gift that his grandma gave him a big hug. Timmy was so happy to have such a gift and hugged his mommy. 
+After that, Timmy went to bed that night with a special gift from his grandma. He loved his present so much that he gave it a special gift to his grandma. Timmy was so happy to have a present that he had found such a beautiful gift. 
+The next day, Timmy&#39;s grandma gave him a gift and gave him a gift. Timmy was so excited and couldn&#39;t wait to tell his grandma. He showed his grandma a gift for him with a present, and they all said thank you to his grandma. Timmy was so happy to receive the gift from her grandma and her gift. 
+The present was that Timmy had!!!!
+
+Step 3800, Loss: 1.4588173627853394, Elapsed Time: 88.57 seconds
+Generated text:
+Once upon a time, there was a little boy named Timmy. Timmy loved to play with his toys, but he always wanted to share them with others. One day, Timmy was playing with his toy cars and accidentally broke them. His mom said, &quot;Don&#39;t worry, I will help you fix your toys. Let&#39;s make it together.&quot;
+So, Timmy went to his room and started to play with his toy cars. He had so much fun playing with it, he didn&#39;t even want to lose it. His mom was happy to help, so they took a break and put the toy cars away in the right place. Timmy was very happy that he could share his toys with his mom.
+
+
+Step 4000, Loss: 1.4644711017608643, Elapsed Time: 69.17 seconds
+Generated text:
+Once upon a time, there was a little girl named Lily. She loved to play in the garden, and even when she saw a beautiful butterfly. She ran over to the butterfly and tried to catch it, but it flew away. 
+Suddenly, a little girl appeared. She looked around and saw her and asked her what she was doing. Lily replied, &quot;I want to play too, please!&quot; Her mom replied, &quot;Okay, but only if you don&#39;t like the butterfly, it&#39;s better.&quot; 
+So, Lily decided to go back to the garden to find the butterfly. She walked over to the garden and saw a big, beautiful butterfly. The butterfly flapped its wings and flew away. Lily felt so happy that she ran back to the garden, happy that she could play with the butterfly again.
+
+
+Step 4200, Loss: 1.4640543460845947, Elapsed Time: 72.24 seconds
+Generated text:
+Once upon a time, there was a boy named Timmy. Timmy loved to play with his toy cars, trucks and even the cars. One day, Timmy&#39;s toy car got stuck in a big mud. Timmy tried to get the wheels, but he was too heavy. He tried to push the wheel but it was too heavy. Timmy tried and tried, but he couldn&#39;t do it. Timmy was sad, but then he remembered how his mom told him. He was brave and strong, but he knew how to use his car to get it. He was happy again, and he was able to get the wheel.
+
+
+Step 4400, Loss: 1.4368994235992432, Elapsed Time: 66.23 seconds
+Generated text:
+Once upon a time, there was a little boy named Timmy. Timmy loved to play outside and pick flowers. One day, he saw a little boy who was very curious. He went up to him and asked, &quot;Can I help you?&quot; The boy replied, &quot;Sure, you can help me find your way.&quot;
+Timmy and the boy searched everywhere but they couldn&#39;t find the way up to the boy. They searched everywhere but they couldn&#39;t find the answer. Suddenly, the boy said, &quot;Don&#39;t worry, I&#39;ll help you find your way.&quot; Timmy said, &quot;I know how to solve this problem.&quot;
+Timmy&#39;s face lit up with excitement and said, &quot;I&#39;ll help you solve this problem. I can find your way home.&quot; His mom said, &quot;That&#39;s right. Let&#39;s find your way and see if we can find a way to find my way back.&quot; Timmy and the boy looked at each other&#39;s hand and said, &quot;Yes, I&#39;ll help you.&quot;
+They found a small tree, and Timmy helped his mom get his help. They worked together to search for the little boy&#39;s journey. After a few hours, they finally found the perfect path. Timmy was so happy that he could!!!!
+
+Step 4600, Loss: 1.4162362813949585, Elapsed Time: 88.24 seconds
+Generated text:
+Once upon a time, there was a little boy named Timmy. Timmy loved to play outside and look at the pretty flowers. One day, Timmy saw a beautiful flower. It was so pretty and he wanted to touch it. 
+But when he got close to the flower, he accidentally dropped it. It broke! Timmy was so sad that he cried and his mom couldn&#39;t fix it. She said they would get another special thing, but Timmy was okay. 
+His mom hugged him and said it was okay. She told him that accidents happen and that it&#39;s important to be careful when you touch things that can happen.
+
+
+Step 4800, Loss: 1.4360578060150146, Elapsed Time: 66.49 seconds
+Generated text:
+Once upon a time, there was a little girl named Lily. She loved to play outside in the park. One day, she saw a big tree and wanted to climb it. But her mom told her to be careful because the tree might hurt them.
+Lily tried to climb the tree, but she was too weak. She fell down and started to cry. Her mom hugged her and told her to go back home. They were very happy and went back to the tree.
+
+
+Step 5000, Loss: 1.4377806186676025, Elapsed Time: 59.31 seconds
+Generated text:
+Once upon a time, there was a little girl named Lily. She loved to play outside and collect things. One day, she went to the park with her mom. She saw a boy sitting at the bench and he said, &quot;Hello, doggy!&quot; Lily felt embarrassed because she didn&#39;t like it. She asked the boy, &quot;What&#39;s wrong?&quot; The boy said, &quot;My dog&#39;s dog bit me!&quot; Lily said, &quot;It&#39;s too bad. I&#39;m too small.&quot; The boy felt sad for her.
+Lily said, &quot;I&#39;m sorry, but I don&#39;t know it&#39;s not good.&quot; She went to her mom and asked if she could borrow some of her toys. Her mom said, &quot;Sure, you can borrow your toy car. You can borrow it, but be careful.&quot; Lily smiled and went back to playing with her toy car. She had a lot of fun with her toy car and played with it all day.
+
+
+Step 5200, Loss: 1.3954946994781494, Elapsed Time: 76.86 seconds
+Generated text:
+Once upon a time, there was a little girl named Lily. She loved to play outside and pick flowers. One day, she saw a beautiful flower in the garden. She picked it up and held it in her hand. She felt so happy that she wanted to show her mom.
+Her mom came outside and saw that Lily was very sad. She told Lily that the flower was still a flower. Lily felt sorry for being so pretty. She promised to be more careful with the flower.
+The next day, Lily went back outside to pick some flowers. She found some pretty flowers and showed them to her mom. Her mom was very happy and said that Lily&#39;s flower was not as pretty as the flowers in the garden. From that day on, Lily loved to play and make pretty flowers in the garden.
+
+
+Step 5400, Loss: 1.401665449142456, Elapsed Time: 70.89 seconds
+Generated text:
+Once upon a time, there was a little boy named Timmy. Timmy loved to play outside and explore. One day, Timmy saw a big tree with a lot of branches. He thought it looked interesting and decided to climb the tree. 
+Timmy&#39;s friend, a wise old owl, said, &quot;Timmy, don&#39;t be careless. I don&#39;t want to fall. You need to get hurt.&quot; 
+Timmy didn&#39;t understand why the owl was so wise, so he explained to his friends, &quot;It&#39;s important to always stay safe.&quot; 
+Timmy felt better and went back to his tree to admire the branches from branch. He knew that even if something is too small, it&#39;s always better to be safe and be careful when climbing tree.
+
+
+Step 5600, Loss: 1.3960157632827759, Elapsed Time: 71.91 seconds
+Generated text:
+Once upon a time, a little girl named Lily went on a trip with her mommy. They were having so much fun. When they got to the beach, they saw a crab and wanted to touch it.
+Lily said, &quot;Mommy, can I touch the crab?&quot;
+&quot;No, it&#39;s too dangerous. You should stay in the sand. The crab might be safe,&quot; her mommy replied.
+Lily was sad and started to cry. &quot;I&#39;m sorry, mommy. I didn&#39;t want to be hurt.&quot;
+Her mommy said, &quot;It&#39;s okay, sweetie. I&#39;m glad you listened to your mommy and not touched the crab. Now you can&#39;t touch the crab&#39;s safety.&quot;
+Lily smiled and hugged her mommy. From that day on, they became good friends and they played together every day.
+
+
+Step 5800, Loss: 1.3838456869125366, Elapsed Time: 73.78 seconds
+Generated text:
+Once upon a time, there was a little boy named Tim. Tim had a big toy car. The car could go very fast. Tim liked to race with his car.
+One day, Tim saw a big box. He wanted to open it. Tim went to his friend, Sue. Sue saw the box and said, &quot;I can open this box!&quot; Sue wanted to open the box. They opened the box. Inside, there was a big, soft teddy bear. The bear was happy.
+Tim and Sue played with the bear all day. They were not very good at all. They played with the toys and had lots of fun. They learned that being kind was better and to help others. And from that day on, Tim and Sue were the best of friends.
+
+
+Step 6000, Loss: 1.4077720642089844, Elapsed Time: 70.17 seconds
+Generated text:
+Once upon a time, a little girl named Sue and her dog, Spot. They lived in a big house with their mom and dad. One day, they found a shiny rock that they had to take home. They took it home and put it in their room.
+Sue&#39;s mom saw the shiny rock and said, &quot;Oh, my toy! Your toy is very special! You should take it home.&quot; Sue was happy to have her toy back and said, &quot;Thank you, Spot!&quot;
+But then, a big wind came and blew the rock back. Sue and Spot got scared and started to cry. Their mom came and saw what happened. She told them not to worry and they both went to the toy store to get the shiny rock.
+The moral of the story is that it&#39;s important to take care of our things, but we can also take care of them. If you take care of them, we might find them and help them find them.
+
+
+Step 6200, Loss: 1.3794877529144287, Elapsed Time: 77.59 seconds
+Generated text:
+Once upon a time, there was a little girl named Lily. She loved to play outside and pick flowers. One day, she went to the park with her mommy. She saw a boy crying because he lost his toy car.
+Lily said, &quot;I lost my toy car, but I can&#39;t find it.&quot;
+Lily asked the boy, &quot;Have you seen my toy car?&quot; The boy said, &quot;No, I haven&#39;t seen it.&quot;
+Lily felt sad and went to play on the swings. She went to the boy and said, &quot;Thank you, you&#39;re my friend.&quot; The boy said, &quot;You are very kind. Can you help me find your toy car?&quot;
+Lily smiled and said, &quot;I will help you find your toy car. Maybe you can find your toy car.&quot;
+
+
+Step 6400, Loss: 1.3905563354492188, Elapsed Time: 73.45 seconds
+Generated text:
+Once upon a time, there was a little girl named Lily. She loved to play outside in the sun. One day, she saw a big, round thing on the ground. It was a pretty, shiny rock.
+Lily picked up the rock and put it on her foot. She was so happy and showed her mom the rock. Her mom was proud of her and gave her a big hug. Lily felt happy too.
+Later that day, Lily and her mom went to the park. Lily saw a big slide. She wanted to slide down it too. She ran up the slide, and slid down fast. The wind blew and Lily fell. She was hurt and sad.
+Lily learned to be careful when she slide. She went to the swings, and when she was playing, she felt much better. Her mom gave her a hug and told her to keep the smooth rock. Lily learned that she should always keep the rock safe.
+
+
+Step 6600, Loss: 1.39736008644104, Elapsed Time: 76.19 seconds
+Generated text:
+Once upon a time, there was a little girl named Lily. She loved to play with her toys and her favorite toy was a teddy bear. One day, Lily was playing with her teddy bear when she saw a shiny object on the ground. She picked it up and looked at it closely. 
+&quot;Wow, look at that object!&quot; said Lily.
+&quot;I want it!&quot; said her mom. &quot;It&#39;s a special object. It&#39;s shiny and it&#39;s very special to me.&quot;
+Lily thought for a moment and then decided to take the object from her mom to her friend. &quot;Look, I found a pretty bracelet!&quot; said Lily. 
+Her friend said, &quot;That&#39;s great, Lily! Let&#39;s play with it.&quot; And so, they played with the bracelet all day long. They were having so much fun!
+
+
+Step 6800, Loss: 1.4118915796279907, Elapsed Time: 72.23 seconds
+Generated text:
+Once upon a time, there was a little girl named Lily. She loved to draw with her toys and make pictures. One day, she was playing in her backyard when she saw a big bird sitting on a branch. The bird was so pretty! Lily wanted to be friends with the bird, so she tried to sing with it. But the bird didn&#39;t fly away. Lily was sad and didn&#39;t know what to do.
+Then, Lily saw a bird that it was very graceful. She asked the bird what was wrong. The bird said that it had wings to fly away. Lily thought that it was a fun idea and flew away. She was happy again and went back to her house to play. From that day on, Lily knew that if she wanted to be friends with her friend, she could help the bird feel better.
+
+
+Step 7000, Loss: 1.4061782360076904, Elapsed Time: 72.51 seconds
+Generated text:
+Once upon a time, a little girl named Sue lived in a big house. Sue had a toy car that she loved to play with. One day, Sue&#39;s mom told her not to clean up. Sue listened to her mom and started to clean her room.
+After cleaning, Sue felt tired and needed to take a nap. She put on her clean, but her mom was not looking well. Sue went to her room and sat down to rest. Her mom said, &quot;Sue, I&#39;m going to rest and drink a big drink.&quot; Sue smiled and felt better.
+Sue went to bed with her mom to rest her room. In the end, she went to sleep with her mom. She felt happy that she was able to help her mom. From that day on, Sue knew that her mom loved her because she loved her little sister so much.
+
+
+Step 7200, Loss: 1.381988286972046, Elapsed Time: 73.38 seconds
+Generated text:
+Once upon a time, a little girl named Lily went to the park with her mommy. She saw a boy who looked sad. She went to her mommy and asked her if she could have a turn to her.
+&quot;Sure, but you have to ask your mommy,&quot; her mommy said. &quot;It&#39;s okay, but it&#39;s important to ask nicely.&quot;
+Lily nodded and gave the boy a hug. &quot;Can we play on the swings?&quot; she asked.
+The boy didn&#39;t like it and said, &quot;Sure, but be careful.&quot;
+Lily felt happy and went to play on the swings. She went back to the boy and asked if he wanted to swing too. The boy said, &quot;I want to swing like you, but it&#39;s not safe.&quot;
+Lily went to the swing and pushed the boy away. She was sad that she lost her favorite toy. The boy was upset and didn&#39;t want to swing anymore. They both sat on the swing and watched the boy play on the swings. Lily felt better and said, &quot;Thank you for letting me swing, Timmy. You&#39;re my friend.&quot;
+
+
+Step 7400, Loss: 1.3883332014083862, Elapsed Time: 83.07 seconds
+Generated text:
+Once upon a time, there was a little girl named Lily. She loved to play outside in the garden and feel the warm sunshine on her skin. One day, while she was playing, she noticed that the flowers had bloomed in a beautiful butterfly. She wanted to see the butterfly so she asked her mommy if she could go to the butterfly&#39;s home. Her mommy said yes and Lily ran to her mommy&#39;s room. 
+When she got there, she saw that the butterfly was sad and started to cry. Her mommy told her that she couldn&#39;t go back to the garden to get her dress and her mommy was not happy. Lily felt bad and didn&#39;t want to go back to the garden to get her dress. 
+The next day, Lily saw the butterfly again and ran back to her mommy&#39;s house. She was happy to see her mommy again and said she was a great helper. Her mommy was so happy that she could see the butterfly again and that was a beautiful butterfly who was a good girl.
+
+
+Step 7600, Loss: 1.3650509119033813, Elapsed Time: 80.14 seconds
+Generated text:
+Once upon a time, there was a little girl named Lily. She loved to play with her toys, but one day she got bored. She went to her friend, Tim, and asked if he could borrow his toy.
+Tim said, &quot;No, Lily. This is my toy car. You can play with it, but I want to borrow your toy car.&quot;
+Lily felt sad because she didn&#39;t want to play with Tim. She said, &quot;Please, Tim. We can borrow your toy car. I can borrow it for my birthday.&quot;
+Tim took the toy car and said, &quot;No, Lily. I can borrow it for my birthday.&quot; He played with the toy car all day. He was happy with his new toy car.
+
+
+Step 7800, Loss: 1.3602105379104614, Elapsed Time: 69.70 seconds
+Generated text:
+Once upon a time, a little girl named Lily went to a park with her mommy. The park was a pretty green place, with a big pond with lots of ducks. Lily loved the sound of the water, so she decided to play in the water.
+Lily saw a butterfly flying in the sky and tried to catch it. But the butterfly was too fast, and she couldn&#39;t catch it. Suddenly, the butterfly landed on a flower and Lily started to panic.
+Her mommy saw the butterfly and asked, &quot;What happened, Lily?&quot;
+&quot;The butterfly fell and hurt my hand,&quot; said Lily.
+Her mommy came over and saw the butterfly and asked, &quot;Are you okay, Lily?&quot;
+&quot;It hurts, sweetie,&quot; said her mommy.
+Lily&#39;s mommy took a big spoon and the butterfly was very pretty and had lots of colors on it. Lily felt much better and was able to catch the butterfly. She was happy to have her friend a little friend, and they played together all day long.
+
+
+Step 8000, Loss: 1.3417373895645142, Elapsed Time: 79.57 seconds
+Generated text:
+Once upon a time, there was a little boy named Tim. Tim had a toy named Sam. Sam liked to play with the toy car. One day, Tim&#39;s mom said they were going to a new park. Tim wanted to play on the swings, but his mom said no.
+Tim started playing with the car. He saw a big dog in the park. The dog barked loudly. Tim felt scared. He wanted to run away. He went to his mom and dad and said they were safe. Tim felt safe.
+Later, Tim and Sam went to the park. They saw a big slide. They both wanted to go on the slide. They ran to the slide and slid down the slide. Tim&#39;s mom and dad helped them get down. They all laughed and had a great time together.
+
+
+Step 8200, Loss: 1.3874244689941406, Elapsed Time: 71.68 seconds
+Generated text:
+Once upon a time, there was a little boy named Timmy. Timmy loved to play with his toy car, but his favorite thing to do was to go to the store. Timmy didn&#39;t like the store, so he went to the store.
+When they got to the store, Timmy saw a toy car and wanted it. He asked his mom for a toy car and her mom said, &quot;No, it&#39;s too expensive.&quot; Timmy didn&#39;t want to buy a toy car. He thought the toy car wouldn&#39;t have a toy car, but his mom said it was okay.
+Later that day, Timmy went to the park with his mom. Timmy saw a boy who looked sad because he lost his toy car. Timmy felt sorry for the boy and said, &quot;I can help you find my toy car.&quot; But he couldn&#39;t find his toy car, and he didn&#39;t know what to do.
+Timmy asked his mom, &quot;Why are you looking for my toy car, and the boy can have it back?&quot; His mom said, &quot;Don&#39;t worry, we can fix it. Let&#39;s find your toy car.&quot; They found the toy car and it was in the store. Timmy was happy that he found a!!!!
+
+Final generated text:
+Once upon a time, there was a little girl named Lily. She loved to play outside and pick flowers. One day, Lily saw a butterfly and tried to catch it, but it flew away. Lily felt sad because she didn&#39;t know what was happening.
+Suddenly, her friend, a little bird named Timmy, came to visit. &quot;Don&#39;t worry, Timmy,&quot; said Lily. &quot;I can catch it!&quot;
+&quot;I&#39;m sorry, Lily,&quot; said Timmy. &quot;I just need to help my mom.&quot;
+&quot;Thank you, Timmy,&quot; said Lily. &quot;You are very kind to me.&quot;
+From that day on, Lily learned to always help others when they needed it. And every time she saw the butterfly, she felt happy again.
+</pre></div>
+</div>
+</div>
+</div>
+<p>Visualize the training loss.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">metrics_history</span><span class="p">[</span><span class="s1">&#39;train_loss&#39;</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Training Loss&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Step&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Loss&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="_images/cd92931fb69295f399be5a2afba4be4b202bd9cda85db6d7299da53c36d2b62a.png" src="_images/cd92931fb69295f399be5a2afba4be4b202bd9cda85db6d7299da53c36d2b62a.png" />
+</div>
+</div>
+<p>As you can see, the model goes from generating completely random words at the beginning to generating sensible tiny stories at the end of the training. So essentially we have pretrained a small LLM to write tiny stories for us.</p>
+</section>
+<section id="saving-the-checkpoint">
+<h2>Saving the checkpoint<a class="headerlink" href="#saving-the-checkpoint" title="Link to this heading">#</a></h2>
+<p>Save the model checkpoint.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">orbax.checkpoint</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">orbax</span>
+
+<span class="n">state</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">state</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+<span class="n">checkpointer</span> <span class="o">=</span> <span class="n">orbax</span><span class="o">.</span><span class="n">PyTreeCheckpointer</span><span class="p">()</span>
+<span class="n">checkpointer</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;/content/save&#39;</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+
+<span class="c1"># Make sure the files are there</span>
+<span class="err">!</span><span class="n">ls</span> <span class="o">/</span><span class="n">content</span><span class="o">/</span><span class="n">save</span><span class="o">/</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>_CHECKPOINT_METADATA  d  manifest.ocdbt  _METADATA  ocdbt.process_0  _sharding
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="profiling-for-hyperparameter-tuning">
+<h2>Profiling for hyperparameter tuning<a class="headerlink" href="#profiling-for-hyperparameter-tuning" title="Link to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="err">!</span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">Uq</span> <span class="n">tensorboard</span><span class="o">-</span><span class="n">plugin</span><span class="o">-</span><span class="n">profile</span> <span class="n">tensorflow</span> <span class="n">tensorboard</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Load the tensorboard colab extension.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">load_ext</span> <span class="n">tensorboard</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>As we’re going to be running this model a number of times, we need some scaffolding to more easily compare our work. For a baseline, we’ll need to perform some warmup to guarantee that our code is JIT’d and that our TPUs are warm. For improved comparability, we’ll only start tracing after we’ve finished warmup.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">trace_dir</span> <span class="o">=</span> <span class="s2">&quot;/tmp/jax-trace/&quot;</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">loop_step</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">step</span><span class="p">):</span>
+    <span class="n">input_batch</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="n">target_batch</span> <span class="o">=</span> <span class="n">prep_target_batch</span><span class="p">(</span><span class="n">input_batch</span><span class="p">)</span>
+    <span class="n">train_step</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">jax</span><span class="o">.</span><span class="n">device_put</span><span class="p">((</span><span class="n">input_batch</span><span class="p">,</span> <span class="n">target_batch</span><span class="p">),</span> <span class="n">NamedSharding</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">P</span><span class="p">(</span><span class="s1">&#39;batch&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))))</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_trace</span><span class="p">():</span>
+    <span class="n">tracing_steps</span> <span class="o">=</span> <span class="mi">30</span>
+    <span class="n">warmup_steps</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="k">for</span> <span class="n">current_step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">warmup_steps</span> <span class="o">+</span> <span class="n">tracing_steps</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">current_step</span> <span class="o">==</span> <span class="n">warmup_steps</span><span class="p">:</span>
+            <span class="n">jax</span><span class="o">.</span><span class="n">profiler</span><span class="o">.</span><span class="n">start_trace</span><span class="p">(</span><span class="n">trace_dir</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">jax</span><span class="o">.</span><span class="n">profiler</span><span class="o">.</span><span class="n">StepTraceAnnotation</span><span class="p">(</span><span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="n">step_num</span><span class="o">=</span><span class="n">current_step</span><span class="p">):</span>
+            <span class="n">batch</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">text_dl</span><span class="p">)</span>
+            <span class="n">loop_step</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">current_step</span><span class="p">)</span>
+
+    <span class="n">jax</span><span class="o">.</span><span class="n">profiler</span><span class="o">.</span><span class="n">stop_trace</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Now we’ll perform some traces to compare results of different batch sizes. This will take several minutes as we need to reprocess our input data to prepare new batches each time.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">trace_dir</span> <span class="o">=</span> <span class="s2">&quot;/tmp/jax-trace-batch-comparison/&quot;</span>
+
+<span class="n">batch_size</span> <span class="o">=</span> <span class="mi">64</span>
+<span class="n">text_dl</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">load_and_preprocess_data</span><span class="p">(</span><span class="s1">&#39;TinyStories-train.txt&#39;</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">maxlen</span><span class="p">))</span>
+<span class="n">generate_trace</span><span class="p">()</span>
+
+<span class="n">batch_size</span> <span class="o">=</span> <span class="mi">256</span>
+<span class="n">text_dl</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">load_and_preprocess_data</span><span class="p">(</span><span class="s1">&#39;TinyStories-train.txt&#39;</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">maxlen</span><span class="p">))</span>
+<span class="n">generate_trace</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Run Tensorboard with the Profiler Plugin to compare our runs. Runs are listed in order from newest to oldest, so the top run in the list will be have <code class="docutils literal notranslate"><span class="pre">batch_size</span> <span class="pre">=</span> <span class="pre">256</span></code>.</p>
+<p>The key metrics to focus on here for this hyperparameter are FLOPS Utilization and Average Step Time.</p>
+<p>In general, we want to maximize FLOPS Utilization while minimizing the step time per training example. In this case, we can see that increasing the batch size from 64 -&gt; 256 achieves both of those. FLOPS increases from 16% to 27%. Average Step Time increase from 100ms to 260ms, however we increased our batch size by 300%. This means we move from 1.5ms per training example to 1.02ms per training example.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">tensorboard</span> <span class="o">--</span><span class="n">logdir</span><span class="o">=</span><span class="err">$</span><span class="n">trace_dir</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Next, we can explore alternative parallelism methods. In cell #4, we used 4-way data parallel and 2-way tensor parallel. 8-way data parallel is another popular way. Let’s compare results between them. To switch to 8-way data parallel, we’ll replace the <code class="docutils literal notranslate"><span class="pre">Mesh</span></code> definition with:</p>
+<p><code class="docutils literal notranslate"><span class="pre">mesh</span> <span class="pre">=</span> <span class="pre">Mesh(mesh_utils.create_device_mesh((8,</span> <span class="pre">1)),</span> <span class="pre">('batch',</span> <span class="pre">'model'))</span></code></p>
+<p>JAX will automatically figure out how to shard the model and data to use the new partition strategy and nothing else need to be done. Re-connect the TPU runtime and run it again to see how it runs.</p>
+<p>How simple and powerful is this! And that’s the beauty of JAX automatic parallelism.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">trace_dir</span> <span class="o">=</span> <span class="s2">&quot;/tmp/jax-trace-parallelism-comparison/&quot;</span>
+
+<span class="n">mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">mesh_utils</span><span class="o">.</span><span class="n">create_device_mesh</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span> <span class="p">(</span><span class="s1">&#39;batch&#39;</span><span class="p">,</span> <span class="s1">&#39;model&#39;</span><span class="p">))</span>
+<span class="n">generate_trace</span><span class="p">()</span>
+
+<span class="n">mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">mesh_utils</span><span class="o">.</span><span class="n">create_device_mesh</span><span class="p">((</span><span class="mi">8</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="p">(</span><span class="s1">&#39;batch&#39;</span><span class="p">,</span> <span class="s1">&#39;model&#39;</span><span class="p">))</span>
+<span class="n">generate_trace</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Once again we’ll run tensorboard.</p>
+<p>Looking at the results, we see that the step times are nearly the same, however the FLOPS Utilization is at 13% for 8-way data parallelism compared to 27% or 4-way data parallelism.</p>
+<p>By looking at the Trace Viewer tool and looking under each TPU’s ops, we can see that the TPUs spend a large amount of time idle while waiting for the host, as well as spending a good amount of time in <code class="docutils literal notranslate"><span class="pre">reduce_sum</span></code> operations.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">tensorboard</span> <span class="o">--</span><span class="n">logdir</span><span class="o">=</span><span class="err">$</span><span class="n">trace_dir</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>By changing hyperparameters and comparing profiles, we’re able to gain significant insights into our bottlenecks and limitations. These are just two examples of hyperparameters to tune, but plenty more of them will have significant effects on training speed and resource utilization.</p>
+</section>
+</section>
+
+<div class="section ablog__blog_comments">
+   
+</div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="JAX_porting_PyTorch_model.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Porting a PyTorch model to JAX</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="JAX_basic_text_classification.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Basic text classification with 1D CNN</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setup">Setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#define-the-minigpt-model-with-flax-and-jax-automatic-parallelism">Define the miniGPT model with Flax and JAX automatic parallelism</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#leveraging-jax-s-data-and-tensor-parallelism">Leveraging JAX’s data and tensor parallelism</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#jax-sharding-mesh">jax.sharding.Mesh</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-and-preprocessing-the-data">Loading and preprocessing the data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-the-loss-function-and-training-step-function">Defining the loss function and training step function</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-the-model">Training the model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#saving-the-checkpoint">Saving the checkpoint</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#profiling-for-hyperparameter-tuning">Profiling for hyperparameter tuning</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By JAX team
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, JAX team.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

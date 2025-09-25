@@ -1,0 +1,1489 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Time series classification with CNN &#8212; JAX AI Stack</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css?v=6644e6bb" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=1dc24ef2" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="_static/documentation_options.js?v=c1d4a9c3"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'JAX_time_series_classification';</script>
+    <link rel="icon" href="_static/favicon.png"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Contribute to documentation" href="contributing.html" />
+    <link rel="prev" title="Train a Vision Transformer (ViT) for image classification with JAX" href="JAX_Vision_transformer.html" /> 
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>   
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/ai-stack-logo.svg" class="logo__image only-light" alt="JAX AI Stack - Home"/>
+    <script>document.write(`<img src="_static/ai-stack-logo.svg" class="logo__image only-dark" alt="JAX AI Stack - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="index.html">
+                    JAX AI Stack
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="blog.html">JAX AI Stack Blog</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing the stack</a></li>
+
+<li class="toctree-l1 has-children"><a class="reference internal" href="getting_started.html">Getting started with JAX for ML</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="neural_net_basics.html">Part 1: JAX neural net basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="digits_vae.html">Part 2: Debug a variational autoencoder (VAE)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="digits_diffusion_model.html">Part 3: Train a diffusion model for image generation</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="JAX_visualizing_models_metrics.html">Visualize JAX model metrics with TensorBoard</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="data_loaders.html">Introduction to Data Loaders</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="data_loaders_on_cpu_with_jax.html">Introduction to Data Loaders on CPU with JAX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_loaders_on_gpu_with_jax.html">Introduction to Data Loaders on GPU with JAX</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="pytorch_users.html">From PyTorch to JAX</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="JAX_for_PyTorch_users.html">JAX for PyTorch users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="JAX_porting_PyTorch_model.html">Porting a PyTorch model to JAX</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Example applications</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="JAX_for_LLM_pretraining.html">Train a miniGPT language model with JAX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_basic_text_classification.html">Basic text classification with 1D CNN</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_transformer_text_classification.html">Text classification with a transformer language model using JAX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_machine_translation.html">Machine Translation with encoder-decoder transformer model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_examples_image_segmentation.html">Image segmentation with UNETR model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_image_captioning.html">Image Captioning with Vision Transformer (ViT) model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_Vision_transformer.html">Train a Vision Transformer (ViT) for image classification with JAX</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Time series classification with CNN</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer resources</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contribute to documentation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/jax-ml/jax-ai-stack" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/JAX_time_series_classification.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Time series classification with CNN</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tools-overview-and-setup">Tools overview and setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-the-dataset">Load the dataset</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-a-data-loader-using-grain">Create a Data Loader using Grain</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#define-the-model">Define the Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#train-the-model">Train the Model</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                   <section class="tex2jax_ignore mathjax_ignore" id="time-series-classification-with-cnn">
+<h1>Time series classification with CNN<a class="headerlink" href="#time-series-classification-with-cnn" title="Link to this heading">#</a></h1>
+<p><a class="reference external" href="https://colab.research.google.com/github/jax-ml/jax-ai-stack/blob/main/docs/source/JAX_time_series_classification.ipynb"><img alt="Open in Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
+<p>In this tutorial, we’re going to perform time series classification with a Convolutional Neural Network.
+We will use the FordA dataset from the <a class="reference external" href="https://www.cs.ucr.edu/%7Eeamonn/time_series_data_2018/">UCR archive</a>,
+which contains measurements of engine noise captured by a motor sensor.</p>
+<p>We need to assess if an engine is malfunctioning based on the recorded noises it generates.
+Each sample comprises of noise measurements across time, together with a “yes/no” label,
+so this is a binary classification problem.</p>
+<p>Although convolution models are mainly associated with image processing, they are also useful
+for time series data because they can extract temporal structures.</p>
+<section id="tools-overview-and-setup">
+<h2>Tools overview and setup<a class="headerlink" href="#tools-overview-and-setup" title="Link to this heading">#</a></h2>
+<p>Here’s a list of key packages that belong to the JAX AI stack required for this tutorial:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/jax-ml/jax">JAX</a> for array computations.</p></li>
+<li><p><a class="reference external" href="https://github.com/google/flax">Flax</a> for constructing neural networks.</p></li>
+<li><p><a class="reference external" href="https://github.com/google-deepmind/optax">Optax</a> for gradient processing and optimization.</p></li>
+<li><p><a class="reference external" href="https://github.com/google/grain/">Grain</a> to define data sources.</p></li>
+<li><p><a class="reference external" href="https://tqdm.github.io/">tqdm</a> for a progress bar to monitor the training progress.</p></li>
+</ul>
+<p>We’ll start by installing and importing these packages.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Required packages</span>
+<span class="c1"># !pip install -U jax flax optax</span>
+<span class="c1"># !pip install -U grain tqdm requests matplotlib</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">jax</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flax</span><span class="w"> </span><span class="kn">import</span> <span class="n">nnx</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">optax</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">grain.python</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">grain</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tqdm</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="load-the-dataset">
+<h2>Load the dataset<a class="headerlink" href="#load-the-dataset" title="Link to this heading">#</a></h2>
+<p>We load dataset files into NumPy arrays, add singleton dimension to take convolution features
+into account, and change <code class="docutils literal notranslate"><span class="pre">-1</span></code> label to <code class="docutils literal notranslate"><span class="pre">0</span></code> (so that the expected values are <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">1</span></code>):</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">prepare_ucr_dataset</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+    <span class="n">root_url</span> <span class="o">=</span> <span class="s2">&quot;https://raw.githubusercontent.com/hfawaz/cd-diagram/master/FordA/&quot;</span>
+
+    <span class="n">train_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">root_url</span> <span class="o">+</span> <span class="s2">&quot;FordA_TRAIN.tsv&quot;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span> <span class="o">=</span> <span class="n">train_data</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:],</span> <span class="n">train_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="n">test_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">root_url</span> <span class="o">+</span> <span class="s2">&quot;FordA_TEST.tsv&quot;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">x_test</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">test_data</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:],</span> <span class="n">test_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="n">x_train</span> <span class="o">=</span> <span class="n">x_train</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">*</span><span class="n">x_train</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">x_test</span> <span class="o">=</span> <span class="n">x_test</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">*</span><span class="n">x_test</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">113</span><span class="p">)</span>
+    <span class="n">indices</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x_train</span><span class="p">))</span>
+    <span class="n">x_train</span> <span class="o">=</span> <span class="n">x_train</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+    <span class="n">y_train</span> <span class="o">=</span> <span class="n">y_train</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+
+    <span class="n">y_train</span><span class="p">[</span><span class="n">y_train</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">y_test</span><span class="p">[</span><span class="n">y_test</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">),</span> <span class="p">(</span><span class="n">x_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">),</span> <span class="p">(</span><span class="n">x_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span> <span class="o">=</span> <span class="n">prepare_ucr_dataset</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Let’s visualize example samples from each class.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">classes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">classes</span><span class="p">:</span>
+    <span class="n">c_x_train</span> <span class="o">=</span> <span class="n">x_train</span><span class="p">[</span><span class="n">y_train</span> <span class="o">==</span> <span class="n">c</span><span class="p">]</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">c_x_train</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;class &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="_images/5eb4884f6a41804d6e2a5130349bae5aea7238944574299b946775f84adc13e2.png" src="_images/5eb4884f6a41804d6e2a5130349bae5aea7238944574299b946775f84adc13e2.png" />
+</div>
+</div>
+<section id="create-a-data-loader-using-grain">
+<h3>Create a Data Loader using Grain<a class="headerlink" href="#create-a-data-loader-using-grain" title="Link to this heading">#</a></h3>
+<p>For handling input data we’re going to use Grain, a pure Python package developed for JAX and
+Flax models.</p>
+<p>Grain follows the source-sampler-loader paradigm. Grain supports custom setups where data sources
+might come in different forms, but they all need to implement the <code class="docutils literal notranslate"><span class="pre">grain.RandomAccessDataSource</span></code>
+interface. See <a class="reference external" href="https://github.com/google/grain/blob/main/docs/source/data_sources.md">PyGrain Data Sources</a>
+for more details.</p>
+<p>Our dataset is comprised of relatively small NumPy arrays so our <code class="docutils literal notranslate"><span class="pre">DataSource</span></code> is uncomplicated:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">DataSource</span><span class="p">(</span><span class="n">grain</span><span class="o">.</span><span class="n">RandomAccessDataSource</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_x</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_y</span> <span class="o">=</span> <span class="n">y</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;measurement&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_y</span><span class="p">[</span><span class="n">idx</span><span class="p">]}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_x</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">train_source</span> <span class="o">=</span> <span class="n">DataSource</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+<span class="n">test_source</span> <span class="o">=</span> <span class="n">DataSource</span><span class="p">(</span><span class="n">x_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Samplers determine the order in which records are processed, and we’ll use the
+<a class="reference external" href="https://github.com/google/grain/blob/main/docs/source/data_loader/samplers.md#index-sampler"><code class="docutils literal notranslate"><span class="pre">IndexSmapler</span></code></a>
+recommended by Grain.</p>
+<p>Finally, we’ll create <code class="docutils literal notranslate"><span class="pre">DataLoader</span></code>s that handle orchestration of loading.
+We’ll leverage Grain’s multiprocessing capabilities to scale processing up to 4 workers.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">seed</span> <span class="o">=</span> <span class="mi">12</span>
+<span class="n">train_batch_size</span> <span class="o">=</span> <span class="mi">128</span>
+<span class="n">test_batch_size</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">train_batch_size</span>
+
+<span class="n">train_sampler</span> <span class="o">=</span> <span class="n">grain</span><span class="o">.</span><span class="n">IndexSampler</span><span class="p">(</span>
+    <span class="nb">len</span><span class="p">(</span><span class="n">train_source</span><span class="p">),</span>
+    <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+    <span class="n">shard_options</span><span class="o">=</span><span class="n">grain</span><span class="o">.</span><span class="n">NoSharding</span><span class="p">(),</span>  <span class="c1"># No sharding since this is a single-device setup</span>
+    <span class="n">num_epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>                      <span class="c1"># Iterate over the dataset for one epoch</span>
+<span class="p">)</span>
+
+<span class="n">test_sampler</span> <span class="o">=</span> <span class="n">grain</span><span class="o">.</span><span class="n">IndexSampler</span><span class="p">(</span>
+    <span class="nb">len</span><span class="p">(</span><span class="n">test_source</span><span class="p">),</span>
+    <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+    <span class="n">shard_options</span><span class="o">=</span><span class="n">grain</span><span class="o">.</span><span class="n">NoSharding</span><span class="p">(),</span>  <span class="c1"># No sharding since this is a single-device setup</span>
+    <span class="n">num_epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>                      <span class="c1"># Iterate over the dataset for one epoch</span>
+<span class="p">)</span>
+
+
+<span class="n">train_loader</span> <span class="o">=</span> <span class="n">grain</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span>
+    <span class="n">data_source</span><span class="o">=</span><span class="n">train_source</span><span class="p">,</span>
+    <span class="n">sampler</span><span class="o">=</span><span class="n">train_sampler</span><span class="p">,</span>  <span class="c1"># Sampler to determine how to access the data</span>
+    <span class="n">worker_count</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>         <span class="c1"># Number of child processes launched to parallelize the transformations among</span>
+    <span class="n">worker_buffer_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>   <span class="c1"># Count of output batches to produce in advance per worker</span>
+    <span class="n">operations</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">grain</span><span class="o">.</span><span class="n">Batch</span><span class="p">(</span><span class="n">train_batch_size</span><span class="p">,</span> <span class="n">drop_remainder</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">test_loader</span> <span class="o">=</span> <span class="n">grain</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span>
+    <span class="n">data_source</span><span class="o">=</span><span class="n">test_source</span><span class="p">,</span>
+    <span class="n">sampler</span><span class="o">=</span><span class="n">test_sampler</span><span class="p">,</span>  <span class="c1"># Sampler to determine how to access the data</span>
+    <span class="n">worker_count</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>        <span class="c1"># Number of child processes launched to parallelize the transformations among</span>
+    <span class="n">worker_buffer_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>  <span class="c1"># Count of output batches to produce in advance per worker</span>
+    <span class="n">operations</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">grain</span><span class="o">.</span><span class="n">Batch</span><span class="p">(</span><span class="n">test_batch_size</span><span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="define-the-model">
+<h2>Define the Model<a class="headerlink" href="#define-the-model" title="Link to this heading">#</a></h2>
+<p>Let’s now construct the Convolutional Neural Network with Flax by subclassing <code class="docutils literal notranslate"><span class="pre">nnx.Module</span></code>.
+You can learn more about the <a class="reference external" href="https://flax.readthedocs.io/en/latest/nnx_basics.html#the-flax-nnx-module-system">Flax NNX module system in the Flax documentation</a>.</p>
+<p>Let’s have three convolution and dense layers, and use ReLU activation function for middle
+layers and softmax in the final layer for binary classification output.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyModel</span><span class="p">(</span><span class="n">nnx</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rngs</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv_1</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Conv</span><span class="p">(</span>
+            <span class="n">in_features</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;SAME&quot;</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layer_norm_1</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">LayerNorm</span><span class="p">(</span><span class="n">num_features</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv_2</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Conv</span><span class="p">(</span>
+            <span class="n">in_features</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;SAME&quot;</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layer_norm_2</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">LayerNorm</span><span class="p">(</span><span class="n">num_features</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv_3</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Conv</span><span class="p">(</span>
+            <span class="n">in_features</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;SAME&quot;</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layer_norm_3</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">LayerNorm</span><span class="p">(</span><span class="n">num_features</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dense_1</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_norm_1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_2</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_norm_2</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_3</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_norm_3</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,))</span>  <span class="c1"># global average pooling</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dense_1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">MyModel</span><span class="p">(</span><span class="n">rngs</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<span class="n">nnx</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>MyModel(
+  conv_1=Conv(
+    kernel_shape=(3, 1, 64),
+    kernel=Param(
+      value=Array(shape=(3, 1, 64), dtype=float32)
+    ),
+    bias=Param(
+      value=Array(shape=(64,), dtype=float32)
+    ),
+    in_features=1,
+    out_features=64,
+    kernel_size=(3,),
+    strides=1,
+    padding=&#39;SAME&#39;,
+    input_dilation=1,
+    kernel_dilation=1,
+    feature_group_count=1,
+    use_bias=True,
+    mask=None,
+    dtype=None,
+    param_dtype=&lt;class &#39;jax.numpy.float32&#39;&gt;,
+    precision=None,
+    kernel_init=&lt;function variance_scaling.&lt;locals&gt;.init at 0x7fec9a939bd0&gt;,
+    bias_init=&lt;function zeros at 0x7fec9b3cecb0&gt;,
+    conv_general_dilated=&lt;function conv_general_dilated at 0x7fec9b897be0&gt;
+  ),
+  layer_norm_1=LayerNorm(
+    scale=Param(
+      value=Array(shape=(64,), dtype=float32)
+    ),
+    bias=Param(
+      value=Array(shape=(64,), dtype=float32)
+    ),
+    num_features=64,
+    epsilon=0.001,
+    dtype=None,
+    param_dtype=&lt;class &#39;jax.numpy.float32&#39;&gt;,
+    use_bias=True,
+    use_scale=True,
+    bias_init=&lt;function zeros at 0x7fec9b3cecb0&gt;,
+    scale_init=&lt;function ones at 0x7fec9b3cee60&gt;,
+    reduction_axes=-1,
+    feature_axes=-1,
+    axis_name=None,
+    axis_index_groups=None,
+    use_fast_variance=True
+  ),
+  conv_2=Conv(
+    kernel_shape=(3, 64, 64),
+    kernel=Param(
+      value=Array(shape=(3, 64, 64), dtype=float32)
+    ),
+    bias=Param(
+      value=Array(shape=(64,), dtype=float32)
+    ),
+    in_features=64,
+    out_features=64,
+    kernel_size=(3,),
+    strides=1,
+    padding=&#39;SAME&#39;,
+    input_dilation=1,
+    kernel_dilation=1,
+    feature_group_count=1,
+    use_bias=True,
+    mask=None,
+    dtype=None,
+    param_dtype=&lt;class &#39;jax.numpy.float32&#39;&gt;,
+    precision=None,
+    kernel_init=&lt;function variance_scaling.&lt;locals&gt;.init at 0x7fec9a939bd0&gt;,
+    bias_init=&lt;function zeros at 0x7fec9b3cecb0&gt;,
+    conv_general_dilated=&lt;function conv_general_dilated at 0x7fec9b897be0&gt;
+  ),
+  layer_norm_2=LayerNorm(
+    scale=Param(
+      value=Array(shape=(64,), dtype=float32)
+    ),
+    bias=Param(
+      value=Array(shape=(64,), dtype=float32)
+    ),
+    num_features=64,
+    epsilon=0.001,
+    dtype=None,
+    param_dtype=&lt;class &#39;jax.numpy.float32&#39;&gt;,
+    use_bias=True,
+    use_scale=True,
+    bias_init=&lt;function zeros at 0x7fec9b3cecb0&gt;,
+    scale_init=&lt;function ones at 0x7fec9b3cee60&gt;,
+    reduction_axes=-1,
+    feature_axes=-1,
+    axis_name=None,
+    axis_index_groups=None,
+    use_fast_variance=True
+  ),
+  conv_3=Conv(
+    kernel_shape=(3, 64, 64),
+    kernel=Param(
+      value=Array(shape=(3, 64, 64), dtype=float32)
+    ),
+    bias=Param(
+      value=Array(shape=(64,), dtype=float32)
+    ),
+    in_features=64,
+    out_features=64,
+    kernel_size=(3,),
+    strides=1,
+    padding=&#39;SAME&#39;,
+    input_dilation=1,
+    kernel_dilation=1,
+    feature_group_count=1,
+    use_bias=True,
+    mask=None,
+    dtype=None,
+    param_dtype=&lt;class &#39;jax.numpy.float32&#39;&gt;,
+    precision=None,
+    kernel_init=&lt;function variance_scaling.&lt;locals&gt;.init at 0x7fec9a939bd0&gt;,
+    bias_init=&lt;function zeros at 0x7fec9b3cecb0&gt;,
+    conv_general_dilated=&lt;function conv_general_dilated at 0x7fec9b897be0&gt;
+  ),
+  layer_norm_3=LayerNorm(
+    scale=Param(
+      value=Array(shape=(64,), dtype=float32)
+    ),
+    bias=Param(
+      value=Array(shape=(64,), dtype=float32)
+    ),
+    num_features=64,
+    epsilon=0.001,
+    dtype=None,
+    param_dtype=&lt;class &#39;jax.numpy.float32&#39;&gt;,
+    use_bias=True,
+    use_scale=True,
+    bias_init=&lt;function zeros at 0x7fec9b3cecb0&gt;,
+    scale_init=&lt;function ones at 0x7fec9b3cee60&gt;,
+    reduction_axes=-1,
+    feature_axes=-1,
+    axis_name=None,
+    axis_index_groups=None,
+    use_fast_variance=True
+  ),
+  dense_1=Linear(
+    kernel=Param(
+      value=Array(shape=(64, 2), dtype=float32)
+    ),
+    bias=Param(
+      value=Array(shape=(2,), dtype=float32)
+    ),
+    in_features=64,
+    out_features=2,
+    use_bias=True,
+    dtype=None,
+    param_dtype=&lt;class &#39;jax.numpy.float32&#39;&gt;,
+    precision=None,
+    kernel_init=&lt;function variance_scaling.&lt;locals&gt;.init at 0x7fec9a939bd0&gt;,
+    bias_init=&lt;function zeros at 0x7fec9b3cecb0&gt;,
+    dot_general=&lt;function dot_general at 0x7fec9ba14820&gt;
+  )
+)
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="train-the-model">
+<h2>Train the Model<a class="headerlink" href="#train-the-model" title="Link to this heading">#</a></h2>
+<p>To train our Flax model we need to construct an <code class="docutils literal notranslate"><span class="pre">nnx.Optimizer</span></code> object with our model and
+a selected optimization algorithm. The optimizer object manages the model’s parameters and
+applies gradients during training.</p>
+<p>We’re going to use <a class="reference external" href="https://optax.readthedocs.io/en/latest/api/optimizers.html#adam">Adam optimizer</a>,
+a popular choice for Deep Learning models. We’ll use it through
+<a class="reference external" href="https://optax.readthedocs.io/en/latest/index.html">Optax</a>, an optimization library developed for JAX.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">num_epochs</span> <span class="o">=</span> <span class="mi">300</span>
+<span class="n">learning_rate</span> <span class="o">=</span> <span class="mf">0.0005</span>
+<span class="n">momentum</span> <span class="o">=</span> <span class="mf">0.9</span>
+
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">ModelAndOptimizer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optax</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="n">learning_rate</span><span class="p">,</span> <span class="n">momentum</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>We’ll define a loss and logits computation function using Optax’s
+<a class="reference external" href="https://optax.readthedocs.io/en/latest/api/losses.html#optax.losses.softmax_cross_entropy_with_integer_labels"><code class="docutils literal notranslate"><span class="pre">losses.softmax_cross_entropy_with_integer_labels</span></code></a>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">compute_losses_and_logits</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">batch_tokens</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">):</span>
+    <span class="n">logits</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">batch_tokens</span><span class="p">)</span>
+
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">optax</span><span class="o">.</span><span class="n">softmax_cross_entropy_with_integer_labels</span><span class="p">(</span>
+        <span class="n">logits</span><span class="o">=</span><span class="n">logits</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">labels</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">loss</span><span class="p">,</span> <span class="n">logits</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>We’ll now define the training and evaluation step functions. The loss and logits from both
+functions will be used for calculating accuracy metrics.</p>
+<p>For training, we’ll use <code class="docutils literal notranslate"><span class="pre">nnx.value_and_grad</span></code> to compute the gradients, and then update
+the model’s parameters using our optimizer.</p>
+<p>Notice the use of <a class="reference external" href="https://flax.readthedocs.io/en/latest/api_reference/flax.nnx/transforms.html#flax.nnx.jit"><code class="docutils literal notranslate"><span class="pre">nnx.jit</span></code></a>. This sets up the functions for just-in-time (JIT) compilation with <a class="reference external" href="https://openxla.org/xla">XLA</a>
+for performant execution across different hardware accelerators like GPUs and TPUs.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nd">@nnx</span><span class="o">.</span><span class="n">jit</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">train_step</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">]</span>
+<span class="p">):</span>
+    <span class="n">batch_tokens</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;measurement&quot;</span><span class="p">])</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+
+    <span class="n">grad_fn</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">value_and_grad</span><span class="p">(</span><span class="n">compute_losses_and_logits</span><span class="p">,</span> <span class="n">has_aux</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">logits</span><span class="p">),</span> <span class="n">grads</span> <span class="o">=</span> <span class="n">grad_fn</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">batch_tokens</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+
+    <span class="n">optimizer</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">grads</span><span class="p">)</span>  <span class="c1"># In-place updates.</span>
+
+    <span class="k">return</span> <span class="n">loss</span>
+
+<span class="nd">@nnx</span><span class="o">.</span><span class="n">jit</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">eval_step</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">],</span> <span class="n">eval_metrics</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">MultiMetric</span>
+<span class="p">):</span>
+    <span class="n">batch_tokens</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;measurement&quot;</span><span class="p">])</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="n">loss</span><span class="p">,</span> <span class="n">logits</span> <span class="o">=</span> <span class="n">compute_losses_and_logits</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">batch_tokens</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+
+    <span class="n">eval_metrics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+        <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span>
+        <span class="n">logits</span><span class="o">=</span><span class="n">logits</span><span class="p">,</span>
+        <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">eval_metrics</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">MultiMetric</span><span class="p">(</span>
+    <span class="n">loss</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">Average</span><span class="p">(</span><span class="s1">&#39;loss&#39;</span><span class="p">),</span>
+    <span class="n">accuracy</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">Accuracy</span><span class="p">(),</span>
+<span class="p">)</span>
+
+<span class="n">train_metrics_history</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;train_loss&quot;</span><span class="p">:</span> <span class="p">[],</span>
+<span class="p">}</span>
+
+<span class="n">eval_metrics_history</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;test_loss&quot;</span><span class="p">:</span> <span class="p">[],</span>
+    <span class="s2">&quot;test_accuracy&quot;</span><span class="p">:</span> <span class="p">[],</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>We can now train the CNN model. We’ll evaluate the model’s performance on the test set
+after each epoch, and print the metrics: total loss and accuracy.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">bar_format</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{desc}</span><span class="s2">[</span><span class="si">{n_fmt}</span><span class="s2">/</span><span class="si">{total_fmt}</span><span class="s2">]</span><span class="si">{postfix}</span><span class="s2"> [</span><span class="si">{elapsed}</span><span class="s2">&lt;</span><span class="si">{remaining}</span><span class="s2">]&quot;</span>
+<span class="n">train_total_steps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_train</span><span class="p">)</span> <span class="o">//</span> <span class="n">train_batch_size</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">train_one_epoch</span><span class="p">(</span><span class="n">epoch</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+    <span class="k">with</span> <span class="n">tqdm</span><span class="o">.</span><span class="n">tqdm</span><span class="p">(</span>
+        <span class="n">desc</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;[train] epoch: </span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">num_epochs</span><span class="si">}</span><span class="s2">, &quot;</span><span class="p">,</span>
+        <span class="n">total</span><span class="o">=</span><span class="n">train_total_steps</span><span class="p">,</span>
+        <span class="n">bar_format</span><span class="o">=</span><span class="n">bar_format</span><span class="p">,</span>
+        <span class="n">miniters</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="n">leave</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="k">as</span> <span class="n">pbar</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">train_loader</span><span class="p">:</span>
+            <span class="n">loss</span> <span class="o">=</span> <span class="n">train_step</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">batch</span><span class="p">)</span>
+            <span class="n">train_metrics_history</span><span class="p">[</span><span class="s2">&quot;train_loss&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+            <span class="n">pbar</span><span class="o">.</span><span class="n">set_postfix</span><span class="p">({</span><span class="s2">&quot;loss&quot;</span><span class="p">:</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()})</span>
+            <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">evaluate_model</span><span class="p">(</span><span class="n">epoch</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="c1"># Compute the metrics on the train and val sets after each training epoch.</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+
+    <span class="n">eval_metrics</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>  <span class="c1"># Reset the eval metrics</span>
+    <span class="k">for</span> <span class="n">test_batch</span> <span class="ow">in</span> <span class="n">test_loader</span><span class="p">:</span>
+        <span class="n">eval_step</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">test_batch</span><span class="p">,</span> <span class="n">eval_metrics</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">metric</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">eval_metrics</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">eval_metrics_history</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;test_</span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">epoch</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[test] epoch: </span><span class="si">{</span><span class="n">epoch</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">num_epochs</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- total loss: </span><span class="si">{</span><span class="n">eval_metrics_history</span><span class="p">[</span><span class="s1">&#39;test_loss&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">0.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- Accuracy: </span><span class="si">{</span><span class="n">eval_metrics_history</span><span class="p">[</span><span class="s1">&#39;test_accuracy&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">0.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
+<span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_epochs</span><span class="p">):</span>
+    <span class="n">train_one_epoch</span><span class="p">(</span><span class="n">epoch</span><span class="p">)</span>
+    <span class="n">evaluate_model</span><span class="p">(</span><span class="n">epoch</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[test] epoch: 1/300
+- total loss: 0.6887
+- Accuracy: 0.5159
+[test] epoch: 11/300
+- total loss: 0.6179
+- Accuracy: 0.7068
+[test] epoch: 21/300
+- total loss: 0.5673
+- Accuracy: 0.7848
+[test] epoch: 31/300
+- total loss: 0.5454
+- Accuracy: 0.7985
+[test] epoch: 41/300
+- total loss: 0.5324
+- Accuracy: 0.7970
+[test] epoch: 51/300
+- total loss: 0.5250
+- Accuracy: 0.7992
+[test] epoch: 61/300
+- total loss: 0.5202
+- Accuracy: 0.8068
+[test] epoch: 71/300
+- total loss: 0.5121
+- Accuracy: 0.8114
+[test] epoch: 81/300
+- total loss: 0.5091
+- Accuracy: 0.8098
+[test] epoch: 91/300
+- total loss: 0.5021
+- Accuracy: 0.8159
+[test] epoch: 101/300
+- total loss: 0.5027
+- Accuracy: 0.8152
+[test] epoch: 111/300
+- total loss: 0.4984
+- Accuracy: 0.8212
+[test] epoch: 121/300
+- total loss: 0.4931
+- Accuracy: 0.8265
+[test] epoch: 131/300
+- total loss: 0.4879
+- Accuracy: 0.8265
+[test] epoch: 141/300
+- total loss: 0.4847
+- Accuracy: 0.8311
+[test] epoch: 151/300
+- total loss: 0.4795
+- Accuracy: 0.8364
+[test] epoch: 161/300
+- total loss: 0.4762
+- Accuracy: 0.8462
+[test] epoch: 171/300
+- total loss: 0.4717
+- Accuracy: 0.8492
+[test] epoch: 181/300
+- total loss: 0.4704
+- Accuracy: 0.8477
+[test] epoch: 191/300
+- total loss: 0.4653
+- Accuracy: 0.8568
+[test] epoch: 201/300
+- total loss: 0.4606
+- Accuracy: 0.8576
+[test] epoch: 211/300
+- total loss: 0.4581
+- Accuracy: 0.8591
+[test] epoch: 221/300
+- total loss: 0.4528
+- Accuracy: 0.8705
+[test] epoch: 231/300
+- total loss: 0.4497
+- Accuracy: 0.8720
+[test] epoch: 241/300
+- total loss: 0.4464
+- Accuracy: 0.8765
+[test] epoch: 251/300
+- total loss: 0.4439
+- Accuracy: 0.8780
+[test] epoch: 261/300
+- total loss: 0.4413
+- Accuracy: 0.8788
+[test] epoch: 271/300
+- total loss: 0.4383
+- Accuracy: 0.8788
+[test] epoch: 281/300
+- total loss: 0.4360
+- Accuracy: 0.8871
+[test] epoch: 291/300
+- total loss: 0.4335
+- Accuracy: 0.8917
+CPU times: user 3h 32min 15s, sys: 44min 47s, total: 4h 17min 2s
+Wall time: 22min 33s
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[train] epoch: 0/300, [28/28], loss=0.684 [00:05&lt;00:00]
+[train] epoch: 1/300, [28/28], loss=0.676 [00:03&lt;00:00]
+[train] epoch: 2/300, [28/28], loss=0.663 [00:03&lt;00:00]
+[train] epoch: 3/300, [28/28], loss=0.655 [00:03&lt;00:00]
+[train] epoch: 4/300, [28/28], loss=0.654 [00:03&lt;00:00]
+[train] epoch: 5/300, [28/28], loss=0.649 [00:03&lt;00:00]
+[train] epoch: 6/300, [28/28], loss=0.651 [00:03&lt;00:00]
+[train] epoch: 7/300, [28/28], loss=0.646 [00:03&lt;00:00]
+[train] epoch: 8/300, [28/28], loss=0.62 [00:03&lt;00:00] 
+[train] epoch: 9/300, [28/28], loss=0.632 [00:03&lt;00:00]
+[train] epoch: 10/300, [28/28], loss=0.606 [00:03&lt;00:00]
+[train] epoch: 11/300, [28/28], loss=0.6 [00:03&lt;00:00]  
+[train] epoch: 12/300, [28/28], loss=0.604 [00:03&lt;00:00]
+[train] epoch: 13/300, [28/28], loss=0.587 [00:03&lt;00:00]
+[train] epoch: 14/300, [28/28], loss=0.588 [00:03&lt;00:00]
+[train] epoch: 15/300, [28/28], loss=0.583 [00:03&lt;00:00]
+[train] epoch: 16/300, [28/28], loss=0.578 [00:03&lt;00:00]
+[train] epoch: 17/300, [28/28], loss=0.578 [00:03&lt;00:00]
+[train] epoch: 18/300, [28/28], loss=0.575 [00:03&lt;00:00]
+[train] epoch: 19/300, [28/28], loss=0.573 [00:03&lt;00:00]
+[train] epoch: 20/300, [28/28], loss=0.57 [00:03&lt;00:00]
+[train] epoch: 21/300, [28/28], loss=0.567 [00:03&lt;00:00]
+[train] epoch: 22/300, [28/28], loss=0.565 [00:03&lt;00:00]
+[train] epoch: 23/300, [28/28], loss=0.564 [00:03&lt;00:00]
+[train] epoch: 24/300, [28/28], loss=0.561 [00:03&lt;00:00]
+[train] epoch: 25/300, [28/28], loss=0.561 [00:03&lt;00:00]
+[train] epoch: 26/300, [28/28], loss=0.56 [00:03&lt;00:00] 
+[train] epoch: 27/300, [28/28], loss=0.558 [00:03&lt;00:00]
+[train] epoch: 28/300, [28/28], loss=0.557 [00:03&lt;00:00]
+[train] epoch: 29/300, [28/28], loss=0.556 [00:03&lt;00:00]
+[train] epoch: 30/300, [28/28], loss=0.554 [00:03&lt;00:00]
+[train] epoch: 31/300, [28/28], loss=0.553 [00:03&lt;00:00]
+[train] epoch: 32/300, [28/28], loss=0.553 [00:03&lt;00:00]
+[train] epoch: 33/300, [28/28], loss=0.551 [00:03&lt;00:00]
+[train] epoch: 34/300, [28/28], loss=0.55 [00:03&lt;00:00] 
+[train] epoch: 35/300, [28/28], loss=0.55 [00:03&lt;00:00] 
+[train] epoch: 36/300, [28/28], loss=0.549 [00:03&lt;00:00]
+[train] epoch: 37/300, [28/28], loss=0.547 [00:03&lt;00:00]
+[train] epoch: 38/300, [28/28], loss=0.547 [00:03&lt;00:00]
+[train] epoch: 39/300, [28/28], loss=0.546 [00:03&lt;00:00]
+[train] epoch: 40/300, [28/28], loss=0.545 [00:03&lt;00:00]
+[train] epoch: 41/300, [28/28], loss=0.546 [00:03&lt;00:00]
+[train] epoch: 42/300, [28/28], loss=0.543 [00:03&lt;00:00]
+[train] epoch: 43/300, [28/28], loss=0.542 [00:03&lt;00:00]
+[train] epoch: 44/300, [28/28], loss=0.541 [00:03&lt;00:00]
+[train] epoch: 45/300, [28/28], loss=0.542 [00:03&lt;00:00]
+[train] epoch: 46/300, [28/28], loss=0.541 [00:03&lt;00:00]
+[train] epoch: 47/300, [28/28], loss=0.541 [00:03&lt;00:00]
+[train] epoch: 48/300, [28/28], loss=0.54 [00:03&lt;00:00] 
+[train] epoch: 49/300, [28/28], loss=0.539 [00:03&lt;00:00]
+[train] epoch: 50/300, [28/28], loss=0.537 [00:03&lt;00:00]
+[train] epoch: 51/300, [28/28], loss=0.538 [00:03&lt;00:00]
+[train] epoch: 52/300, [28/28], loss=0.537 [00:03&lt;00:00]
+[train] epoch: 53/300, [28/28], loss=0.538 [00:03&lt;00:00]
+[train] epoch: 54/300, [28/28], loss=0.536 [00:03&lt;00:00]
+[train] epoch: 55/300, [28/28], loss=0.536 [00:03&lt;00:00]
+[train] epoch: 56/300, [28/28], loss=0.534 [00:03&lt;00:00]
+[train] epoch: 57/300, [28/28], loss=0.534 [00:03&lt;00:00]
+[train] epoch: 58/300, [28/28], loss=0.534 [00:03&lt;00:00]
+[train] epoch: 59/300, [28/28], loss=0.533 [00:03&lt;00:00]
+[train] epoch: 60/300, [28/28], loss=0.532 [00:03&lt;00:00]
+[train] epoch: 61/300, [28/28], loss=0.533 [00:03&lt;00:00]
+[train] epoch: 62/300, [28/28], loss=0.531 [00:03&lt;00:00]
+[train] epoch: 63/300, [28/28], loss=0.531 [00:03&lt;00:00]
+[train] epoch: 64/300, [28/28], loss=0.531 [00:03&lt;00:00]
+[train] epoch: 65/300, [28/28], loss=0.529 [00:03&lt;00:00]
+[train] epoch: 66/300, [28/28], loss=0.532 [00:03&lt;00:00]
+[train] epoch: 67/300, [28/28], loss=0.528 [00:03&lt;00:00]
+[train] epoch: 68/300, [28/28], loss=0.529 [00:03&lt;00:00]
+[train] epoch: 69/300, [28/28], loss=0.528 [00:03&lt;00:00]
+[train] epoch: 70/300, [28/28], loss=0.528 [00:03&lt;00:00]
+[train] epoch: 71/300, [28/28], loss=0.528 [00:03&lt;00:00]
+[train] epoch: 72/300, [28/28], loss=0.526 [00:03&lt;00:00]
+[train] epoch: 73/300, [28/28], loss=0.531 [00:03&lt;00:00]
+[train] epoch: 74/300, [28/28], loss=0.524 [00:03&lt;00:00]
+[train] epoch: 75/300, [28/28], loss=0.525 [00:03&lt;00:00]
+[train] epoch: 76/300, [28/28], loss=0.524 [00:03&lt;00:00]
+[train] epoch: 77/300, [28/28], loss=0.526 [00:03&lt;00:00]
+[train] epoch: 78/300, [28/28], loss=0.523 [00:03&lt;00:00]
+[train] epoch: 79/300, [28/28], loss=0.524 [00:03&lt;00:00]
+[train] epoch: 80/300, [28/28], loss=0.523 [00:03&lt;00:00]
+[train] epoch: 81/300, [28/28], loss=0.522 [00:03&lt;00:00]
+[train] epoch: 82/300, [28/28], loss=0.522 [00:03&lt;00:00]
+[train] epoch: 83/300, [28/28], loss=0.521 [00:03&lt;00:00]
+[train] epoch: 84/300, [28/28], loss=0.523 [00:03&lt;00:00]
+[train] epoch: 85/300, [28/28], loss=0.521 [00:03&lt;00:00]
+[train] epoch: 86/300, [28/28], loss=0.523 [00:03&lt;00:00]
+[train] epoch: 87/300, [28/28], loss=0.52 [00:03&lt;00:00] 
+[train] epoch: 88/300, [28/28], loss=0.523 [00:03&lt;00:00]
+[train] epoch: 89/300, [28/28], loss=0.519 [00:03&lt;00:00]
+[train] epoch: 90/300, [28/28], loss=0.52 [00:03&lt;00:00]
+[train] epoch: 91/300, [28/28], loss=0.519 [00:03&lt;00:00]
+[train] epoch: 92/300, [28/28], loss=0.52 [00:03&lt;00:00] 
+[train] epoch: 93/300, [28/28], loss=0.518 [00:03&lt;00:00]
+[train] epoch: 94/300, [28/28], loss=0.52 [00:03&lt;00:00] 
+[train] epoch: 95/300, [28/28], loss=0.518 [00:03&lt;00:00]
+[train] epoch: 96/300, [28/28], loss=0.52 [00:03&lt;00:00] 
+[train] epoch: 97/300, [28/28], loss=0.517 [00:03&lt;00:00]
+[train] epoch: 98/300, [28/28], loss=0.517 [00:03&lt;00:00]
+[train] epoch: 99/300, [28/28], loss=0.518 [00:03&lt;00:00]
+[train] epoch: 100/300, [28/28], loss=0.516 [00:03&lt;00:00]
+[train] epoch: 101/300, [28/28], loss=0.516 [00:03&lt;00:00]
+[train] epoch: 102/300, [28/28], loss=0.519 [00:03&lt;00:00]
+[train] epoch: 103/300, [28/28], loss=0.515 [00:03&lt;00:00]
+[train] epoch: 104/300, [28/28], loss=0.517 [00:03&lt;00:00]
+[train] epoch: 105/300, [28/28], loss=0.515 [00:03&lt;00:00]
+[train] epoch: 106/300, [28/28], loss=0.515 [00:03&lt;00:00]
+[train] epoch: 107/300, [28/28], loss=0.515 [00:03&lt;00:00]
+[train] epoch: 108/300, [28/28], loss=0.514 [00:03&lt;00:00]
+[train] epoch: 109/300, [28/28], loss=0.514 [00:03&lt;00:00]
+[train] epoch: 110/300, [28/28], loss=0.513 [00:03&lt;00:00]
+[train] epoch: 111/300, [28/28], loss=0.514 [00:03&lt;00:00]
+[train] epoch: 112/300, [28/28], loss=0.514 [00:03&lt;00:00]
+[train] epoch: 113/300, [28/28], loss=0.513 [00:03&lt;00:00]
+[train] epoch: 114/300, [28/28], loss=0.513 [00:03&lt;00:00]
+[train] epoch: 115/300, [28/28], loss=0.512 [00:03&lt;00:00]
+[train] epoch: 116/300, [28/28], loss=0.512 [00:03&lt;00:00]
+[train] epoch: 117/300, [28/28], loss=0.511 [00:03&lt;00:00]
+[train] epoch: 118/300, [28/28], loss=0.511 [00:03&lt;00:00]
+[train] epoch: 119/300, [28/28], loss=0.511 [00:03&lt;00:00]
+[train] epoch: 120/300, [28/28], loss=0.511 [00:03&lt;00:00]
+[train] epoch: 121/300, [28/28], loss=0.511 [00:03&lt;00:00]
+[train] epoch: 122/300, [28/28], loss=0.51 [00:03&lt;00:00] 
+[train] epoch: 123/300, [28/28], loss=0.509 [00:03&lt;00:00]
+[train] epoch: 124/300, [28/28], loss=0.509 [00:03&lt;00:00]
+[train] epoch: 125/300, [28/28], loss=0.509 [00:03&lt;00:00]
+[train] epoch: 126/300, [28/28], loss=0.509 [00:03&lt;00:00]
+[train] epoch: 127/300, [28/28], loss=0.508 [00:03&lt;00:00]
+[train] epoch: 128/300, [28/28], loss=0.508 [00:03&lt;00:00]
+[train] epoch: 129/300, [28/28], loss=0.507 [00:03&lt;00:00]
+[train] epoch: 130/300, [28/28], loss=0.506 [00:03&lt;00:00]
+[train] epoch: 131/300, [28/28], loss=0.507 [00:03&lt;00:00]
+[train] epoch: 132/300, [28/28], loss=0.505 [00:03&lt;00:00]
+[train] epoch: 133/300, [28/28], loss=0.505 [00:03&lt;00:00]
+[train] epoch: 134/300, [28/28], loss=0.504 [00:03&lt;00:00]
+[train] epoch: 135/300, [28/28], loss=0.505 [00:03&lt;00:00]
+[train] epoch: 136/300, [28/28], loss=0.504 [00:03&lt;00:00]
+[train] epoch: 137/300, [28/28], loss=0.505 [00:03&lt;00:00]
+[train] epoch: 138/300, [28/28], loss=0.504 [00:03&lt;00:00]
+[train] epoch: 139/300, [28/28], loss=0.503 [00:03&lt;00:00]
+[train] epoch: 140/300, [28/28], loss=0.502 [00:03&lt;00:00]
+[train] epoch: 141/300, [28/28], loss=0.502 [00:03&lt;00:00]
+[train] epoch: 142/300, [28/28], loss=0.501 [00:03&lt;00:00]
+[train] epoch: 143/300, [28/28], loss=0.501 [00:03&lt;00:00]
+[train] epoch: 144/300, [28/28], loss=0.5 [00:03&lt;00:00]  
+[train] epoch: 145/300, [28/28], loss=0.5 [00:03&lt;00:00]  
+[train] epoch: 146/300, [28/28], loss=0.5 [00:03&lt;00:00]  
+[train] epoch: 147/300, [28/28], loss=0.5 [00:03&lt;00:00]  
+[train] epoch: 148/300, [28/28], loss=0.5 [00:03&lt;00:00]  
+[train] epoch: 149/300, [28/28], loss=0.499 [00:03&lt;00:00]
+[train] epoch: 150/300, [28/28], loss=0.499 [00:03&lt;00:00]
+[train] epoch: 151/300, [28/28], loss=0.498 [00:03&lt;00:00]
+[train] epoch: 152/300, [28/28], loss=0.499 [00:03&lt;00:00]
+[train] epoch: 153/300, [28/28], loss=0.498 [00:03&lt;00:00]
+[train] epoch: 154/300, [28/28], loss=0.498 [00:03&lt;00:00]
+[train] epoch: 155/300, [28/28], loss=0.498 [00:03&lt;00:00]
+[train] epoch: 156/300, [28/28], loss=0.496 [00:03&lt;00:00]
+[train] epoch: 157/300, [28/28], loss=0.496 [00:03&lt;00:00]
+[train] epoch: 158/300, [28/28], loss=0.495 [00:03&lt;00:00]
+[train] epoch: 159/300, [28/28], loss=0.495 [00:03&lt;00:00]
+[train] epoch: 160/300, [28/28], loss=0.494 [00:03&lt;00:00]
+[train] epoch: 161/300, [28/28], loss=0.494 [00:03&lt;00:00]
+[train] epoch: 162/300, [28/28], loss=0.494 [00:03&lt;00:00]
+[train] epoch: 163/300, [28/28], loss=0.493 [00:03&lt;00:00]
+[train] epoch: 164/300, [28/28], loss=0.492 [00:03&lt;00:00]
+[train] epoch: 165/300, [28/28], loss=0.492 [00:03&lt;00:00]
+[train] epoch: 166/300, [28/28], loss=0.493 [00:03&lt;00:00]
+[train] epoch: 167/300, [28/28], loss=0.492 [00:03&lt;00:00]
+[train] epoch: 168/300, [28/28], loss=0.493 [00:03&lt;00:00]
+[train] epoch: 169/300, [28/28], loss=0.494 [00:03&lt;00:00]
+[train] epoch: 170/300, [28/28], loss=0.492 [00:03&lt;00:00]
+[train] epoch: 171/300, [28/28], loss=0.492 [00:03&lt;00:00]
+[train] epoch: 172/300, [28/28], loss=0.49 [00:03&lt;00:00] 
+[train] epoch: 173/300, [28/28], loss=0.489 [00:03&lt;00:00]
+[train] epoch: 174/300, [28/28], loss=0.489 [00:03&lt;00:00]
+[train] epoch: 175/300, [28/28], loss=0.49 [00:03&lt;00:00] 
+[train] epoch: 176/300, [28/28], loss=0.488 [00:03&lt;00:00]
+[train] epoch: 177/300, [28/28], loss=0.488 [00:03&lt;00:00]
+[train] epoch: 178/300, [28/28], loss=0.486 [00:03&lt;00:00]
+[train] epoch: 179/300, [28/28], loss=0.49 [00:03&lt;00:00] 
+[train] epoch: 180/300, [28/28], loss=0.489 [00:03&lt;00:00]
+[train] epoch: 181/300, [28/28], loss=0.488 [00:03&lt;00:00]
+[train] epoch: 182/300, [28/28], loss=0.488 [00:03&lt;00:00]
+[train] epoch: 183/300, [28/28], loss=0.486 [00:03&lt;00:00]
+[train] epoch: 184/300, [28/28], loss=0.484 [00:03&lt;00:00]
+[train] epoch: 185/300, [28/28], loss=0.484 [00:03&lt;00:00]
+[train] epoch: 186/300, [28/28], loss=0.483 [00:03&lt;00:00]
+[train] epoch: 187/300, [28/28], loss=0.483 [00:03&lt;00:00]
+[train] epoch: 188/300, [28/28], loss=0.484 [00:03&lt;00:00]
+[train] epoch: 189/300, [28/28], loss=0.485 [00:03&lt;00:00]
+[train] epoch: 190/300, [28/28], loss=0.483 [00:03&lt;00:00]
+[train] epoch: 191/300, [28/28], loss=0.482 [00:03&lt;00:00]
+[train] epoch: 192/300, [28/28], loss=0.48 [00:03&lt;00:00] 
+[train] epoch: 193/300, [28/28], loss=0.482 [00:03&lt;00:00]
+[train] epoch: 194/300, [28/28], loss=0.481 [00:03&lt;00:00]
+[train] epoch: 195/300, [28/28], loss=0.48 [00:03&lt;00:00] 
+[train] epoch: 196/300, [28/28], loss=0.48 [00:03&lt;00:00] 
+[train] epoch: 197/300, [28/28], loss=0.478 [00:03&lt;00:00]
+[train] epoch: 198/300, [28/28], loss=0.478 [00:03&lt;00:00]
+[train] epoch: 199/300, [28/28], loss=0.479 [00:03&lt;00:00]
+[train] epoch: 200/300, [28/28], loss=0.479 [00:03&lt;00:00]
+[train] epoch: 201/300, [28/28], loss=0.48 [00:03&lt;00:00] 
+[train] epoch: 202/300, [28/28], loss=0.476 [00:03&lt;00:00]
+[train] epoch: 203/300, [28/28], loss=0.477 [00:03&lt;00:00]
+[train] epoch: 204/300, [28/28], loss=0.476 [00:03&lt;00:00]
+[train] epoch: 205/300, [28/28], loss=0.475 [00:03&lt;00:00]
+[train] epoch: 206/300, [28/28], loss=0.476 [00:03&lt;00:00]
+[train] epoch: 207/300, [28/28], loss=0.475 [00:03&lt;00:00]
+[train] epoch: 208/300, [28/28], loss=0.473 [00:03&lt;00:00]
+[train] epoch: 209/300, [28/28], loss=0.475 [00:03&lt;00:00]
+[train] epoch: 210/300, [28/28], loss=0.474 [00:03&lt;00:00]
+[train] epoch: 211/300, [28/28], loss=0.471 [00:03&lt;00:00]
+[train] epoch: 212/300, [28/28], loss=0.473 [00:03&lt;00:00]
+[train] epoch: 213/300, [28/28], loss=0.471 [00:03&lt;00:00]
+[train] epoch: 214/300, [28/28], loss=0.473 [00:03&lt;00:00]
+[train] epoch: 215/300, [28/28], loss=0.471 [00:03&lt;00:00]
+[train] epoch: 216/300, [28/28], loss=0.472 [00:03&lt;00:00]
+[train] epoch: 217/300, [28/28], loss=0.47 [00:03&lt;00:00] 
+[train] epoch: 218/300, [28/28], loss=0.471 [00:03&lt;00:00]
+[train] epoch: 219/300, [28/28], loss=0.469 [00:03&lt;00:00]
+[train] epoch: 220/300, [28/28], loss=0.469 [00:03&lt;00:00]
+[train] epoch: 221/300, [28/28], loss=0.468 [00:03&lt;00:00]
+[train] epoch: 222/300, [28/28], loss=0.468 [00:03&lt;00:00]
+[train] epoch: 223/300, [28/28], loss=0.467 [00:03&lt;00:00]
+[train] epoch: 224/300, [28/28], loss=0.467 [00:03&lt;00:00]
+[train] epoch: 225/300, [28/28], loss=0.466 [00:03&lt;00:00]
+[train] epoch: 226/300, [28/28], loss=0.465 [00:03&lt;00:00]
+[train] epoch: 227/300, [28/28], loss=0.465 [00:03&lt;00:00]
+[train] epoch: 228/300, [28/28], loss=0.465 [00:03&lt;00:00]
+[train] epoch: 229/300, [28/28], loss=0.465 [00:03&lt;00:00]
+[train] epoch: 230/300, [28/28], loss=0.465 [00:03&lt;00:00]
+[train] epoch: 231/300, [28/28], loss=0.465 [00:03&lt;00:00]
+[train] epoch: 232/300, [28/28], loss=0.464 [00:03&lt;00:00]
+[train] epoch: 233/300, [28/28], loss=0.463 [00:03&lt;00:00]
+[train] epoch: 234/300, [28/28], loss=0.462 [00:03&lt;00:00]
+[train] epoch: 235/300, [28/28], loss=0.462 [00:03&lt;00:00]
+[train] epoch: 236/300, [28/28], loss=0.461 [00:03&lt;00:00]
+[train] epoch: 237/300, [28/28], loss=0.46 [00:03&lt;00:00] 
+[train] epoch: 238/300, [28/28], loss=0.458 [00:03&lt;00:00]
+[train] epoch: 239/300, [28/28], loss=0.46 [00:03&lt;00:00] 
+[train] epoch: 240/300, [28/28], loss=0.458 [00:03&lt;00:00]
+[train] epoch: 241/300, [28/28], loss=0.459 [00:03&lt;00:00]
+[train] epoch: 242/300, [28/28], loss=0.457 [00:03&lt;00:00]
+[train] epoch: 243/300, [28/28], loss=0.458 [00:03&lt;00:00]
+[train] epoch: 244/300, [28/28], loss=0.456 [00:03&lt;00:00]
+[train] epoch: 245/300, [28/28], loss=0.457 [00:03&lt;00:00]
+[train] epoch: 246/300, [28/28], loss=0.455 [00:03&lt;00:00]
+[train] epoch: 247/300, [28/28], loss=0.454 [00:03&lt;00:00]
+[train] epoch: 248/300, [28/28], loss=0.454 [00:03&lt;00:00]
+[train] epoch: 249/300, [28/28], loss=0.454 [00:03&lt;00:00]
+[train] epoch: 250/300, [28/28], loss=0.452 [00:03&lt;00:00]
+[train] epoch: 251/300, [28/28], loss=0.45 [00:03&lt;00:00] 
+[train] epoch: 252/300, [28/28], loss=0.453 [00:03&lt;00:00]
+[train] epoch: 253/300, [28/28], loss=0.45 [00:03&lt;00:00] 
+[train] epoch: 254/300, [28/28], loss=0.451 [00:03&lt;00:00]
+[train] epoch: 255/300, [28/28], loss=0.45 [00:03&lt;00:00] 
+[train] epoch: 256/300, [28/28], loss=0.452 [00:03&lt;00:00]
+[train] epoch: 257/300, [28/28], loss=0.452 [00:03&lt;00:00]
+[train] epoch: 258/300, [28/28], loss=0.449 [00:03&lt;00:00]
+[train] epoch: 259/300, [28/28], loss=0.449 [00:03&lt;00:00]
+[train] epoch: 260/300, [28/28], loss=0.448 [00:03&lt;00:00]
+[train] epoch: 261/300, [28/28], loss=0.446 [00:03&lt;00:00]
+[train] epoch: 262/300, [28/28], loss=0.447 [00:03&lt;00:00]
+[train] epoch: 263/300, [28/28], loss=0.445 [00:03&lt;00:00]
+[train] epoch: 264/300, [28/28], loss=0.445 [00:03&lt;00:00]
+[train] epoch: 265/300, [28/28], loss=0.445 [00:03&lt;00:00]
+[train] epoch: 266/300, [28/28], loss=0.445 [00:03&lt;00:00]
+[train] epoch: 267/300, [28/28], loss=0.443 [00:03&lt;00:00]
+[train] epoch: 268/300, [28/28], loss=0.444 [00:03&lt;00:00]
+[train] epoch: 269/300, [28/28], loss=0.443 [00:03&lt;00:00]
+[train] epoch: 270/300, [28/28], loss=0.442 [00:03&lt;00:00]
+[train] epoch: 271/300, [28/28], loss=0.443 [00:03&lt;00:00]
+[train] epoch: 272/300, [28/28], loss=0.441 [00:03&lt;00:00]
+[train] epoch: 273/300, [28/28], loss=0.441 [00:03&lt;00:00]
+[train] epoch: 274/300, [28/28], loss=0.441 [00:03&lt;00:00]
+[train] epoch: 275/300, [28/28], loss=0.44 [00:03&lt;00:00] 
+[train] epoch: 276/300, [28/28], loss=0.441 [00:03&lt;00:00]
+[train] epoch: 277/300, [28/28], loss=0.438 [00:03&lt;00:00]
+[train] epoch: 278/300, [28/28], loss=0.438 [00:03&lt;00:00]
+[train] epoch: 279/300, [28/28], loss=0.437 [00:03&lt;00:00]
+[train] epoch: 280/300, [28/28], loss=0.436 [00:03&lt;00:00]
+[train] epoch: 281/300, [28/28], loss=0.436 [00:03&lt;00:00]
+[train] epoch: 282/300, [28/28], loss=0.435 [00:03&lt;00:00]
+[train] epoch: 283/300, [28/28], loss=0.435 [00:03&lt;00:00]
+[train] epoch: 284/300, [28/28], loss=0.434 [00:03&lt;00:00]
+[train] epoch: 285/300, [28/28], loss=0.434 [00:03&lt;00:00]
+[train] epoch: 286/300, [28/28], loss=0.433 [00:03&lt;00:00]
+[train] epoch: 287/300, [28/28], loss=0.433 [00:03&lt;00:00]
+[train] epoch: 288/300, [28/28], loss=0.432 [00:03&lt;00:00]
+[train] epoch: 289/300, [28/28], loss=0.432 [00:03&lt;00:00]
+[train] epoch: 290/300, [28/28], loss=0.432 [00:03&lt;00:00]
+[train] epoch: 291/300, [28/28], loss=0.433 [00:03&lt;00:00]
+[train] epoch: 292/300, [28/28], loss=0.432 [00:03&lt;00:00]
+[train] epoch: 293/300, [28/28], loss=0.43 [00:03&lt;00:00] 
+[train] epoch: 294/300, [28/28], loss=0.431 [00:03&lt;00:00]
+[train] epoch: 295/300, [28/28], loss=0.431 [00:03&lt;00:00]
+[train] epoch: 296/300, [28/28], loss=0.43 [00:03&lt;00:00] 
+[train] epoch: 297/300, [28/28], loss=0.429 [00:03&lt;00:00]
+[train] epoch: 298/300, [28/28], loss=0.428 [00:03&lt;00:00]
+[train] epoch: 299/300, [28/28], loss=0.427 [00:03&lt;00:00]
+</pre></div>
+</div>
+</div>
+</div>
+<p>Finally, let’s visualize the loss and accuracy with Matplotlib.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">train_metrics_history</span><span class="p">[</span><span class="s2">&quot;train_loss&quot;</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Loss value during the training&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;matplotlib.legend.Legend at 0x7fec902d3730&gt;
+</pre></div>
+</div>
+<img alt="_images/ac6770bc76194b2b3687e9510ed2229e42300f1ae6cfe37b75777d8c7f12edb5.png" src="_images/ac6770bc76194b2b3687e9510ed2229e42300f1ae6cfe37b75777d8c7f12edb5.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Loss value on test set&quot;</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">eval_metrics_history</span><span class="p">[</span><span class="s2">&quot;test_loss&quot;</span><span class="p">])</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Accuracy on test set&quot;</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">eval_metrics_history</span><span class="p">[</span><span class="s2">&quot;test_accuracy&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&lt;matplotlib.lines.Line2D at 0x7fec681dd060&gt;]
+</pre></div>
+</div>
+<img alt="_images/e39c606f30af93382749dab7ceb5edd85fc29e6d3aaae524a52b912d1aa4c16d.png" src="_images/e39c606f30af93382749dab7ceb5edd85fc29e6d3aaae524a52b912d1aa4c16d.png" />
+</div>
+</div>
+<p>Our model reached almost 90% accuracy on the test set after 300 epochs, but it’s worth noting
+that the loss function isn’t completely flat yet. We could continue until the curve flattens,
+but we also need to pay attention to validation accuracy so as to spot when the model starts
+overfitting.</p>
+<p>For model early stopping and selecting best model, you can check out <a class="reference external" href="https://github.com/google/orbax">Orbax</a>,
+a library which provides checkpointing and persistence utilities.</p>
+</section>
+</section>
+
+<div class="section ablog__blog_comments">
+   
+</div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="JAX_Vision_transformer.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Train a Vision Transformer (ViT) for image classification with JAX</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="contributing.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Contribute to documentation</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tools-overview-and-setup">Tools overview and setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-the-dataset">Load the dataset</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-a-data-loader-using-grain">Create a Data Loader using Grain</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#define-the-model">Define the Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#train-the-model">Train the Model</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By JAX team
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, JAX team.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

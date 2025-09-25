@@ -1,0 +1,1501 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Part 3: Train a diffusion model for image generation &#8212; JAX AI Stack</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css?v=6644e6bb" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=1dc24ef2" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="_static/documentation_options.js?v=c1d4a9c3"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'digits_diffusion_model';</script>
+    <link rel="icon" href="_static/favicon.png"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Visualize JAX model metrics with TensorBoard" href="JAX_visualizing_models_metrics.html" />
+    <link rel="prev" title="Part 2: Debug a variational autoencoder (VAE)" href="digits_vae.html" /> 
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>   
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/ai-stack-logo.svg" class="logo__image only-light" alt="JAX AI Stack - Home"/>
+    <script>document.write(`<img src="_static/ai-stack-logo.svg" class="logo__image only-dark" alt="JAX AI Stack - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="index.html">
+                    JAX AI Stack
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="blog.html">JAX AI Stack Blog</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing the stack</a></li>
+
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="getting_started.html">Getting started with JAX for ML</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="neural_net_basics.html">Part 1: JAX neural net basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="digits_vae.html">Part 2: Debug a variational autoencoder (VAE)</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Part 3: Train a diffusion model for image generation</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="JAX_visualizing_models_metrics.html">Visualize JAX model metrics with TensorBoard</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="data_loaders.html">Introduction to Data Loaders</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="data_loaders_on_cpu_with_jax.html">Introduction to Data Loaders on CPU with JAX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_loaders_on_gpu_with_jax.html">Introduction to Data Loaders on GPU with JAX</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="pytorch_users.html">From PyTorch to JAX</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="JAX_for_PyTorch_users.html">JAX for PyTorch users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="JAX_porting_PyTorch_model.html">Porting a PyTorch model to JAX</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Example applications</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="JAX_for_LLM_pretraining.html">Train a miniGPT language model with JAX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_basic_text_classification.html">Basic text classification with 1D CNN</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_transformer_text_classification.html">Text classification with a transformer language model using JAX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_machine_translation.html">Machine Translation with encoder-decoder transformer model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_examples_image_segmentation.html">Image segmentation with UNETR model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_image_captioning.html">Image Captioning with Vision Transformer (ViT) model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_Vision_transformer.html">Train a Vision Transformer (ViT) for image classification with JAX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="JAX_time_series_classification.html">Time series classification with CNN</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer resources</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contribute to documentation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/jax-ml/jax-ai-stack" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/digits_diffusion_model.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Part 3: Train a diffusion model for image generation</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setup">Setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-and-preprocessing-the-data">Loading and preprocessing the data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-the-diffusion-model-with-flax">Defining the diffusion model with Flax</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-u-net-architecture">The U-Net architecture</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-the-diffusion-model">Defining the diffusion model</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-the-loss-function-and-training-step">Defining the loss function and training step</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model-training-configuration">Model training configuration</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#implementing-the-training-loop">Implementing the training loop</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#training-loss-visualization">Training loss visualization</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization-functions">Visualization functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                   <section class="tex2jax_ignore mathjax_ignore" id="part-3-train-a-diffusion-model-for-image-generation">
+<h1>Part 3: Train a diffusion model for image generation<a class="headerlink" href="#part-3-train-a-diffusion-model-for-image-generation" title="Link to this heading">#</a></h1>
+<p><a class="reference external" href="https://colab.research.google.com/github/jax-ml/jax-ai-stack/blob/main/docs/source/digits_diffusion_model.ipynb"><img alt="Open in Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
+<p>This tutorial guides you through developing and training a simple diffusion model using the <a class="reference external" href="https://en.wikipedia.org/wiki/U-Net">U-Net architecture</a> for image generation using JAX, <a class="reference external" href="http://flax.readthedocs.io">Flax NNX</a> and <a class="reference external" href="http://optax.readthedocs.io">Optax</a>. This builds upon the previous tutorial, <a class="reference external" href="https://jax-ai-stack.readthedocs.io/en/latest/digits_vae.html">Variational autoencoder (VAE) and debugging in JAX</a>, which focus on training a simpler generative model called VAE.</p>
+<p>In this tutorial, you’ll learn how to:</p>
+<ul class="simple">
+<li><p>Load and preprocess the dataset</p></li>
+<li><p>Define the diffusion model with Flax</p></li>
+<li><p>Create the loss and training functions</p></li>
+<li><p>Train the model (with Google Colab’s Cloud TPU v2)</p></li>
+<li><p>Visualize and track the model’s progress</p></li>
+</ul>
+<p>If you are new to JAX for AI, check out the <a class="reference external" href="https://jax-ai-stack.readthedocs.io/en/latest/neural_net_basics.html">introductory tutorial</a>, which covers neural network building with Flax, Optax and JAX.</p>
+<section id="setup">
+<h2>Setup<a class="headerlink" href="#setup" title="Link to this heading">#</a></h2>
+<p>JAX for AI (the stack) installation is covered <a class="reference external" href="https://docs.jaxstack.ai/en/latest/install.html">here</a>. And JAX (the library) installation is covered in <a class="reference external" href="https://jax.readthedocs.io/en/latest/installation.html">this guide</a> on the JAX documentation site.</p>
+<p>Start with importing JAX, JAX NumPy, Flax NNX, Optax, matplotlib and scikit-learn:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">jax</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">optax</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flax</span><span class="w"> </span><span class="kn">import</span> <span class="n">nnx</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_digits</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_test_split</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p><strong>Note:</strong> If you are using <a class="reference external" href="https://colab.research.google.com/">Google Colab</a>, select the free Google Cloud TPU v2 as the hardware accelerator.</p>
+<p>Check the available JAX devices, or <a class="reference external" href="https://jax.readthedocs.io/en/latest/_autosummary/jax.Device.html"><code class="docutils literal notranslate"><span class="pre">jax.Device</span></code>s</a>, with <a class="reference external" href="https://jax.readthedocs.io/en/latest/_autosummary/jax.devices.html"><code class="docutils literal notranslate"><span class="pre">jax.devices()</span></code></a>. The output of the cell below will show a list of 8 (eight) devices:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Check the available JAX devices.</span>
+<span class="n">jax</span><span class="o">.</span><span class="n">devices</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[TpuDevice(id=0, process_index=0, coords=(0,0,0), core_on_chip=0),
+ TpuDevice(id=1, process_index=0, coords=(0,0,0), core_on_chip=1),
+ TpuDevice(id=2, process_index=0, coords=(1,0,0), core_on_chip=0),
+ TpuDevice(id=3, process_index=0, coords=(1,0,0), core_on_chip=1),
+ TpuDevice(id=4, process_index=0, coords=(0,1,0), core_on_chip=0),
+ TpuDevice(id=5, process_index=0, coords=(0,1,0), core_on_chip=1),
+ TpuDevice(id=6, process_index=0, coords=(1,1,0), core_on_chip=0),
+ TpuDevice(id=7, process_index=0, coords=(1,1,0), core_on_chip=1)]
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="loading-and-preprocessing-the-data">
+<h2>Loading and preprocessing the data<a class="headerlink" href="#loading-and-preprocessing-the-data" title="Link to this heading">#</a></h2>
+<p>We’ll use the small, self-contained <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_digits.html">scikit-learn <code class="docutils literal notranslate"><span class="pre">digits</span></code> dataset</a> for ease of experimentation to demonstrate diffusion model training. For simplicity, we’ll focus on generating only the digit ‘1’ (one).</p>
+<p>This involves several steps, such as:</p>
+<ol class="arabic simple">
+<li><p>Loading the dataset</p></li>
+<li><p>Filtering the images of ‘1’ (one)</p></li>
+<li><p>Normalizing pixel values</p></li>
+<li><p>Converting the data into <code class="docutils literal notranslate"><span class="pre">jax.Array</span></code>s</p></li>
+<li><p>Reshaping the data, and splitting it into training and test sets</p></li>
+</ol>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load and preprocess the `digits` dataset.</span>
+<span class="n">digits</span> <span class="o">=</span> <span class="n">load_digits</span><span class="p">()</span>
+<span class="c1"># Filter for digit &#39;1&#39; (one) images.</span>
+<span class="n">images</span> <span class="o">=</span> <span class="n">digits</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="n">digits</span><span class="o">.</span><span class="n">target</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
+<span class="c1"># Normalize pixel values into floating-point arrays in the `[0, 1]` interval.</span>
+<span class="n">images</span> <span class="o">=</span> <span class="n">images</span> <span class="o">/</span> <span class="mf">16.0</span>
+<span class="c1"># Convert to `jax.Array`s.</span>
+<span class="n">images</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
+<span class="c1"># Reshape to `(num_images, height, width, channels)` for convolutional layers.</span>
+<span class="n">images</span> <span class="o">=</span> <span class="n">images</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># Split the dataset into training and test sets (5% for testing).</span>
+<span class="n">images_train</span><span class="p">,</span> <span class="n">images_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Training set size: </span><span class="si">{</span><span class="n">images_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Test set size: </span><span class="si">{</span><span class="n">images_test</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Visualize sample images.</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ax</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">axes</span><span class="o">.</span><span class="n">flat</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">images_train</span><span class="p">):</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">images_train</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training set size: 172
+Test set size: 10
+</pre></div>
+</div>
+<img alt="_images/14980854bc29f4ab4b3cd6510325a0efd5b37b55706d9add8857ac68ebfb9a27.png" src="_images/14980854bc29f4ab4b3cd6510325a0efd5b37b55706d9add8857ac68ebfb9a27.png" />
+</div>
+</div>
+</section>
+<section id="defining-the-diffusion-model-with-flax">
+<h2>Defining the diffusion model with Flax<a class="headerlink" href="#defining-the-diffusion-model-with-flax" title="Link to this heading">#</a></h2>
+<p>In this section, we’ll develop various parts of the <a class="reference external" href="https://en.wikipedia.org/wiki/Diffusion_model">diffusion model</a> and then put them all together.</p>
+<section id="the-u-net-architecture">
+<h3>The U-Net architecture<a class="headerlink" href="#the-u-net-architecture" title="Link to this heading">#</a></h3>
+<p>For this example, we’ll use the <a class="reference external" href="https://en.wikipedia.org/wiki/U-Net">U-Net architecture</a>, a convolutional neural network architecture, as the backbone of the diffusion model. The U-Net consists of the following:</p>
+<ul class="simple">
+<li><p>An <a class="reference external" href="https://en.wikipedia.org/wiki/Autoencoder">encoder</a> path that <a class="reference external" href="https://en.wikipedia.org/wiki/Downsampling_(signal_processing)">downsamples</a> the input image, extracting features.</p></li>
+<li><p>A bridge with a (self-)[attention mechanism](<a class="reference external" href="https://en.wikipedia.org/wiki/Attention_(machine_learning)">https://en.wikipedia.org/wiki/Attention_(machine_learning)</a> that connects the encoder with the decoder.</p></li>
+<li><p>A <a class="reference external" href="https://en.wikipedia.org/wiki/Autoencoder">decoder</a> path that <a class="reference external" href="https://en.wikipedia.org/wiki/Upsampling">upsamples</a> the feature representations learned by the encoder, reconstructing the output image.</p></li>
+<li><p><a class="reference external" href="https://en.wikipedia.org/wiki/Residual_neural_network#Residual_connection">Skip connections</a> between the encoder and the decoder.</p></li>
+</ul>
+<p>Let’s define a class called <code class="docutils literal notranslate"><span class="pre">UNet</span></code> by subclassing <a class="reference external" href="https://flax.readthedocs.io/en/latest/api_reference/flax.nnx/module.html#flax.nnx.Module"><code class="docutils literal notranslate"><span class="pre">flax.nnx.Module</span></code></a> and using, among other things, <a class="reference external" href="https://flax.readthedocs.io/en/latest/api_reference/flax.nnx/nn/linear.html#flax.nnx.Linear"><code class="docutils literal notranslate"><span class="pre">flax.nnx.Linear</span></code></a> (linear or dense layers for time embedding and time projection layers, as well as the self-attention layers), <a class="reference external" href="https://flax.readthedocs.io/en/latest/api_reference/flax.nnx/nn/normalization.html#flax.nnx.LayerNorm"><code class="docutils literal notranslate"><span class="pre">flax.nnx.LayerNorm</span></code></a> (layer normalization), and <a class="reference external" href="https://flax.readthedocs.io/en/latest/api_reference/flax.nnx/nn/linear.html#flax.nnx.Conv"><code class="docutils literal notranslate"><span class="pre">flax.nnx.Conv</span></code></a> (convolution layers for the output layer).</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">UNet</span><span class="p">(</span><span class="n">nnx</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">in_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                 <span class="n">out_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                 <span class="n">features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                 <span class="n">time_emb_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">128</span><span class="p">,</span>
+                 <span class="o">*</span><span class="p">,</span>
+                 <span class="n">rngs</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the U-Net architecture with time embedding.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">features</span> <span class="o">=</span> <span class="n">features</span>
+
+        <span class="c1"># Time embedding layers for diffusion timestep conditioning.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_mlp_1</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="n">time_emb_dim</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="n">time_emb_dim</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_mlp_2</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="n">time_emb_dim</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="n">time_emb_dim</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+
+        <span class="c1"># Time projection layers for different scales.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_proj1</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="n">time_emb_dim</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_proj2</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="n">time_emb_dim</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="n">features</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_proj3</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="n">time_emb_dim</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="n">features</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_proj4</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="n">time_emb_dim</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="n">features</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+
+        <span class="c1"># The encoder path.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">down_conv1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_residual_block</span><span class="p">(</span><span class="n">in_channels</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">rngs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">down_conv2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_residual_block</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">features</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">rngs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">down_conv3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_residual_block</span><span class="p">(</span><span class="n">features</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">features</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="n">rngs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">down_conv4</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_residual_block</span><span class="p">(</span><span class="n">features</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="n">features</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="n">rngs</span><span class="p">)</span>
+
+        <span class="c1"># Multi-head self-attention blocks.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attention1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_attention_block</span><span class="p">(</span><span class="n">features</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="n">rngs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attention2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_attention_block</span><span class="p">(</span><span class="n">features</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="n">rngs</span><span class="p">)</span>
+
+        <span class="c1"># The bridge connecting the encoder and the decoder.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bridge_down</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_residual_block</span><span class="p">(</span><span class="n">features</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="n">features</span> <span class="o">*</span> <span class="mi">16</span><span class="p">,</span> <span class="n">rngs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bridge_attention</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_attention_block</span><span class="p">(</span><span class="n">features</span> <span class="o">*</span> <span class="mi">16</span><span class="p">,</span> <span class="n">rngs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bridge_up</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_residual_block</span><span class="p">(</span><span class="n">features</span> <span class="o">*</span> <span class="mi">16</span><span class="p">,</span> <span class="n">features</span> <span class="o">*</span> <span class="mi">16</span><span class="p">,</span> <span class="n">rngs</span><span class="p">)</span>
+
+        <span class="c1"># Decoder path with skip connections.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">up_conv4</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_residual_block</span><span class="p">(</span><span class="n">features</span> <span class="o">*</span> <span class="mi">24</span><span class="p">,</span> <span class="n">features</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="n">rngs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">up_conv3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_residual_block</span><span class="p">(</span><span class="n">features</span> <span class="o">*</span> <span class="mi">12</span><span class="p">,</span> <span class="n">features</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="n">rngs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">up_conv2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_residual_block</span><span class="p">(</span><span class="n">features</span> <span class="o">*</span> <span class="mi">6</span><span class="p">,</span> <span class="n">features</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">rngs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">up_conv1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_residual_block</span><span class="p">(</span><span class="n">features</span> <span class="o">*</span> <span class="mi">3</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">rngs</span><span class="p">)</span>
+
+        <span class="c1"># Output layers.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">final_norm</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">LayerNorm</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">final_conv</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Conv</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span>
+                                 <span class="n">out_features</span><span class="o">=</span><span class="n">out_channels</span><span class="p">,</span>
+                                 <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+                                 <span class="n">strides</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                                 <span class="n">padding</span><span class="o">=</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+                                 <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_attention_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rngs</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates a self-attention block with learned query, key, value projections.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            channels (int): The number of channels in the input feature maps.</span>
+<span class="sd">            rngs (flax.nnx.Rngs): A set of named `flax.nnx.RngStream` objects that generate a stream of JAX pseudo-random number generator (PRNG) keys.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Callable: A function representing a forward pass through the attention block.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">query_proj</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="n">channels</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="n">channels</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+        <span class="n">key_proj</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="n">channels</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="n">channels</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+        <span class="n">value_proj</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="n">channels</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="n">channels</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Applies self-attention to the input.</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">                x (jax.Array): The input tensor with the shape `[batch, height, width, channels]` (or `B, H, W, C`).</span>
+
+<span class="sd">            Returns:</span>
+<span class="sd">                jax.Array: The output tensor after applying self-attention.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+
+            <span class="c1"># Shape: batch, height, width, channels.</span>
+            <span class="n">B</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">C</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">C</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+            <span class="c1"># Project the input into query, key, value projections.</span>
+            <span class="n">q</span> <span class="o">=</span> <span class="n">query_proj</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">key_proj</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">value_proj</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+            <span class="c1"># Reshape for the attention computation.</span>
+            <span class="n">q</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">H</span> <span class="o">*</span> <span class="n">W</span><span class="p">,</span> <span class="n">C</span><span class="p">)</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">k</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">H</span> <span class="o">*</span> <span class="n">W</span><span class="p">,</span> <span class="n">C</span><span class="p">)</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">H</span> <span class="o">*</span> <span class="n">W</span><span class="p">,</span> <span class="n">C</span><span class="p">)</span>
+
+            <span class="c1"># Compute the scaled dot-product attention.</span>
+            <span class="n">attention</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;bic,bjc-&gt;bij&#39;</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="o">/</span> <span class="n">scale</span>  <span class="c1"># Scaled dot-product.</span>
+            <span class="n">attention</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">attention</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Softmax.</span>
+
+            <span class="c1"># The output tensor.</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;bij,bjc-&gt;bic&#39;</span><span class="p">,</span> <span class="n">attention</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">C</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="n">out</span>  <span class="c1"># A ResNet-style residual connection.</span>
+
+        <span class="k">return</span> <span class="n">forward</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_residual_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                              <span class="n">in_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                              <span class="n">out_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                              <span class="n">rngs</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates a residual block with two convolutions and normalization.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            in_channels (int): Number of input channels.</span>
+<span class="sd">            out_channels (int): Number of output channels.</span>
+<span class="sd">            rngs (flax.nnx.Rngs): A set of named `flax.nnx.RngStream` objects that generate a stream of JAX PRNG keys.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Callable: A function that represents the forward pass through the residual block.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Convolutional layers with layer normalization.</span>
+        <span class="n">conv1</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Conv</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="n">in_channels</span><span class="p">,</span>
+                        <span class="n">out_features</span><span class="o">=</span><span class="n">out_channels</span><span class="p">,</span>
+                        <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+                        <span class="n">strides</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                        <span class="n">padding</span><span class="o">=</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+                        <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+        <span class="n">norm1</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">LayerNorm</span><span class="p">(</span><span class="n">out_channels</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+        <span class="n">conv2</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Conv</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="n">out_channels</span><span class="p">,</span>
+                        <span class="n">out_features</span><span class="o">=</span><span class="n">out_channels</span><span class="p">,</span>
+                        <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+                        <span class="n">strides</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                        <span class="n">padding</span><span class="o">=</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+                        <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+        <span class="n">norm2</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">LayerNorm</span><span class="p">(</span><span class="n">out_channels</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+
+        <span class="c1"># Projection shortcut if dimensions change.</span>
+        <span class="n">shortcut</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Conv</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="n">in_channels</span><span class="p">,</span>
+                            <span class="n">out_features</span><span class="o">=</span><span class="n">out_channels</span><span class="p">,</span>
+                            <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                            <span class="n">strides</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                            <span class="n">rngs</span><span class="o">=</span><span class="n">rngs</span><span class="p">)</span>
+
+        <span class="c1"># The forward pass through the residual block.</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">:</span>
+            <span class="n">identity</span> <span class="o">=</span> <span class="n">shortcut</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+            <span class="n">x</span> <span class="o">=</span> <span class="n">conv1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">norm1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">gelu</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+            <span class="n">x</span> <span class="o">=</span> <span class="n">conv2</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">norm2</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">gelu</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="n">identity</span>
+
+        <span class="k">return</span> <span class="n">forward</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_pos_encoding</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span> <span class="n">dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Applies sinusoidal positional encoding for time embedding.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            t (jax.Array): The time embedding, representing the timestep.</span>
+<span class="sd">            dim (int): The dimension of the output positional encoding.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            jax.Array: The sinusoidal positional embedding per timestep.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Calculate half the embedding dimension.</span>
+        <span class="n">half_dim</span> <span class="o">=</span> <span class="n">dim</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="c1"># Compute the logarithmic scaling factor for sinusoidal frequencies.</span>
+        <span class="n">emb</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">10000.0</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">half_dim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># Generate a range of sinusoidal frequencies.</span>
+        <span class="n">emb</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">half_dim</span><span class="p">)</span> <span class="o">*</span> <span class="o">-</span><span class="n">emb</span><span class="p">)</span>
+        <span class="c1"># Create the positional encoding by multiplying time embeddings with.</span>
+        <span class="n">emb</span> <span class="o">=</span> <span class="n">t</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">emb</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="c1"># Concatenate sine and cosine components for richer representation.</span>
+        <span class="n">emb</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">jnp</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">emb</span><span class="p">),</span> <span class="n">jnp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">emb</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">emb</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_downsample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Downsamples the input feature map with max pooling.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">nnx</span><span class="o">.</span><span class="n">max_pool</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">window_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">strides</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;SAME&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_upsample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span> <span class="n">target_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Upsamples the input feature map using nearest neighbor interpolation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">jax</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
+                              <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">target_size</span><span class="p">,</span> <span class="n">target_size</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]),</span>
+                              <span class="n">method</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform the forward pass through the U-Net using time embeddings.&quot;&quot;&quot;</span>
+
+        <span class="c1"># Time embedding and projection.</span>
+        <span class="n">t_emb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pos_encoding</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">128</span><span class="p">)</span> <span class="c1"># Sinusoidal positional encoding for time.</span>
+        <span class="n">t_emb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_mlp_1</span><span class="p">(</span><span class="n">t_emb</span><span class="p">)</span> <span class="c1"># Project and activate the time embedding</span>
+        <span class="n">t_emb</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">gelu</span><span class="p">(</span><span class="n">t_emb</span><span class="p">)</span> <span class="c1"># Activation function: `flax.nnx.gelu` (GeLU).</span>
+        <span class="n">t_emb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_mlp_2</span><span class="p">(</span><span class="n">t_emb</span><span class="p">)</span>
+
+        <span class="c1"># Project time embeddings for each scale.</span>
+        <span class="c1"># Project to the correct dimensions for each encoder block.</span>
+        <span class="n">t_emb1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_proj1</span><span class="p">(</span><span class="n">t_emb</span><span class="p">)[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">t_emb2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_proj2</span><span class="p">(</span><span class="n">t_emb</span><span class="p">)[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">t_emb3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_proj3</span><span class="p">(</span><span class="n">t_emb</span><span class="p">)[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">t_emb4</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_proj4</span><span class="p">(</span><span class="n">t_emb</span><span class="p">)[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="c1"># The encoder path with time injection.</span>
+        <span class="n">d1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">down_conv1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">t_emb1</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">t_emb1</span><span class="p">,</span> <span class="n">d1</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="c1"># Broadcast the time embedding to match feature map shape.</span>
+        <span class="n">d1</span> <span class="o">=</span> <span class="n">d1</span> <span class="o">+</span> <span class="n">t_emb1</span> <span class="c1"># Add the time embedding to the feature map.</span>
+
+        <span class="n">d2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">down_conv2</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_downsample</span><span class="p">(</span><span class="n">d1</span><span class="p">))</span>
+        <span class="n">t_emb2</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">t_emb2</span><span class="p">,</span> <span class="n">d2</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">d2</span> <span class="o">=</span> <span class="n">d2</span> <span class="o">+</span> <span class="n">t_emb2</span>
+
+        <span class="n">d3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">down_conv3</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_downsample</span><span class="p">(</span><span class="n">d2</span><span class="p">))</span>
+        <span class="n">d3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attention1</span><span class="p">(</span><span class="n">d3</span><span class="p">)</span> <span class="c1"># Apply self-attention.</span>
+        <span class="n">t_emb3</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">t_emb3</span><span class="p">,</span> <span class="n">d3</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">d3</span> <span class="o">=</span> <span class="n">d3</span> <span class="o">+</span> <span class="n">t_emb3</span>
+
+        <span class="n">d4</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">down_conv4</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_downsample</span><span class="p">(</span><span class="n">d3</span><span class="p">))</span>
+        <span class="n">d4</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attention2</span><span class="p">(</span><span class="n">d4</span><span class="p">)</span>
+        <span class="n">t_emb4</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">t_emb4</span><span class="p">,</span> <span class="n">d4</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">d4</span> <span class="o">=</span> <span class="n">d4</span> <span class="o">+</span> <span class="n">t_emb4</span>
+
+        <span class="c1"># The bridge.</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_downsample</span><span class="p">(</span><span class="n">d4</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bridge_down</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bridge_attention</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bridge_up</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+        <span class="c1"># The decoder path with skip connections.</span>
+        <span class="n">u4</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">up_conv4</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_upsample</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">d4</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">d4</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">u3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">up_conv3</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_upsample</span><span class="p">(</span><span class="n">u4</span><span class="p">,</span> <span class="n">d3</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">d3</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">u2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">up_conv2</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_upsample</span><span class="p">(</span><span class="n">u3</span><span class="p">,</span> <span class="n">d2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">d2</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">u1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">up_conv1</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_upsample</span><span class="p">(</span><span class="n">u2</span><span class="p">,</span> <span class="n">d1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">d1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
+
+        <span class="c1"># Final layers.</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">final_norm</span><span class="p">(</span><span class="n">u1</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">gelu</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">final_conv</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="defining-the-diffusion-model">
+<h3>Defining the diffusion model<a class="headerlink" href="#defining-the-diffusion-model" title="Link to this heading">#</a></h3>
+<p>Here, we will define the diffusion model that encapsulates the previously components, such as the <code class="docutils literal notranslate"><span class="pre">UNet</span></code> class, and include all the layers needed to perform the diffusion operations. The <code class="docutils literal notranslate"><span class="pre">DiffusionModel</span></code> class implements the diffusion process with:</p>
+<ul class="simple">
+<li><p>Forward diffusion (adding noise)</p></li>
+<li><p>Reverse diffusion (denoising)</p></li>
+<li><p>Custom noise scheduling</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">DiffusionModel</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">model</span><span class="p">:</span> <span class="n">UNet</span><span class="p">,</span>
+                 <span class="n">num_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                 <span class="n">beta_start</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                 <span class="n">beta_end</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize diffusion process parameters.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            model (UNet): The U-Net model for image generation.</span>
+<span class="sd">            num_steps (int): The number of diffusion steps in the process.</span>
+<span class="sd">            beta_start: The starting value for beta, controlling the noise level.</span>
+<span class="sd">            beta_end: The end value for beta.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_steps</span> <span class="o">=</span> <span class="n">num_steps</span>
+
+        <span class="c1"># Noise schedule parameters.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cosine_beta_schedule</span><span class="p">(</span><span class="n">num_steps</span><span class="p">,</span> <span class="n">beta_start</span><span class="p">,</span> <span class="n">beta_end</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha_cumulative</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">cumprod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sqrt_alpha_cumulative</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha_cumulative</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sqrt_one_minus_alpha_cumulative</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha_cumulative</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sqrt_recip_alpha</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">posterior_variance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha_cumulative</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha_cumulative</span> <span class="o">+</span> <span class="mf">1e-7</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_cosine_beta_schedule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                            <span class="n">num_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                            <span class="n">beta_start</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                            <span class="n">beta_end</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Cosine schedule for noise levels.&quot;&quot;&quot;</span>
+        <span class="n">steps</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">,</span> <span class="n">num_steps</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">steps</span> <span class="o">/</span> <span class="n">num_steps</span>
+        <span class="n">alphas</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">cos</span><span class="p">(((</span><span class="n">x</span> <span class="o">+</span> <span class="mf">0.008</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1.008</span><span class="p">)</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="n">alphas</span> <span class="o">=</span> <span class="n">alphas</span> <span class="o">/</span> <span class="n">alphas</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">betas</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">alphas</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">/</span> <span class="n">alphas</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">betas</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">betas</span><span class="p">,</span> <span class="n">beta_start</span><span class="p">,</span> <span class="n">beta_end</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">betas</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">],</span> <span class="n">betas</span><span class="p">])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                <span class="n">x</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+                <span class="n">t</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+                <span class="n">key</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward diffusion process - adds noise according to schedule.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x (jax.Array): The input image.</span>
+<span class="sd">            t (jax.Array): The timestep(s) at which the noise is added.</span>
+<span class="sd">            key (jax.Array): A JAX PRNG key for generating random noise.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple[jax.Array, jax.Array]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">noise</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">noisy_x</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">jnp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha_cumulative</span><span class="p">[</span><span class="n">t</span><span class="p">])[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span>
+            <span class="n">jnp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha_cumulative</span><span class="p">[</span><span class="n">t</span><span class="p">])[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">noise</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">noisy_x</span><span class="p">,</span> <span class="n">noise</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">reverse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Performs the reverse diffusion process, denoising the input image gradually.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x (jax.Array): The noise image batch per timestep.</span>
+<span class="sd">            key (jax.Array): A JAX PRNG key for the random noise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x_t</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_steps</span><span class="p">)):</span>
+            <span class="n">t_batch</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">t</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">predicted</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">x_t</span><span class="p">,</span> <span class="n">t_batch</span><span class="p">)</span> <span class="c1"># Predicted noise using the U-Net.</span>
+
+            <span class="n">key</span><span class="p">,</span> <span class="n">subkey</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="c1"># Split the JAX PRNG key.</span>
+            <span class="n">noise</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">subkey</span><span class="p">,</span> <span class="n">x_t</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="k">if</span> <span class="n">t</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span> <span class="c1"># Sample the noise for the current timestep.</span>
+
+            <span class="c1"># The denoising step.</span>
+            <span class="n">x_t</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">jnp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">[</span><span class="n">t</span><span class="p">]))</span> <span class="o">*</span> <span class="p">(</span>
+                <span class="n">x_t</span> <span class="o">-</span> <span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">[</span><span class="n">t</span><span class="p">])</span> <span class="o">/</span> <span class="n">jnp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha_cumulative</span><span class="p">[</span><span class="n">t</span><span class="p">]))</span> <span class="o">*</span> <span class="n">predicted</span>
+            <span class="p">)</span> <span class="o">+</span> <span class="n">jnp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">[</span><span class="n">t</span><span class="p">])</span> <span class="o">*</span> <span class="n">noise</span>
+
+        <span class="k">return</span> <span class="n">x_t</span> <span class="c1"># The final denoised image.</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="defining-the-loss-function-and-training-step">
+<h2>Defining the loss function and training step<a class="headerlink" href="#defining-the-loss-function-and-training-step" title="Link to this heading">#</a></h2>
+<p>In this section, we’ll define the components for training our diffusion model, including:</p>
+<ul class="simple">
+<li><p>The loss function (<code class="docutils literal notranslate"><span class="pre">loss_fn()</span></code>), which incorporates <a class="reference external" href="https://en.wikipedia.org/wiki/Signal-to-noise_ratio">SNR weighting</a> and a gradient penalty; and</p></li>
+<li><p>The training step (<code class="docutils literal notranslate"><span class="pre">train_step()</span></code>) with <a class="reference external" href="https://arxiv.org/pdf/1905.11881">gradient clipping</a> for stability.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">loss_fn</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">UNet</span><span class="p">,</span>
+           <span class="n">images</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+           <span class="n">t</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+           <span class="n">noise</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+           <span class="n">sqrt_alpha_cumulative</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+           <span class="n">sqrt_one_minus_alpha_cumulative</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes the diffusion loss function with SNR weighting and adaptive noise scaling.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model(UNet): The U-Net model for image generation.</span>
+<span class="sd">        images (jax.Array): A batch of images used for training.</span>
+<span class="sd">        t (jax.Array): The timestep(s) at which the noise is added to each image.</span>
+<span class="sd">        noise (jax.Array): The noise added to the images.</span>
+<span class="sd">        sqrt_alpha_cumulative (jax.Array): Square root of cumulative alpha values.</span>
+<span class="sd">        sqrt_one_minus_alpha_cumulative (jax.Array): Square root of (1 - cumulative alpha values).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            jax.Array: The total loss value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Generate noisy images.</span>
+    <span class="n">noisy_images</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">sqrt_alpha_cumulative</span><span class="p">[</span><span class="n">t</span><span class="p">][:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">images</span> <span class="o">+</span>
+        <span class="n">sqrt_one_minus_alpha_cumulative</span><span class="p">[</span><span class="n">t</span><span class="p">][:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">noise</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Predict the noise using the U-Net.</span>
+    <span class="n">predicted</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">noisy_images</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+
+    <span class="c1"># Compute the SNR-weighted loss.</span>
+    <span class="n">snr</span> <span class="o">=</span> <span class="p">(</span><span class="n">sqrt_alpha_cumulative</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">/</span> <span class="n">sqrt_one_minus_alpha_cumulative</span><span class="p">[</span><span class="n">t</span><span class="p">])[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="n">loss_weights</span> <span class="o">=</span> <span class="n">snr</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">snr</span><span class="p">)</span>
+
+    <span class="n">squared_error</span> <span class="o">=</span> <span class="p">(</span><span class="n">noise</span> <span class="o">-</span> <span class="n">predicted</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">main_loss</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">loss_weights</span> <span class="o">*</span> <span class="n">squared_error</span><span class="p">)</span>
+
+    <span class="c1"># Perform gradient penalty (regularization) with a reduced coefficient.</span>
+    <span class="n">grad</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">())(</span><span class="n">noisy_images</span><span class="p">)</span>
+    <span class="n">grad_penalty</span> <span class="o">=</span> <span class="mf">0.02</span> <span class="o">*</span> <span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">grad</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+
+    <span class="c1"># The total loss.</span>
+    <span class="k">return</span> <span class="n">main_loss</span> <span class="o">+</span> <span class="n">grad_penalty</span>
+
+<span class="c1"># Flax NNX JIT-compilation for performance (`flax.nnx.jit`).</span>
+<span class="nd">@nnx</span><span class="o">.</span><span class="n">jit</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">train_step</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">UNet</span><span class="p">,</span>
+               <span class="n">optimizer</span><span class="p">:</span> <span class="n">nnx</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span>
+               <span class="n">images</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+               <span class="n">t</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+               <span class="n">noise</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+               <span class="n">sqrt_alpha_cumulative</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+               <span class="n">sqrt_one_minus_alpha_cumulative</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Performs a single training step with gradient clipping.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model(UNet): The U-Net model for image generation that is being trained.</span>
+<span class="sd">        optimizer (flax.nnx.Optimizer): The Flax NNX optimizer for parameter updates.</span>
+<span class="sd">        images (jax.Array): A batch of images used for training.</span>
+<span class="sd">        t (jax.Array): The timestep(s) at which the noise is added to each image.</span>
+<span class="sd">        noise (jax.Array): The noise added to the images during training.</span>
+<span class="sd">        sqrt_alpha_cumulative (jax.Array): Square root of cumulative alpha values from the diffusion schedule.</span>
+<span class="sd">        sqrt_one_minus_alpha_cumulative (jax.Array): Square root of (1 - cumulative alpha values) from the diffusion schedule.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        jax.Array: The loss value after a single training step.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># The loss and gradients using `flax.nnx.value_and_grad`.</span>
+    <span class="n">loss</span><span class="p">,</span> <span class="n">grads</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">value_and_grad</span><span class="p">(</span><span class="n">loss_fn</span><span class="p">)(</span>
+        <span class="n">model</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">noise</span><span class="p">,</span>
+        <span class="n">sqrt_alpha_cumulative</span><span class="p">,</span> <span class="n">sqrt_one_minus_alpha_cumulative</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Apply conservative gradient clipping.</span>
+    <span class="n">clip_threshold</span> <span class="o">=</span> <span class="mf">0.3</span>
+    <span class="n">grads</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">tree_util</span><span class="o">.</span><span class="n">tree_map</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">g</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="o">-</span><span class="n">clip_threshold</span><span class="p">,</span> <span class="n">clip_threshold</span><span class="p">),</span>
+        <span class="n">grads</span>
+    <span class="p">)</span>
+    <span class="c1"># Update the parameters using the optimizer.</span>
+    <span class="n">optimizer</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">grads</span><span class="p">)</span>
+    <span class="c1"># Return the loss after a single training step.</span>
+    <span class="k">return</span> <span class="n">loss</span>
+</pre></div>
+</div>
+</div>
+</div>
+<section id="model-training-configuration">
+<h3>Model training configuration<a class="headerlink" href="#model-training-configuration" title="Link to this heading">#</a></h3>
+<p>Next, we’ll define the model configuration and the training loop implementation.</p>
+<p>We need to set up:</p>
+<ul class="simple">
+<li><p>Model hyperparameters</p></li>
+<li><p>An optimizer with the learning rate schedule</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the model and training hyperparameters.</span>
+<span class="n">key</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">PRNGKey</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span> <span class="c1"># PRNG seed for reproducibility.</span>
+<span class="n">in_channels</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">out_channels</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">features</span> <span class="o">=</span> <span class="mi">64</span>   <span class="c1"># Number of features in the U-Net.</span>
+<span class="n">num_steps</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="n">num_epochs</span> <span class="o">=</span> <span class="mi">5000</span>
+<span class="n">batch_size</span> <span class="o">=</span> <span class="mi">64</span>
+<span class="n">learning_rate</span> <span class="o">=</span> <span class="mf">1e-4</span>
+<span class="n">beta_start</span> <span class="o">=</span> <span class="mf">1e-4</span>   <span class="c1"># The starting value for beta (noise level schedule).</span>
+<span class="n">beta_end</span> <span class="o">=</span> <span class="mf">0.02</span>   <span class="c1"># The end value for beta (noise level schedule).</span>
+
+<span class="c1"># Initialize model components.</span>
+<span class="n">key</span><span class="p">,</span> <span class="n">subkey</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="c1"># Split the JAX PRNG key for initialization.</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">UNet</span><span class="p">(</span><span class="n">in_channels</span><span class="p">,</span> <span class="n">out_channels</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">rngs</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">subkey</span><span class="p">))</span> <span class="c1"># Instantiate the U-Net.</span>
+
+<span class="n">diffusion</span> <span class="o">=</span> <span class="n">DiffusionModel</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+    <span class="n">num_steps</span><span class="o">=</span><span class="n">num_steps</span><span class="p">,</span>
+    <span class="n">beta_start</span><span class="o">=</span><span class="n">beta_start</span><span class="p">,</span>
+    <span class="n">beta_end</span><span class="o">=</span><span class="n">beta_end</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Learning rate schedule configuration.</span>
+<span class="c1"># Start with the warmup, then cosine decay.</span>
+<span class="n">warmup_steps</span> <span class="o">=</span> <span class="mi">1000</span> <span class="c1"># Number of steps.</span>
+<span class="n">total_steps</span> <span class="o">=</span> <span class="n">num_epochs</span> <span class="c1"># Total number of training steps.</span>
+
+<span class="c1"># Multiple schedules using `optax.join_schedules`:</span>
+<span class="c1"># Linear transition (`optax.linear_schedule`) (for the warmup) and</span>
+<span class="c1"># and cosine learning rate decay (`optax.cosine_decay_schedule`).</span>
+<span class="n">schedule_fn</span> <span class="o">=</span> <span class="n">optax</span><span class="o">.</span><span class="n">join_schedules</span><span class="p">(</span>
+    <span class="n">schedules</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">optax</span><span class="o">.</span><span class="n">linear_schedule</span><span class="p">(</span>
+            <span class="n">init_value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">end_value</span><span class="o">=</span><span class="n">learning_rate</span><span class="p">,</span>
+            <span class="n">transition_steps</span><span class="o">=</span><span class="n">warmup_steps</span>
+        <span class="p">),</span>
+        <span class="n">optax</span><span class="o">.</span><span class="n">cosine_decay_schedule</span><span class="p">(</span>
+            <span class="n">init_value</span><span class="o">=</span><span class="n">learning_rate</span><span class="p">,</span>
+            <span class="n">decay_steps</span><span class="o">=</span><span class="n">total_steps</span> <span class="o">-</span> <span class="n">warmup_steps</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="mf">0.01</span>
+        <span class="p">)</span>
+    <span class="p">],</span>
+    <span class="n">boundaries</span><span class="o">=</span><span class="p">[</span><span class="n">warmup_steps</span><span class="p">]</span> <span class="c1"># Where the schedule transitions from the warmup to cosine decay.</span>
+<span class="p">)</span>
+
+<span class="c1"># Optimizer configuration (AdamW) with gradient clipping.</span>
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">nnx</span><span class="o">.</span><span class="n">ModelAndOptimizer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optax</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span>
+    <span class="n">optax</span><span class="o">.</span><span class="n">clip_by_global_norm</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="c1"># Gradient clipping.</span>
+    <span class="n">optax</span><span class="o">.</span><span class="n">adamw</span><span class="p">(</span>
+        <span class="n">learning_rate</span><span class="o">=</span><span class="n">schedule_fn</span><span class="p">,</span>
+        <span class="n">weight_decay</span><span class="o">=</span><span class="mf">2e-5</span><span class="p">,</span>
+        <span class="n">b1</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
+        <span class="n">b2</span><span class="o">=</span><span class="mf">0.999</span><span class="p">,</span>
+        <span class="n">eps</span><span class="o">=</span><span class="mf">1e-8</span>
+    <span class="p">)</span>
+<span class="p">))</span>
+
+<span class="c1"># Model initialization with dummy input.</span>
+<span class="n">dummy_input</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="n">dummy_t</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">dummy_input</span><span class="p">,</span> <span class="n">dummy_t</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Input shape:&quot;</span><span class="p">,</span> <span class="n">dummy_input</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Output shape:&quot;</span><span class="p">,</span> <span class="n">output</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Model initialized successfully&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Input shape: (1, 8, 8, 1)
+Output shape: (1, 8, 8, 1)
+
+Model initialized successfully
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="implementing-the-training-loop">
+<h3>Implementing the training loop<a class="headerlink" href="#implementing-the-training-loop" title="Link to this heading">#</a></h3>
+<p>Finally, we need to implement the main training loop for the diffusion model with:</p>
+<ul class="simple">
+<li><p>The progressive timestep sampling strategy</p></li>
+<li><p><a class="reference external" href="https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average">Exponential moving average (EMA)</a> loss tracking</p></li>
+<li><p>Adaptive noise generation</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Initialize training metrics.</span>
+<span class="n">losses</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>                <span class="c1"># Store the EMA loss history.</span>
+<span class="n">moving_avg_loss</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># The EMA of the loss value.</span>
+<span class="n">beta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.99</span>                      <span class="c1"># The EMA decay factor for loss smoothing.</span>
+
+<span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_epochs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+    <span class="c1"># Split the JAX PRNG key for independent random operations.</span>
+    <span class="n">key</span><span class="p">,</span> <span class="n">subkey1</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="n">key</span><span class="p">,</span> <span class="n">subkey2</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+    <span class="c1"># Progressive timestep sampling - weights early steps more heavily as training progresses.</span>
+    <span class="c1"># This helps model focus on fine details in later epochs while maintaining stability.</span>
+    <span class="n">progress</span> <span class="o">=</span> <span class="n">epoch</span> <span class="o">/</span> <span class="n">num_epochs</span>
+    <span class="n">t_weights</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">progress</span><span class="p">),</span> <span class="n">num_steps</span><span class="p">)</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span>
+        <span class="n">subkey1</span><span class="p">,</span>
+        <span class="n">num_steps</span><span class="p">,</span>
+        <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">images_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],),</span>
+        <span class="n">p</span><span class="o">=</span><span class="n">t_weights</span><span class="o">/</span><span class="n">t_weights</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Generate the Gaussian noise for the current batch of images.</span>
+    <span class="n">noise</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">subkey2</span><span class="p">,</span> <span class="n">images_train</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="c1"># Execute the training step with noise prediction and parameter updates.</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">train_step</span><span class="p">(</span>
+        <span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">images_train</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">noise</span><span class="p">,</span>
+        <span class="n">diffusion</span><span class="o">.</span><span class="n">sqrt_alpha_cumulative</span><span class="p">,</span> <span class="n">diffusion</span><span class="o">.</span><span class="n">sqrt_one_minus_alpha_cumulative</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Update the exponential moving average (EMA) of the loss for smoother tracking.</span>
+    <span class="k">if</span> <span class="n">moving_avg_loss</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">moving_avg_loss</span> <span class="o">=</span> <span class="n">loss</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">moving_avg_loss</span> <span class="o">=</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">moving_avg_loss</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">beta</span><span class="p">)</span> <span class="o">*</span> <span class="n">loss</span>
+
+    <span class="n">losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">moving_avg_loss</span><span class="p">)</span>
+
+    <span class="c1"># Log the training progress at regular intervals.</span>
+    <span class="k">if</span> <span class="n">epoch</span> <span class="o">%</span> <span class="mi">100</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Epoch </span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s2">, Loss: </span><span class="si">{</span><span class="n">moving_avg_loss</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Training completed.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Epoch 0, Loss: 1.2441
+Epoch 100, Loss: 1.1178
+Epoch 200, Loss: 0.8737
+Epoch 300, Loss: 0.7176
+Epoch 400, Loss: 0.6327
+Epoch 500, Loss: 0.5682
+Epoch 600, Loss: 0.5024
+Epoch 700, Loss: 0.4417
+Epoch 800, Loss: 0.3805
+Epoch 900, Loss: 0.3254
+Epoch 1000, Loss: 0.2803
+Epoch 1100, Loss: 0.2534
+Epoch 1200, Loss: 0.2339
+Epoch 1300, Loss: 0.2221
+Epoch 1400, Loss: 0.2141
+Epoch 1500, Loss: 0.2085
+Epoch 1600, Loss: 0.2046
+Epoch 1700, Loss: 0.1991
+Epoch 1800, Loss: 0.1951
+Epoch 1900, Loss: 0.1923
+Epoch 2000, Loss: 0.1919
+Epoch 2100, Loss: 0.1913
+Epoch 2200, Loss: 0.1888
+Epoch 2300, Loss: 0.1858
+Epoch 2400, Loss: 0.1861
+Epoch 2500, Loss: 0.1867
+Epoch 2600, Loss: 0.1855
+Epoch 2700, Loss: 0.1832
+Epoch 2800, Loss: 0.1834
+Epoch 2900, Loss: 0.1839
+Epoch 3000, Loss: 0.1844
+Epoch 3100, Loss: 0.1838
+Epoch 3200, Loss: 0.1816
+Epoch 3300, Loss: 0.1824
+Epoch 3400, Loss: 0.1815
+Epoch 3500, Loss: 0.1823
+Epoch 3600, Loss: 0.1834
+Epoch 3700, Loss: 0.1823
+Epoch 3800, Loss: 0.1811
+Epoch 3900, Loss: 0.1806
+Epoch 4000, Loss: 0.1804
+Epoch 4100, Loss: 0.1814
+Epoch 4200, Loss: 0.1802
+Epoch 4300, Loss: 0.1813
+Epoch 4400, Loss: 0.1799
+Epoch 4500, Loss: 0.1811
+Epoch 4600, Loss: 0.1820
+Epoch 4700, Loss: 0.1829
+Epoch 4800, Loss: 0.1828
+Epoch 4900, Loss: 0.1832
+Epoch 5000, Loss: 0.1827
+
+Training completed.
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="training-loss-visualization">
+<h3>Training loss visualization<a class="headerlink" href="#training-loss-visualization" title="Link to this heading">#</a></h3>
+<p>To visualize the training loss, we can use a logarithmic scale to better display the exponential decay of the loss values over time. This representation helps identify both early rapid improvements and later fine-tuning phases of the training process.</p>
+<p>Based on the results, the model appears to perform well, as the training loss falls over time during training.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Plot the training loss history with logarithmic scaling.</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>            <span class="c1"># Create figure with wide aspect ratio for clarity</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">losses</span><span class="p">)</span>                       <span class="c1"># losses: List[float] - historical EMA loss values.</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Training Loss Over Time&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Epoch&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Loss&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>                      <span class="c1"># Use the log scale to better visualize exponential decay.</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>                         <span class="c1"># Add a grid for easier value reading.</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="_images/8802a45392adbb718eae801edb29cff05004aa4535da519ffa6724e637aa6120.png" src="_images/8802a45392adbb718eae801edb29cff05004aa4535da519ffa6724e637aa6120.png" />
+</div>
+</div>
+</section>
+</section>
+<section id="visualization-functions">
+<h2>Visualization functions<a class="headerlink" href="#visualization-functions" title="Link to this heading">#</a></h2>
+<p>Here, we can create several utilities for:</p>
+<ul class="simple">
+<li><p>Sample generation;</p></li>
+<li><p>Forward/reverse process visualization; and</p></li>
+<li><p>Training progress tracking.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@partial</span><span class="p">(</span><span class="n">nnx</span><span class="o">.</span><span class="n">jit</span><span class="p">,</span> <span class="n">static_argnums</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,))</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">reverse_diffusion_batch</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">UNet</span><span class="p">,</span>
+                          <span class="n">x</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+                          <span class="n">key</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+                          <span class="n">num_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Efficiently generates samples from the trained diffusion model using batched reverse diffusion (with `jax.lax.scan`).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (UNet): The trained U-Net model for image generation.</span>
+<span class="sd">        x (jax.Array): Noisy image (or pure noise).</span>
+<span class="sd">        key (jax.Array): A JAX PRNG key for generating random noise.</span>
+<span class="sd">        num_steps (int): Number of denoising steps in the reverse diffusion process.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        jax.Array: The denoised image after `num_steps` iterations.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Define the schedule for beta (noise level) and alpha (signal strength).</span>
+    <span class="n">beta</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">1e-4</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">)</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">beta</span>
+    <span class="n">alpha_cumulative</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">cumprod</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">scan_step</span><span class="p">(</span><span class="n">carry</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">],</span>
+                 <span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">],</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Applied a single denoising step.&quot;&quot;&quot;</span>
+        <span class="c1"># Carry-over information.</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="n">carry</span>
+
+        <span class="c1"># Create a batch of timesteps for the current iteration.</span>
+        <span class="n">t_batch</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],),</span> <span class="n">step</span><span class="p">)</span>
+
+        <span class="c1"># Predict the noise using the U-Net model.</span>
+        <span class="n">predicted</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">t_batch</span><span class="p">)</span>
+
+        <span class="c1"># Generate noise for the current timestep (after the first &quot;pure noise&quot; step).</span>
+        <span class="n">key</span><span class="p">,</span> <span class="n">subkey</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="c1"># Split the JAX PRNG key.</span>
+        <span class="n">noise</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">step</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">subkey</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># Update the image using denoising.</span>
+        <span class="n">x_new</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">jnp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">alpha</span><span class="p">[</span><span class="n">step</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span>
+            <span class="n">x</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span><span class="p">[</span><span class="n">step</span><span class="p">])</span> <span class="o">/</span> <span class="n">jnp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha_cumulative</span><span class="p">[</span><span class="n">step</span><span class="p">])</span> <span class="o">*</span> <span class="n">predicted</span>
+        <span class="p">)</span> <span class="o">+</span> <span class="n">jnp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">beta</span><span class="p">[</span><span class="n">step</span><span class="p">])</span> <span class="o">*</span> <span class="n">noise</span>
+
+        <span class="c1"># Return the updated image and carry-over information.</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x_new</span><span class="p">,</span> <span class="n">key</span><span class="p">),</span> <span class="n">x_new</span>
+
+    <span class="n">steps</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">num_steps</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="p">(</span><span class="n">final_x</span><span class="p">,</span> <span class="n">_</span><span class="p">),</span> <span class="n">_</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">lax</span><span class="o">.</span><span class="n">scan</span><span class="p">(</span><span class="n">scan_step</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">key</span><span class="p">),</span> <span class="n">steps</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">final_x</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_samples</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">UNet</span><span class="p">,</span>
+                <span class="n">diffusion</span><span class="p">:</span> <span class="n">DiffusionModel</span><span class="p">,</span>
+                <span class="n">images</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+                <span class="n">key</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+                <span class="n">num_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">9</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Visualize original vs reconstructed images.&quot;&quot;&quot;</span>
+    <span class="n">indices</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="n">num_samples</span><span class="p">,),</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="p">))</span>
+    <span class="n">samples</span> <span class="o">=</span> <span class="n">images</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+
+    <span class="n">key</span><span class="p">,</span> <span class="n">subkey</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="c1"># Split the JAX PRNG key.</span>
+    <span class="n">noisy</span> <span class="o">=</span> <span class="n">diffusion</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="n">num_samples</span><span class="p">,),</span> <span class="n">diffusion</span><span class="o">.</span><span class="n">num_steps</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">subkey</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">key</span><span class="p">,</span> <span class="n">subkey</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="c1"># Split the JAX PRNG key.</span>
+    <span class="n">reconstructed</span> <span class="o">=</span> <span class="n">reverse_diffusion_batch</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">noisy</span><span class="p">,</span> <span class="n">subkey</span><span class="p">,</span> <span class="n">diffusion</span><span class="o">.</span><span class="n">num_steps</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_samples</span><span class="p">):</span>
+        <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">samples</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">)</span>
+        <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+        <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">reconstructed</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">)</span>
+        <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+
+    <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Original&#39;</span><span class="p">)</span>
+    <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Reconstructed&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="c1"># Create a plot of original vs reconstructed images.</span>
+<span class="n">key</span><span class="p">,</span> <span class="n">subkey</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="c1"># Split the JAX PRNG key.</span>
+<span class="n">plot_samples</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">diffusion</span><span class="p">,</span> <span class="n">images_test</span><span class="p">,</span> <span class="n">subkey</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="_images/9377d8ff39fb6c139907b29450012e9c0c49429e70cdcdd72768364be9dbaf54.png" src="_images/9377d8ff39fb6c139907b29450012e9c0c49429e70cdcdd72768364be9dbaf54.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@partial</span><span class="p">(</span><span class="n">nnx</span><span class="o">.</span><span class="n">jit</span><span class="p">,</span> <span class="n">static_argnums</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,))</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_forward_sequence</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">UNet</span><span class="p">,</span>
+                           <span class="n">image</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+                           <span class="n">key</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+                           <span class="n">num_vis_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes the forward diffusion sequence efficiently.&quot;&quot;&quot;</span>
+    <span class="c1"># Prepare image sequence and noise parameters.</span>
+    <span class="n">image_repeated</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">image</span><span class="p">[</span><span class="kc">None</span><span class="p">],</span> <span class="n">num_vis_steps</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">timesteps</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">999</span><span class="p">,</span> <span class="n">num_vis_steps</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>  <span class="c1"># Assuming 1000 steps</span>
+    <span class="n">beta</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">1e-4</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">beta</span>
+    <span class="n">alpha_cumulative</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">cumprod</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span>
+
+    <span class="c1"># Generate and apply noise progressively.</span>
+    <span class="n">noise</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">image_repeated</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">noisy_images</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">jnp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">alpha_cumulative</span><span class="p">[</span><span class="n">timesteps</span><span class="p">])[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">image_repeated</span> <span class="o">+</span>
+        <span class="n">jnp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha_cumulative</span><span class="p">[</span><span class="n">timesteps</span><span class="p">])[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">noise</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">noisy_images</span>
+
+<span class="nd">@partial</span><span class="p">(</span><span class="n">nnx</span><span class="o">.</span><span class="n">jit</span><span class="p">,</span> <span class="n">static_argnums</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,))</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_reverse_sequence</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">UNet</span><span class="p">,</span>
+                           <span class="n">noisy_image</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+                           <span class="n">key</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+                           <span class="n">num_vis_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute reverse diffusion sequence efficiently.&quot;&quot;&quot;</span>
+    <span class="c1"># Denoise completely and create interpolation sequence.</span>
+    <span class="n">final_image</span> <span class="o">=</span> <span class="n">reverse_diffusion_batch</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">noisy_image</span><span class="p">[</span><span class="kc">None</span><span class="p">],</span> <span class="n">key</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">alphas</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">num_vis_steps</span><span class="p">)</span>
+    <span class="n">reverse_sequence</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alphas</span><span class="p">)[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">noisy_image</span> <span class="o">+</span>
+        <span class="n">alphas</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">final_image</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">reverse_sequence</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_forward_and_reverse</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">UNet</span><span class="p">,</span>
+                          <span class="n">diffusion</span><span class="p">:</span> <span class="n">DiffusionModel</span><span class="p">,</span>
+                          <span class="n">image</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+                          <span class="n">key</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+                          <span class="n">num_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">9</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot both forward and reverse diffusion processes with optimized computation.&quot;&quot;&quot;</span>
+    <span class="c1"># Compute the forward/reverse transformations</span>
+    <span class="n">key1</span><span class="p">,</span> <span class="n">key2</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="n">forward_sequence</span> <span class="o">=</span> <span class="n">compute_forward_sequence</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">key1</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">)</span>
+    <span class="n">reverse_sequence</span> <span class="o">=</span> <span class="n">compute_reverse_sequence</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">forward_sequence</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">key2</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">)</span>
+
+    <span class="c1"># Plot the grid.</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s1">&#39;Forward and reverse diffusion process&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">1.1</span><span class="p">)</span>
+
+    <span class="n">timesteps</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">diffusion</span><span class="o">.</span><span class="n">num_steps</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+
+    <span class="c1"># Visualize forward diffusion.</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_steps</span><span class="p">):</span>
+        <span class="n">ax1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">forward_sequence</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;binary&#39;</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;t=</span><span class="si">{</span><span class="n">timesteps</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Forward&#39;</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+    <span class="c1"># Visualize reverse diffusion.</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_steps</span><span class="p">):</span>
+        <span class="n">ax2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">reverse_sequence</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;binary&#39;</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">)</span>
+        <span class="n">ax2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+        <span class="n">ax2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;t=</span><span class="si">{</span><span class="n">timesteps</span><span class="p">[</span><span class="n">num_steps</span><span class="o">-</span><span class="mi">1</span><span class="o">-</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">ax2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Reverse&#39;</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="c1"># Create a plot.</span>
+<span class="n">key</span><span class="p">,</span> <span class="n">subkey</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Full forward and reverse diffusion processes:&quot;</span><span class="p">)</span>
+<span class="n">plot_forward_and_reverse</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">diffusion</span><span class="p">,</span> <span class="n">images_test</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">subkey</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Full Forward and Reverse Process:
+</pre></div>
+</div>
+<img alt="_images/b760fb636cb43afa47fa1c4c3ffcf5d6ef596a1c272613a688fd47fd2d4ba096.png" src="_images/b760fb636cb43afa47fa1c4c3ffcf5d6ef596a1c272613a688fd47fd2d4ba096.png" />
+</div>
+</div>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">#</a></h2>
+<p>In this tutorial, we implemented a simple diffusion model using JAX and Flax NNX, and trained it with Optax and Flax NNX. The model consisted of the U-Net model architecture with attention mechanisms, the training used Flax’s NNX JIT compilation (<code class="docutils literal notranslate"><span class="pre">flax.nnx.jit</span></code>), and we also learned how to visualize the diffusion process.</p>
+</section>
+</section>
+
+<div class="section ablog__blog_comments">
+   
+</div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="digits_vae.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Part 2: Debug a variational autoencoder (VAE)</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="JAX_visualizing_models_metrics.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Visualize JAX model metrics with TensorBoard</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setup">Setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-and-preprocessing-the-data">Loading and preprocessing the data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-the-diffusion-model-with-flax">Defining the diffusion model with Flax</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-u-net-architecture">The U-Net architecture</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-the-diffusion-model">Defining the diffusion model</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-the-loss-function-and-training-step">Defining the loss function and training step</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model-training-configuration">Model training configuration</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#implementing-the-training-loop">Implementing the training loop</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#training-loss-visualization">Training loss visualization</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization-functions">Visualization functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By JAX team
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, JAX team.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
